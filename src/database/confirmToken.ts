@@ -7,6 +7,7 @@ export interface PendingWrite {
   method: string;
   url: string;
   body: unknown;
+  operationId: string;
 }
 
 interface TokenPayload extends PendingWrite {

@@ -4,7 +4,12 @@ import { describe, it, expect, vi } from "vitest";
 import { createConfirmToken, verifyConfirmToken } from "./confirmToken";
 
 const SECRET = "a".repeat(32);
-const WRITE = { method: "PATCH", url: "https://api.appfolio.com/api/v0/work_orders/123", body: { Status: "Completed" } };
+const WRITE = {
+  method: "PATCH",
+  url: "https://api.appfolio.com/api/v0/work_orders/123",
+  body: { Status: "Completed" },
+  operationId: "updateWorkOrder",
+};
 
 describe("confirm token", () => {
   it("round-trips a valid token back to the original write", () => {
@@ -26,6 +31,12 @@ describe("confirm token", () => {
     const [payload] = token.split(".");
     const tampered = payload + "x." + token.split(".")[1];
     expect(verifyConfirmToken(tampered, SECRET)).toBeUndefined();
+  });
+
+  it("round-trips the operationId as part of the signed payload", () => {
+    const token = createConfirmToken(WRITE, SECRET);
+    const write = verifyConfirmToken(token, SECRET);
+    expect(write?.operationId).toBe("updateWorkOrder");
   });
 
   it("rejects an expired token", () => {

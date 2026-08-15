@@ -110,6 +110,7 @@ describe("callEndpoint: writes", () => {
       method: "POST",
       url: "/work_orders/42/notes",
       body: { Note: "Replaced the garbage disposal" },
+      operationId: "createWorkOrderNote",
     });
     expect(verifyConfirmToken(result.confirmToken, SECRET)).toEqual(result.preview);
     expect(deps.http.request).not.toHaveBeenCalled();
@@ -225,5 +226,72 @@ describe("confirmWrite", () => {
 
     await expect(confirmWrite(deps, { role: "owner" }, preview.confirmToken)).rejects.toThrow("AppFolio 500");
     expect(deps.notifyAudit).toHaveBeenCalledWith(expect.objectContaining({ type: "confirmed", outcome: "failure" }));
+  });
+
+  it("still returns the successful result even when the post-success audit notification fails", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const deps = makeDeps();
+    const preview = await callEndpoint(deps, { role: "owner" }, "createWorkOrderNote", {
+      pathParams: { id: "42" },
+      body: { Note: "x" },
+    });
+    if (preview.executed) throw new Error("unreachable");
+    deps.notifyAudit = vi.fn().mockRejectedValue(new Error("Slack webhook down"));
+
+    const result = await confirmWrite(deps, { role: "owner" }, preview.confirmToken);
+
+    expect(result).toEqual({ ok: true });
+    expect(deps.http.request).toHaveBeenCalledTimes(1);
+    expect(consoleError).toHaveBeenCalledWith(
+      "confirmWrite: post-success audit notification failed",
+      expect.any(Error)
+    );
+    consoleError.mockRestore();
+  });
+
+  it("re-validation: a token minted for an owner-executable write still succeeds when confirmed by owner", async () => {
+    const deps = makeDeps();
+    const preview = await callEndpoint(deps, { role: "owner" }, "createWorkOrderNote", {
+      pathParams: { id: "42" },
+      body: { Note: "x" },
+    });
+    if (preview.executed) throw new Error("unreachable");
+
+    const result = await confirmWrite(deps, { role: "owner" }, preview.confirmToken);
+
+    expect(result).toEqual({ ok: true });
+    expect(deps.http.request).toHaveBeenCalledTimes(1);
+  });
+
+  it("re-validation: a token minted for an admin-only write is rejected at confirm time if presented by owner", async () => {
+    const deps = makeDeps();
+    const preview = await callEndpoint(deps, { role: "admin" }, "updateBill", {
+      pathParams: { id: "1" },
+      body: { Amount: 100 },
+    });
+    if (preview.executed) throw new Error("unreachable");
+
+    await expect(confirmWrite(deps, { role: "owner" }, preview.confirmToken)).rejects.toThrow(PermissionError);
+    expect(deps.http.request).not.toHaveBeenCalled();
+    expect(deps.notifyAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "confirmed", caller: "owner", outcome: "rejected" })
+    );
+  });
+
+  it("re-validation: a token minted while writes were enabled is rejected at confirm time once writesEnabled flips false", async () => {
+    const deps = makeDeps();
+    const preview = await callEndpoint(deps, { role: "owner" }, "createWorkOrderNote", {
+      pathParams: { id: "42" },
+      body: { Note: "x" },
+    });
+    if (preview.executed) throw new Error("unreachable");
+
+    deps.writesEnabled = false;
+
+    await expect(confirmWrite(deps, { role: "owner" }, preview.confirmToken)).rejects.toThrow(WritesDisabledError);
+    expect(deps.http.request).not.toHaveBeenCalled();
+    expect(deps.notifyAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "confirmed", caller: "owner", outcome: "rejected" })
+    );
   });
 });

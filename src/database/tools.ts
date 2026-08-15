@@ -76,7 +76,9 @@ export interface AuditEvent {
   operationId?: string;
   caller: Role;
   url: string;
-  outcome?: "success" | "failure";
+  // "rejected": the confirm token was valid, but re-authorization at confirm time failed
+  // (role/flags changed since the preview), so no request was ever sent to AppFolio.
+  outcome?: "success" | "failure" | "rejected";
 }
 
 export interface CallEndpointDeps {
@@ -109,6 +111,21 @@ function findDiscoverable(ops: ScopedOperation[], caller: CallerContext, operati
   return op;
 }
 
+// Shared by callEndpoint (before minting a preview) and confirmWrite (before executing a
+// confirmed token), so a token can never execute under authorization weaker than what minted
+// it: same role/flag checks, re-run fresh against current deps at confirm time.
+function assertWriteAuthorized(deps: CallEndpointDeps, caller: CallerContext, op: ScopedOperation): void {
+  if (!op.executableBy.includes(caller.role)) {
+    throw new PermissionError(`${op.operationId} requires admin role, ask Bret to enable it`);
+  }
+  if (op.class === "DESTRUCTIVE" && !deps.destructiveEnabled) {
+    throw new WritesDisabledError(`${op.operationId} is destructive and destructive writes are disabled`);
+  }
+  if (!deps.writesEnabled) {
+    throw new WritesDisabledError(`${op.operationId} is a write and writes are disabled`);
+  }
+}
+
 export async function callEndpoint(
   deps: CallEndpointDeps,
   caller: CallerContext,
@@ -123,17 +140,9 @@ export async function callEndpoint(
     return { executed: true, result };
   }
 
-  if (!op.executableBy.includes(caller.role)) {
-    throw new PermissionError(`${operationId} requires admin role, ask Bret to enable it`);
-  }
-  if (op.class === "DESTRUCTIVE" && !deps.destructiveEnabled) {
-    throw new WritesDisabledError(`${operationId} is destructive and destructive writes are disabled`);
-  }
-  if (!deps.writesEnabled) {
-    throw new WritesDisabledError(`${operationId} is a write and writes are disabled`);
-  }
+  assertWriteAuthorized(deps, caller, op);
 
-  const write: PendingWrite = { method: op.method, url, body: params.body };
+  const write: PendingWrite = { method: op.method, url, body: params.body, operationId: op.operationId };
   const confirmToken = createConfirmToken(write, deps.tokenSecret);
   await deps.notifyAudit({ type: "preview", operationId, caller: caller.role, url });
   return { executed: false, preview: write, confirmToken };
@@ -143,12 +152,51 @@ export async function confirmWrite(deps: CallEndpointDeps, caller: CallerContext
   const write = verifyConfirmToken(token, deps.tokenSecret);
   if (!write) throw new InvalidTokenError("Confirm token is invalid or expired");
 
+  // Re-check the operation's role/flags at confirm time, not just the token's signature: a
+  // token minted under one caller's permissions (or under flags that have since changed) must
+  // not execute just because it's still validly signed and unexpired.
   try {
-    const result = await deps.http.request(write.method, write.url, { body: write.body });
-    await deps.notifyAudit({ type: "confirmed", caller: caller.role, url: write.url, outcome: "success" });
-    return result;
+    const op = findDiscoverable(deps.ops, caller, write.operationId);
+    assertWriteAuthorized(deps, caller, op);
   } catch (err) {
-    await deps.notifyAudit({ type: "confirmed", caller: caller.role, url: write.url, outcome: "failure" });
+    await deps.notifyAudit({
+      type: "confirmed",
+      operationId: write.operationId,
+      caller: caller.role,
+      url: write.url,
+      outcome: "rejected",
+    });
     throw err;
   }
+
+  let result: unknown;
+  try {
+    result = await deps.http.request(write.method, write.url, { body: write.body });
+  } catch (err) {
+    await deps.notifyAudit({
+      type: "confirmed",
+      operationId: write.operationId,
+      caller: caller.role,
+      url: write.url,
+      outcome: "failure",
+    });
+    throw err;
+  }
+
+  // The write already succeeded against AppFolio at this point. A failure notifying audit
+  // (e.g. Slack webhook down) must never be reported as a write failure, and must never log a
+  // false "failure" outcome for a write that actually went through: these are non-idempotent
+  // operations, and a caller retrying after a false failure would produce a duplicate write.
+  try {
+    await deps.notifyAudit({
+      type: "confirmed",
+      operationId: write.operationId,
+      caller: caller.role,
+      url: write.url,
+      outcome: "success",
+    });
+  } catch (notifyErr) {
+    console.error("confirmWrite: post-success audit notification failed", notifyErr);
+  }
+  return result;
 }
