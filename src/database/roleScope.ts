@@ -1,4 +1,4 @@
-// ABOUTME: Classifies every Database API operation by role scope — who can execute it, and
+// ABOUTME: Classifies every Database API operation by role scope: who can execute it, and
 // ABOUTME: who can discover it exists, per the design spec's owner/admin allowlist.
 import type { RawOperation } from "./catalogGen";
 import type { Role } from "../config";
@@ -11,7 +11,7 @@ export interface ScopedOperation extends RawOperation {
   discoverableBy: Role[];
 }
 
-// Curated allowlist for `owner` (Justin) — narrow, additive, scoped to running unit turns
+// Curated allowlist for `owner` (Justin): narrow, additive, scoped to running unit turns
 // and work orders. Notes/attachments/photos are separate sub-resources from the parent
 // record's own PATCH, so owner never gets updateTenant (whole-record write); updateVendor
 // is included in full per an explicit decision to give owner full vendor writes, not just notes.
@@ -30,7 +30,7 @@ export const OWNER_WRITE_OPERATION_IDS = new Set([
   "updateVendor",
   "createVendorNote",
   "updateVendorNote",
-  // Units (notes, attachments, photos — not pricing, not photo deletion)
+  // Units (notes, attachments, photos: not pricing, not photo deletion)
   "createUnitNote",
   "updateUnitNote",
   "createUnitAttachment",
