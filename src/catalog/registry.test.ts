@@ -1,4 +1,5 @@
-// ABOUTME: Tests the generic search/describe registry shared by reports and database catalogs.
+// ABOUTME: Tests for the generic search/describe registry shared by both catalog implementations.
+// ABOUTME: Verifies search and descriptor query behavior for any descriptor collection.
 import { describe, it, expect } from "vitest";
 import { search, describe as describeItem } from "./registry";
 import type { Descriptor } from "./types";
