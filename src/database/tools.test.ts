@@ -294,4 +294,31 @@ describe("confirmWrite", () => {
       expect.objectContaining({ type: "confirmed", caller: "owner", outcome: "rejected" })
     );
   });
+
+  it("re-validation: a token minted for a destructive operation is rejected at confirm time if presented by owner", async () => {
+    const deps = makeDeps();
+    const preview = await callEndpoint(deps, { role: "admin" }, "deleteInspection", {
+      pathParams: { id: "1" },
+    });
+    if (preview.executed) throw new Error("unreachable");
+
+    await expect(confirmWrite(deps, { role: "owner" }, preview.confirmToken)).rejects.toThrow(NotFoundError);
+    expect(deps.http.request).not.toHaveBeenCalled();
+  });
+
+  it("re-validation: a token minted for a destructive operation is rejected at confirm time once destructiveEnabled flips false", async () => {
+    const deps = makeDeps();
+    const preview = await callEndpoint(deps, { role: "admin" }, "deleteInspection", {
+      pathParams: { id: "1" },
+    });
+    if (preview.executed) throw new Error("unreachable");
+
+    deps.destructiveEnabled = false;
+
+    await expect(confirmWrite(deps, { role: "admin" }, preview.confirmToken)).rejects.toThrow(WritesDisabledError);
+    expect(deps.http.request).not.toHaveBeenCalled();
+    expect(deps.notifyAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "confirmed", caller: "admin", outcome: "rejected" })
+    );
+  });
 });
