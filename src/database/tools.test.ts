@@ -1,7 +1,17 @@
 // ABOUTME: Tests the discovery tools' role-aware filtering: destructive ops are fully
 // ABOUTME: invisible to owner; ordinary admin-only writes are visible but marked uncallable.
-import { describe, it, expect } from "vitest";
-import { listEndpoints, describeEndpoint, NotFoundError } from "./tools";
+import { describe, it, expect, vi } from "vitest";
+import {
+  listEndpoints,
+  describeEndpoint,
+  NotFoundError,
+  callEndpoint,
+  confirmWrite,
+  PermissionError,
+  WritesDisabledError,
+  InvalidTokenError,
+} from "./tools";
+import { verifyConfirmToken } from "./confirmToken";
 import { scopeOperations } from "./roleScope";
 import type { RawOperation } from "./catalogGen";
 
@@ -61,5 +71,159 @@ describe("describeEndpoint", () => {
 
   it("throws NotFoundError for a destructive operation hidden from owner", () => {
     expect(() => describeEndpoint(OPS, { role: "owner" }, "deleteInspection")).toThrow(NotFoundError);
+  });
+});
+
+const SECRET = "a".repeat(32);
+
+function makeDeps(overrides: Partial<Parameters<typeof callEndpoint>[0]> = {}) {
+  return {
+    ops: OPS,
+    http: { request: vi.fn().mockResolvedValue({ ok: true }) } as any,
+    tokenSecret: SECRET,
+    writesEnabled: true,
+    destructiveEnabled: true,
+    notifyAudit: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  };
+}
+
+describe("callEndpoint: reads", () => {
+  it("executes GET operations directly without a confirm step", async () => {
+    const deps = makeDeps();
+    const result = await callEndpoint(deps, { role: "owner" }, "getTenants", {});
+    expect(result).toEqual({ executed: true, result: { ok: true } });
+    expect(deps.http.request).toHaveBeenCalledWith("GET", "/tenants", { query: undefined });
+  });
+});
+
+describe("callEndpoint: writes", () => {
+  it("returns a preview and confirm token instead of executing, for an allowed write", async () => {
+    const deps = makeDeps();
+    const result = await callEndpoint(deps, { role: "owner" }, "createWorkOrderNote", {
+      pathParams: { id: "42" },
+      body: { Note: "Replaced the garbage disposal" },
+    });
+    expect(result.executed).toBe(false);
+    if (result.executed) throw new Error("unreachable");
+    expect(result.preview).toEqual({
+      method: "POST",
+      url: "/work_orders/42/notes",
+      body: { Note: "Replaced the garbage disposal" },
+    });
+    expect(verifyConfirmToken(result.confirmToken, SECRET)).toEqual(result.preview);
+    expect(deps.http.request).not.toHaveBeenCalled();
+    expect(deps.notifyAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "preview", operationId: "createWorkOrderNote", caller: "owner" })
+    );
+  });
+
+  it("rejects a write outside the caller's role with PermissionError", async () => {
+    const deps = makeDeps();
+    await expect(callEndpoint(deps, { role: "owner" }, "updateBill", { pathParams: { id: "1" } })).rejects.toThrow(
+      PermissionError
+    );
+  });
+
+  it("rejects a write with WritesDisabledError when writesEnabled is false", async () => {
+    const deps = makeDeps({ writesEnabled: false });
+    await expect(
+      callEndpoint(deps, { role: "owner" }, "createWorkOrderNote", { pathParams: { id: "42" }, body: {} })
+    ).rejects.toThrow(WritesDisabledError);
+  });
+
+  it("rejects a write with WritesDisabledError for admin too when writesEnabled is false", async () => {
+    const deps = makeDeps({ writesEnabled: false });
+    await expect(
+      callEndpoint(deps, { role: "admin" }, "createWorkOrderNote", { pathParams: { id: "42" }, body: {} })
+    ).rejects.toThrow(WritesDisabledError);
+    expect(deps.http.request).not.toHaveBeenCalled();
+  });
+
+  it("throws NotFoundError, not PermissionError, for a destructive operation owner cannot even discover", async () => {
+    const deps = makeDeps();
+    await expect(
+      callEndpoint(deps, { role: "owner" }, "deleteInspection", { pathParams: { id: "1" } })
+    ).rejects.toThrow(NotFoundError);
+  });
+
+  it("blocks a destructive operation for admin when destructiveEnabled is false, without a preview", async () => {
+    const deps = makeDeps({ destructiveEnabled: false });
+    await expect(
+      callEndpoint(deps, { role: "admin" }, "deleteInspection", { pathParams: { id: "1" } })
+    ).rejects.toThrow(WritesDisabledError);
+    expect(deps.http.request).not.toHaveBeenCalled();
+    expect(deps.notifyAudit).not.toHaveBeenCalled();
+  });
+});
+
+describe("confirmWrite", () => {
+  it("executes the exact request encoded in a valid token", async () => {
+    const deps = makeDeps();
+    const preview = await callEndpoint(deps, { role: "owner" }, "createWorkOrderNote", {
+      pathParams: { id: "42" },
+      body: { Note: "Replaced the garbage disposal" },
+    });
+    if (preview.executed) throw new Error("unreachable");
+
+    const result = await confirmWrite(deps, { role: "owner" }, preview.confirmToken);
+
+    expect(result).toEqual({ ok: true });
+    expect(deps.http.request).toHaveBeenCalledWith("POST", "/work_orders/42/notes", {
+      body: { Note: "Replaced the garbage disposal" },
+    });
+    expect(deps.notifyAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "confirmed", caller: "owner", outcome: "success" })
+    );
+  });
+
+  it("rejects an invalid token with InvalidTokenError", async () => {
+    const deps = makeDeps();
+    await expect(confirmWrite(deps, { role: "owner" }, "garbage")).rejects.toThrow(InvalidTokenError);
+    expect(deps.http.request).not.toHaveBeenCalled();
+    expect(deps.notifyAudit).not.toHaveBeenCalled();
+  });
+
+  it("rejects a tampered token with InvalidTokenError", async () => {
+    const deps = makeDeps();
+    const preview = await callEndpoint(deps, { role: "owner" }, "createWorkOrderNote", {
+      pathParams: { id: "42" },
+      body: { Note: "x" },
+    });
+    if (preview.executed) throw new Error("unreachable");
+    const [payloadB64, signature] = preview.confirmToken.split(".");
+    const tampered = payloadB64 + "x." + signature;
+
+    await expect(confirmWrite(deps, { role: "owner" }, tampered)).rejects.toThrow(InvalidTokenError);
+    expect(deps.http.request).not.toHaveBeenCalled();
+  });
+
+  it("rejects an expired token with InvalidTokenError", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
+    const deps = makeDeps();
+    const preview = await callEndpoint(deps, { role: "owner" }, "createWorkOrderNote", {
+      pathParams: { id: "42" },
+      body: { Note: "x" },
+    });
+    if (preview.executed) throw new Error("unreachable");
+
+    vi.setSystemTime(new Date("2026-01-01T00:16:00Z")); // 16 minutes later, past the 15-minute TTL
+    await expect(confirmWrite(deps, { role: "owner" }, preview.confirmToken)).rejects.toThrow(InvalidTokenError);
+    expect(deps.http.request).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it("logs a failure outcome and rethrows when the underlying request fails", async () => {
+    const deps = makeDeps();
+    const preview = await callEndpoint(deps, { role: "owner" }, "createWorkOrderNote", {
+      pathParams: { id: "42" },
+      body: { Note: "x" },
+    });
+    if (preview.executed) throw new Error("unreachable");
+    deps.http.request = vi.fn().mockRejectedValue(new Error("AppFolio 500"));
+
+    await expect(confirmWrite(deps, { role: "owner" }, preview.confirmToken)).rejects.toThrow("AppFolio 500");
+    expect(deps.notifyAudit).toHaveBeenCalledWith(expect.objectContaining({ type: "confirmed", outcome: "failure" }));
   });
 });
