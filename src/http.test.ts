@@ -1,4 +1,4 @@
-// ABOUTME: Tests the shared AppFolio HTTP client — auth headers, retry, error handling.
+// ABOUTME: Tests the shared AppFolio HTTP client (auth headers, retry, error handling).
 // ABOUTME: Verifies Basic auth, developer ID header, retry logic, and error throwing.
 import { describe, it, expect, vi } from "vitest";
 import { AppFolioHttpClient, AppFolioHttpError } from "./http";
@@ -89,6 +89,21 @@ describe("AppFolioHttpClient", () => {
     });
 
     await expect(client.request("GET", "/tenants/999")).rejects.toThrow(AppFolioHttpError);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns undefined for 204 No Content response", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    const client = new AppFolioHttpClient({
+      baseUrl: "https://api.appfolio.com/api/v0",
+      username: "u",
+      password: "p",
+      fetchImpl,
+    });
+
+    const result = await client.request("DELETE", "/tenants/123");
+
+    expect(result).toBeUndefined();
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 });

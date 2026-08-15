@@ -1,4 +1,4 @@
-// ABOUTME: Shared HTTP client for both AppFolio APIs — Basic auth, retry/backoff, pagination.
+// ABOUTME: Shared HTTP client for both AppFolio APIs (Basic auth, retry/backoff, pagination).
 // ABOUTME: Every AppFolio network call in this codebase goes through here, nowhere else.
 export interface AppFolioHttpClientOptions {
   baseUrl: string;
