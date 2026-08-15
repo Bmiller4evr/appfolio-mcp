@@ -7,7 +7,7 @@ vi.mock("jose", () => ({
   jwtVerify: vi.fn(),
 }));
 
-import { jwtVerify } from "jose";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import { verifyToken, resolveRole } from "./workos";
 
 const CONFIG = { clientId: "client_123", apiKey: "sk_test", authkitDomain: "https://auth.example.com" };
@@ -62,5 +62,58 @@ describe("verifyToken", () => {
       scopes: [],
       extra: { userId: "user_123", role: "owner" },
     });
+  });
+
+  it("passes the configured clientId as the expected audience to jwtVerify", async () => {
+    vi.mocked(jwtVerify).mockResolvedValue({
+      payload: { sub: "user_123", org_role: "admin" },
+    } as any);
+
+    await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+
+    expect(jwtVerify).toHaveBeenCalledWith(
+      "valid.jwt.token",
+      expect.anything(),
+      expect.objectContaining({ issuer: CONFIG.authkitDomain, audience: CONFIG.clientId })
+    );
+  });
+
+  it("returns undefined when jwtVerify rejects a token with the wrong or missing audience", async () => {
+    vi.mocked(jwtVerify).mockRejectedValue(
+      new Error('JWTClaimValidationFailed: unexpected "aud" claim value')
+    );
+
+    const result = await verifyToken(
+      new Request("https://mcp.example.com"),
+      "wrong-audience.jwt.token",
+      CONFIG
+    );
+
+    expect(result).toBeUndefined();
+  });
+
+  it("returns undefined when the token payload has no sub claim", async () => {
+    vi.mocked(jwtVerify).mockResolvedValue({
+      payload: { org_role: "admin" },
+    } as any);
+
+    const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+
+    expect(result).toBeUndefined();
+  });
+
+  it("reuses the cached JWKS remote set across multiple calls for the same config", async () => {
+    const config = { ...CONFIG, authkitDomain: "https://cache-test.example.com" };
+    vi.mocked(jwtVerify).mockResolvedValue({
+      payload: { sub: "user_123", org_role: "admin" },
+    } as any);
+
+    await verifyToken(new Request("https://mcp.example.com"), "token.one", config);
+    await verifyToken(new Request("https://mcp.example.com"), "token.two", config);
+
+    const jwksCallsForDomain = vi
+      .mocked(createRemoteJWKSet)
+      .mock.calls.filter(([url]) => url.toString() === "https://cache-test.example.com/oauth2/jwks");
+    expect(jwksCallsForDomain).toHaveLength(1);
   });
 });
