@@ -52,7 +52,8 @@ export async function verifyToken(
     });
     const userId = payload.sub;
     if (typeof userId !== "string" || !userId) return undefined;
-    const orgRole = (payload as { org_role?: string }).org_role ?? "member";
+    // AuthKit access tokens carry the organization role as `role`, not `org_role`.
+    const orgRole = (payload as { role?: string }).role ?? "member";
     return {
       token: bearerToken,
       clientId: config.clientId,

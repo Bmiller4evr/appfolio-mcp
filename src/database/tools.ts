@@ -70,6 +70,7 @@ export function describeEndpoint(ops: ScopedOperation[], caller: CallerContext, 
 export class PermissionError extends Error {}
 export class WritesDisabledError extends Error {}
 export class InvalidTokenError extends Error {}
+export class InvalidPathParamError extends Error {}
 
 export interface AuditEvent {
   type: "preview" | "confirmed";
@@ -94,11 +95,24 @@ export type CallEndpointResult =
   | { executed: true; result: unknown }
   | { executed: false; preview: PendingWrite; confirmToken: string };
 
+// A path param is substituted into the operation's URL path template, and the WHATWG URL
+// constructor in AppFolioHttpClient resolves ".." segments, so an unchecked value can walk out
+// of the operation's own path and reach an endpoint the caller's role scope excludes (e.g.
+// updateVendor with vendorId "../tenants/123" becomes PATCH /tenants/123). Values carrying
+// path, query, or fragment syntax are refused outright; anything accepted is percent-encoded
+// so it can only ever be a single path segment.
+const PATH_PARAM_SEPARATORS = /[/\\?#]|\.\./;
+
 function resolvePath(path: string, pathParams: Record<string, string> = {}): string {
   return path.replace(/\{(\w+)\}/g, (_match, name) => {
     const value = pathParams[name];
-    if (!value) throw new PermissionError(`Missing path param: ${name}`);
-    return value;
+    if (value === undefined) throw new PermissionError(`Missing path param: ${name}`);
+    if (PATH_PARAM_SEPARATORS.test(value)) {
+      throw new InvalidPathParamError(
+        `Invalid path param ${name}: must be a single path segment, without / \\ ? # or ..`
+      );
+    }
+    return encodeURIComponent(value);
   });
 }
 

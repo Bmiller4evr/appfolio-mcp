@@ -10,6 +10,7 @@ import {
   PermissionError,
   WritesDisabledError,
   InvalidTokenError,
+  InvalidPathParamError,
 } from "./tools";
 import { verifyConfirmToken } from "./confirmToken";
 import { scopeOperations } from "./roleScope";
@@ -26,6 +27,7 @@ const RAW_OPS: RawOperation[] = [
     summary: "Create work order note",
     tag: "Work Orders",
   },
+  { method: "PATCH", path: "/vendors/{vendorId}", operationId: "updateVendor", summary: "Update a vendor", tag: "Vendors" },
 ];
 const OPS = scopeOperations(RAW_OPS);
 
@@ -155,6 +157,58 @@ describe("callEndpoint: writes", () => {
     ).rejects.toThrow(WritesDisabledError);
     expect(deps.http.request).not.toHaveBeenCalled();
     expect(deps.notifyAudit).not.toHaveBeenCalled();
+  });
+});
+
+describe("callEndpoint: path params", () => {
+  it("rejects a path param that traverses out of the operation's own path", async () => {
+    const deps = makeDeps();
+    await expect(
+      callEndpoint(deps, { role: "owner" }, "updateVendor", {
+        pathParams: { vendorId: "../tenants/123" },
+        body: { Name: "x" },
+      })
+    ).rejects.toThrow(InvalidPathParamError);
+    expect(deps.http.request).not.toHaveBeenCalled();
+  });
+
+  it("rejects a path param containing a path separator", async () => {
+    const deps = makeDeps();
+    await expect(
+      callEndpoint(deps, { role: "owner" }, "updateVendor", { pathParams: { vendorId: "foo/bar" }, body: {} })
+    ).rejects.toThrow(InvalidPathParamError);
+    expect(deps.http.request).not.toHaveBeenCalled();
+  });
+
+  it("rejects a path param carrying a query or fragment marker", async () => {
+    const deps = makeDeps();
+    await expect(
+      callEndpoint(deps, { role: "owner" }, "updateVendor", { pathParams: { vendorId: "1?x=2" }, body: {} })
+    ).rejects.toThrow(InvalidPathParamError);
+    await expect(
+      callEndpoint(deps, { role: "owner" }, "updateVendor", { pathParams: { vendorId: "1#frag" }, body: {} })
+    ).rejects.toThrow(InvalidPathParamError);
+    expect(deps.http.request).not.toHaveBeenCalled();
+  });
+
+  it("percent-encodes an accepted path param", async () => {
+    const deps = makeDeps();
+    const result = await callEndpoint(deps, { role: "owner" }, "updateVendor", {
+      pathParams: { vendorId: "a b" },
+      body: {},
+    });
+    if (result.executed) throw new Error("unreachable");
+    expect(result.preview.url).toBe("/vendors/a%20b");
+  });
+
+  it('accepts "0" as a path param value', async () => {
+    const deps = makeDeps();
+    const result = await callEndpoint(deps, { role: "owner" }, "createWorkOrderNote", {
+      pathParams: { id: "0" },
+      body: { Note: "x" },
+    });
+    if (result.executed) throw new Error("unreachable");
+    expect(result.preview.url).toBe("/work_orders/0/notes");
   });
 });
 
