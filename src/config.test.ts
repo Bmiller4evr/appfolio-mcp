@@ -7,12 +7,22 @@ const BASE_ENV = {
   WORKOS_CLIENT_ID: "client_123",
   WORKOS_API_KEY: "sk_test_123",
   WORKOS_AUTHKIT_DOMAIN: "https://auth.example.com",
+  WORKOS_ORGANIZATION_ID: "org_123",
   APPFOLIO_MCP_TOKEN_SECRET: "a".repeat(32),
 };
 
 describe("loadConfig", () => {
   it("throws ConfigError when WorkOS vars are missing", () => {
     expect(() => loadConfig({})).toThrow(ConfigError);
+  });
+
+  it("throws ConfigError when the WorkOS organization id is missing", () => {
+    const { WORKOS_ORGANIZATION_ID: _omitted, ...env } = BASE_ENV;
+    expect(() => loadConfig(env)).toThrow(ConfigError);
+  });
+
+  it("populates the WorkOS organization id", () => {
+    expect(loadConfig(BASE_ENV).workos.organizationId).toBe("org_123");
   });
 
   it("leaves reports config undefined when unset", () => {

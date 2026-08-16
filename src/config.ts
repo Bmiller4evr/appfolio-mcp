@@ -15,7 +15,7 @@ export interface AppFolioDatabaseConfig {
 }
 
 export interface Config {
-  workos: { clientId: string; apiKey: string; authkitDomain: string };
+  workos: { clientId: string; apiKey: string; authkitDomain: string; organizationId: string };
   tokenSecret: string;
   reports?: AppFolioReportsConfig;
   database?: AppFolioDatabaseConfig;
@@ -47,7 +47,7 @@ function readModule(
   if (setCount === 0) return undefined;
   if (setCount < names.length) {
     throw new ConfigError(
-      `${moduleName} is partially configured — set all of [${names.join(", ")}] or none of them`
+      `${moduleName} is partially configured: set all of [${names.join(", ")}] or none of them`
     );
   }
   return values as string[];
@@ -58,6 +58,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     clientId: requireVar(env, "WORKOS_CLIENT_ID"),
     apiKey: requireVar(env, "WORKOS_API_KEY"),
     authkitDomain: requireVar(env, "WORKOS_AUTHKIT_DOMAIN"),
+    organizationId: requireVar(env, "WORKOS_ORGANIZATION_ID"),
   };
   const tokenSecret = requireVar(env, "APPFOLIO_MCP_TOKEN_SECRET");
 

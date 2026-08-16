@@ -12,6 +12,7 @@ vi.hoisted(() => {
   process.env.WORKOS_CLIENT_ID = "client_123";
   process.env.WORKOS_API_KEY = "sk_test_123";
   process.env.WORKOS_AUTHKIT_DOMAIN = "https://auth.example.com";
+  process.env.WORKOS_ORGANIZATION_ID = "org_123";
   process.env.APPFOLIO_MCP_TOKEN_SECRET = "a".repeat(32);
 });
 

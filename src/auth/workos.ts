@@ -7,6 +7,7 @@ export interface WorkOSConfig {
   clientId: string;
   apiKey: string;
   authkitDomain: string;
+  organizationId: string;
 }
 
 export interface AuthInfo {
@@ -52,8 +53,18 @@ export async function verifyToken(
     });
     const userId = payload.sub;
     if (typeof userId !== "string" || !userId) return undefined;
-    // AuthKit access tokens carry the organization role as `role`, not `org_role`.
-    const orgRole = (payload as { role?: string }).role ?? "member";
+
+    // This server serves one WorkOS organization (Bret's and Justin's), not open AuthKit
+    // signup, so a token minted for any other organization is refused like any other
+    // verification failure.
+    if ((payload as { org_id?: string }).org_id !== config.organizationId) return undefined;
+
+    // AuthKit access tokens carry the organization role as `role`, not `org_role`. A token
+    // with no role claim at all is refused rather than mapped to owner: a caller whose role
+    // we cannot read is a caller we cannot scope.
+    const orgRole = (payload as { role?: string }).role;
+    if (typeof orgRole !== "string" || !orgRole) return undefined;
+
     return {
       token: bearerToken,
       clientId: config.clientId,

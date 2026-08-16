@@ -10,7 +10,12 @@ vi.mock("jose", () => ({
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { verifyToken, resolveRole } from "./workos";
 
-const CONFIG = { clientId: "client_123", apiKey: "sk_test", authkitDomain: "https://auth.example.com" };
+const CONFIG = {
+  clientId: "client_123",
+  apiKey: "sk_test",
+  authkitDomain: "https://auth.example.com",
+  organizationId: "org_123",
+};
 
 describe("resolveRole", () => {
   it("maps the WorkOS admin org role to admin", () => {
@@ -30,7 +35,7 @@ describe("verifyToken", () => {
 
   it("returns AuthInfo with the resolved role in extra, for a valid token", async () => {
     vi.mocked(jwtVerify).mockResolvedValue({
-      payload: { sub: "user_123", role: "admin" },
+      payload: { sub: "user_123", org_id: "org_123", role: "admin" },
     } as any);
 
     const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
@@ -49,9 +54,9 @@ describe("verifyToken", () => {
     expect(result).toBeUndefined();
   });
 
-  it("defaults to owner when the token has no role claim", async () => {
+  it("maps a non-admin role claim to owner", async () => {
     vi.mocked(jwtVerify).mockResolvedValue({
-      payload: { sub: "user_123" },
+      payload: { sub: "user_123", org_id: "org_123", role: "member" },
     } as any);
 
     const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
@@ -64,9 +69,39 @@ describe("verifyToken", () => {
     });
   });
 
-  it("passes the configured clientId as the expected audience to jwtVerify", async () => {
+  it("returns undefined when the token has no role claim at all", async () => {
+    vi.mocked(jwtVerify).mockResolvedValue({
+      payload: { sub: "user_123", org_id: "org_123" },
+    } as any);
+
+    const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+
+    expect(result).toBeUndefined();
+  });
+
+  it("returns undefined for a token from another organization", async () => {
+    vi.mocked(jwtVerify).mockResolvedValue({
+      payload: { sub: "user_123", org_id: "org_someone_else", role: "admin" },
+    } as any);
+
+    const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+
+    expect(result).toBeUndefined();
+  });
+
+  it("returns undefined for a token with no organization claim", async () => {
     vi.mocked(jwtVerify).mockResolvedValue({
       payload: { sub: "user_123", role: "admin" },
+    } as any);
+
+    const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+
+    expect(result).toBeUndefined();
+  });
+
+  it("passes the configured clientId as the expected audience to jwtVerify", async () => {
+    vi.mocked(jwtVerify).mockResolvedValue({
+      payload: { sub: "user_123", org_id: "org_123", role: "admin" },
     } as any);
 
     await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
@@ -94,7 +129,7 @@ describe("verifyToken", () => {
 
   it("returns undefined when the token payload has no sub claim", async () => {
     vi.mocked(jwtVerify).mockResolvedValue({
-      payload: { role: "admin" },
+      payload: { org_id: "org_123", role: "admin" },
     } as any);
 
     const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
@@ -105,7 +140,7 @@ describe("verifyToken", () => {
   it("reuses the cached JWKS remote set across multiple calls for the same config", async () => {
     const config = { ...CONFIG, authkitDomain: "https://cache-test.example.com" };
     vi.mocked(jwtVerify).mockResolvedValue({
-      payload: { sub: "user_123", role: "admin" },
+      payload: { sub: "user_123", org_id: "org_123", role: "admin" },
     } as any);
 
     await verifyToken(new Request("https://mcp.example.com"), "token.one", config);
