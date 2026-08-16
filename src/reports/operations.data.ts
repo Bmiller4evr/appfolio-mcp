@@ -1,5 +1,5 @@
-// ABOUTME: AppFolio Reports API (V2) catalog. Only vendor_directory's columns/filters are
-// ABOUTME: independently verified, everything else is listed by id pending verification.
+// ABOUTME: AppFolio Reports API (V2) catalog. vendor_directory and rent_roll have verified
+// ABOUTME: columns/filters, everything else is listed by id pending verification.
 export interface ReportColumn {
   name: string;
   type: string;
@@ -46,9 +46,38 @@ export const REPORTS: ReportDescriptor[] = [
       { name: "contract_expiration_to", type: "date" },
     ],
   },
+  // rent_roll's V2 columns below are sourced from AppFolio's own Reports API OpenAPI schema
+  // export, provided by the project owner (components.schemas.RentRollRequest/Response), not
+  // browsed UI prose or a guess. See .superpowers/sdd/verified-report-columns.md.
+  {
+    id: "rent_roll",
+    title: "Rent Roll",
+    summary: "Occupancy and rent by unit.",
+    tags: ["occupancy"],
+    verified: true,
+    source: "AppFolio Reports API OpenAPI schema export",
+    columns: [
+      { name: "property_id", type: "integer" },
+      { name: "property_name", type: "string" },
+      { name: "unit_id", type: "integer" },
+      { name: "unit", type: "string" },
+      { name: "sqft", type: "integer" },
+      { name: "status", type: "string" },
+      { name: "market_rent", type: "string" },
+      { name: "rent", type: "string" },
+      { name: "lease_to", type: "date" },
+      { name: "tenant_id", type: "integer" },
+      { name: "tenant", type: "string" },
+    ],
+    filters: [
+      { name: "as_of_to", type: "date" },
+      { name: "properties.properties_ids", type: "array" },
+      { name: "unit_visibility", type: "string" },
+      { name: "non_revenue_units", type: "string" },
+    ],
+  },
   // Known by id (V1 CSV export + AppFolio's Reports API), V2 columns NOT yet verified.
-  // Tasks 12-14 each verify and fill in the report they depend on before using it.
-  { id: "rent_roll", title: "Rent Roll", summary: "Occupancy and rent by unit.", tags: ["occupancy"], verified: false, columns: [], filters: [] },
+  // Tasks 13-14 each verify and fill in the report they depend on before using it.
   { id: "delinquency", title: "Delinquency", summary: "Aging balances by tenant.", tags: ["financial"], verified: false, columns: [], filters: [] },
   { id: "work_order", title: "Work Orders", summary: "Open and closed maintenance tickets.", tags: ["maintenance"], verified: false, columns: [], filters: [] },
 ];
