@@ -5,7 +5,7 @@ Generated from the Reports API Redocly HTML export (110 report endpoints).
 Base URL: https://{database}.appfolio.com/api/v2/reports/{report_id}
 Auth: HTTP Basic (Reports API credentials, separate from the Database API pair)
 
-Only vendor_directory, rent_roll, delinquency, and work_order have been verified with full column/filter detail for this project (see docs/composites/*.md and src/reports/operations.data.ts). Every other report below is listed by name only, pending future verification if a composite needs it.
+Only vendor_directory and rent_roll have been verified with full column/filter detail in this project so far (see docs/composites/*.md and src/reports/operations.data.ts). delinquency and work_order are pending verification in later tasks. Every other report below is listed by name only, pending future verification if a composite needs it.
 
 ## All reports
 
