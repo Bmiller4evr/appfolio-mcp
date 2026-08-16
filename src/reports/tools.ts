@@ -27,9 +27,10 @@ export interface RunReportResult {
 export async function runReport(
   http: Pick<AppFolioHttpClient, "request">,
   reportId: string,
-  opts: { filters?: Record<string, unknown>; columns?: string[]; maxRows?: number } = {}
+  opts: { filters?: Record<string, unknown>; columns?: string[]; maxRows?: number } = {},
+  lookupReport: (id: string) => ReportDescriptor = describeReport
 ): Promise<RunReportResult> {
-  const report = describeReport(reportId);
+  const report = lookupReport(reportId);
   if (!report.verified) {
     throw new UnverifiedReportError(
       `${reportId}'s V2 columns are unverified, confirm against Manage API Settings > Reports API Documentation before running it`

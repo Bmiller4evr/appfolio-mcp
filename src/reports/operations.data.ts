@@ -1,5 +1,5 @@
-// ABOUTME: AppFolio Reports API (V2) catalog. vendor_directory, rent_roll, and delinquency have
-// ABOUTME: verified columns/filters, everything else is listed by id pending verification.
+// ABOUTME: AppFolio Reports API (V2) catalog. vendor_directory, rent_roll, delinquency, and
+// ABOUTME: work_order have verified columns/filters, everything else is listed by id pending verification.
 export interface ReportColumn {
   name: string;
   type: string;
@@ -113,7 +113,37 @@ export const REPORTS: ReportDescriptor[] = [
       { name: "balance_operator.comparator", type: "string" },
     ],
   },
-  // Known by id (V1 CSV export + AppFolio's Reports API), V2 columns NOT yet verified.
-  // Task 14 verifies and fills in the report it depends on before using it.
-  { id: "work_order", title: "Work Orders", summary: "Open and closed maintenance tickets.", tags: ["maintenance"], verified: false, columns: [], filters: [] },
+  // work_order's V2 columns below are sourced from AppFolio's own Reports API OpenAPI schema
+  // export, provided by the project owner (components.schemas.WorkOrderRequest/Response), not
+  // browsed UI prose or a guess. See .superpowers/sdd/verified-report-columns.md.
+  {
+    id: "work_order",
+    title: "Work Orders",
+    summary: "Open and closed maintenance tickets.",
+    tags: ["maintenance"],
+    verified: true,
+    source: "AppFolio Reports API OpenAPI schema export",
+    columns: [
+      { name: "work_order_id", type: "integer" },
+      { name: "work_order_number", type: "string" },
+      { name: "property_id", type: "integer" },
+      { name: "property_name", type: "string" },
+      { name: "vendor_id", type: "integer" },
+      { name: "vendor", type: "string" },
+      { name: "priority", type: "string" },
+      { name: "status", type: "string" },
+      { name: "created_at", type: "date" },
+      { name: "scheduled_start", type: "date" },
+      { name: "completed_on", type: "date" },
+      { name: "estimate_req_on", type: "date" },
+      { name: "estimated_on", type: "date" },
+    ],
+    filters: [
+      { name: "property.*", type: "object" },
+      { name: "work_order_statuses", type: "array" },
+      { name: "priority", type: "string" },
+      { name: "status_date_range_from", type: "date" },
+      { name: "status_date_range_to", type: "date" },
+    ],
+  },
 ];

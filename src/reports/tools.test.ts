@@ -2,12 +2,13 @@
 // ABOUTME: column-scoped queries, truncation and pagination signal.
 import { describe, it, expect, vi } from "vitest";
 import { listReports, describeReport, runReport, UnverifiedReportError, NotFoundError } from "./tools";
+import type { ReportDescriptor } from "./operations.data";
 
 describe("listReports", () => {
   it("lists all reports, flagging which are verified", () => {
     const results = listReports();
     expect(results.find((r) => r.id === "vendor_directory")?.verified).toBe(true);
-    expect(results.find((r) => r.id === "work_order")?.verified).toBe(false);
+    expect(results.find((r) => r.id === "work_order")?.verified).toBe(true);
   });
 
   it("filters by search text", () => {
@@ -45,7 +46,18 @@ describe("runReport", () => {
 
   it("refuses to run an unverified report rather than guess at its columns", async () => {
     const http = { request: vi.fn() };
-    await expect(runReport(http, "work_order")).rejects.toThrow(UnverifiedReportError);
+    const unverifiedReport: ReportDescriptor = {
+      id: "fixture_unverified",
+      title: "Fixture Unverified Report",
+      summary: "A synthetic descriptor, standing in for whatever report is unverified at any point in time.",
+      tags: [],
+      verified: false,
+      columns: [],
+      filters: [],
+    };
+    await expect(runReport(http, "fixture_unverified", {}, () => unverifiedReport)).rejects.toThrow(
+      UnverifiedReportError
+    );
     expect(http.request).not.toHaveBeenCalled();
   });
 });
