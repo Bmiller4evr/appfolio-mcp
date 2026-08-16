@@ -238,6 +238,22 @@ describe("callEndpoint: path params", () => {
     if (result.executed) throw new Error("unreachable");
     expect(result.preview.url).toBe("/work_orders/0/notes");
   });
+
+  it("rejects an empty string path param value", async () => {
+    const deps = makeDeps();
+    await expect(
+      callEndpoint(deps, { role: "owner" }, "updateVendor", { pathParams: { vendorId: "" }, body: {} })
+    ).rejects.toThrow(InvalidPathParamError);
+    expect(deps.http.request).not.toHaveBeenCalled();
+  });
+
+  it('rejects "." as a path param value', async () => {
+    const deps = makeDeps();
+    await expect(
+      callEndpoint(deps, { role: "owner" }, "createWorkOrderNote", { pathParams: { id: "." }, body: { Note: "x" } })
+    ).rejects.toThrow(InvalidPathParamError);
+    expect(deps.http.request).not.toHaveBeenCalled();
+  });
 });
 
 describe("confirmWrite", () => {

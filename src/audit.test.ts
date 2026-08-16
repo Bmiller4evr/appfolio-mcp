@@ -11,6 +11,31 @@ describe("formatAuditMessage", () => {
     expect(msg).toContain("/work_orders/42");
   });
 
+  it("formats a rejected preview event distinctly from a normal preview and a confirmed-rejected event", () => {
+    const previewMsg = formatAuditMessage({ type: "preview", operationId: "updateWorkOrder", caller: "owner", url: "/work_orders/42" });
+    const rejectedPreviewMsg = formatAuditMessage({
+      type: "preview",
+      operationId: "updateWorkOrder",
+      caller: "owner",
+      url: "/work_orders/42",
+      outcome: "rejected",
+    });
+    const confirmedRejectedMsg = formatAuditMessage({
+      type: "confirmed",
+      operationId: "updateWorkOrder",
+      caller: "owner",
+      url: "/work_orders/42",
+      outcome: "rejected",
+    });
+
+    expect(rejectedPreviewMsg).toContain("owner");
+    expect(rejectedPreviewMsg).toContain("updateWorkOrder");
+    expect(rejectedPreviewMsg).toContain("denied");
+    expect(rejectedPreviewMsg).not.toContain("previewed");
+    expect(rejectedPreviewMsg).not.toEqual(previewMsg);
+    expect(rejectedPreviewMsg).not.toEqual(confirmedRejectedMsg);
+  });
+
   it("formats a confirmed success event", () => {
     const msg = formatAuditMessage({ type: "confirmed", caller: "admin", url: "/bills/9", outcome: "success" });
     expect(msg).toContain("admin");

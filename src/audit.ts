@@ -7,6 +7,9 @@ export function formatAuditMessage(event: AuditEvent): string {
   const operation = event.operationId ?? "unknown-operation";
 
   if (event.type === "preview") {
+    if (event.outcome === "rejected") {
+      return `:no_entry_sign: [${timestamp}] *${event.caller}* attempted \`${operation}\` → \`${event.url}\` and was denied`;
+    }
     return `:eyes: [${timestamp}] *${event.caller}* previewed \`${operation}\` → \`${event.url}\``;
   }
 

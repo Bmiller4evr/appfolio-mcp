@@ -105,13 +105,18 @@ export type CallEndpointResult =
 // so it can only ever be a single path segment.
 const PATH_PARAM_SEPARATORS = /[/\\?#]|\.\./;
 
+// A leading dot also has to be refused on its own: "." isn't caught by PATH_PARAM_SEPARATORS
+// (no ".." there), but new URL() still collapses a "/./" segment away, silently turning
+// "/work_orders/./notes" into "/work_orders/notes". An empty value is refused for the same
+// class of reason: encodeURIComponent("") is "", which collapses "/vendors/{vendorId}" down
+// to the collection endpoint "/vendors/" instead of a single resource.
 function resolvePath(path: string, pathParams: Record<string, string> = {}): string {
   return path.replace(/\{(\w+)\}/g, (_match, name) => {
     const value = pathParams[name];
     if (value === undefined) throw new PermissionError(`Missing path param: ${name}`);
-    if (PATH_PARAM_SEPARATORS.test(value)) {
+    if (value === "" || value.startsWith(".") || PATH_PARAM_SEPARATORS.test(value)) {
       throw new InvalidPathParamError(
-        `Invalid path param ${name}: must be a single path segment, without / \\ ? # or ..`
+        `Invalid path param ${name}: must be a non-empty single path segment, without / \\ ? # or .., and not starting with .`
       );
     }
     return encodeURIComponent(value);
