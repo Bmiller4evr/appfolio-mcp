@@ -67,6 +67,12 @@ describe("workOrderAging", () => {
     expect(result.workOrders[0].stalled).not.toContain("scheduled_start_passed");
   });
 
+  it("does not flag estimate_overdue when estimate_req_on is not yet due as of the given date", async () => {
+    const row = { ...BASE_ROW, estimate_req_on: "2026-09-01" };
+    const result = await workOrderAging(makeHttp([row]), { asOf: "2026-08-13" });
+    expect(result.workOrders[0].stalled).not.toContain("estimate_overdue");
+  });
+
   it("filters to requested properties and status client-side", async () => {
     const rows = [
       BASE_ROW,
