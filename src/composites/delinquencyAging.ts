@@ -48,7 +48,7 @@ function isTruthyFlag(value: unknown): boolean {
 export async function delinquencyAging(
   reportsHttp: Pick<AppFolioHttpClient, "request">,
   opts: { minBalance: number; properties?: string[] }
-): Promise<{ totals: AgingTotals; tenants: DelinquentTenant[] }> {
+): Promise<{ totals: AgingTotals; tenants: DelinquentTenant[]; truncated: boolean }> {
   const filters: Record<string, unknown> = {};
   if (opts.properties) filters.properties = { properties_ids: opts.properties };
 
@@ -84,5 +84,8 @@ export async function delinquencyAging(
     });
   }
 
-  return { totals, tenants };
+  // The underlying report caps its rows, so a larger delinquency list would otherwise produce
+  // confident totals computed from only part of it. Pass the flag through so callers can tell
+  // a complete answer from a partial one.
+  return { totals, tenants, truncated: report.truncated };
 }

@@ -77,8 +77,10 @@ export interface AuditEvent {
   operationId?: string;
   caller: Role;
   url: string;
-  // "rejected": the confirm token was valid, but re-authorization at confirm time failed
-  // (role/flags changed since the preview), so no request was ever sent to AppFolio.
+  // "rejected": authorization failed, so no request was ever sent to AppFolio. On a "preview"
+  // event the caller's role or the write flags refused the write before any preview was minted;
+  // on a "confirmed" event the token was valid but re-authorization at confirm time failed
+  // (role/flags changed since the preview).
   outcome?: "success" | "failure" | "rejected";
 }
 
@@ -154,7 +156,14 @@ export async function callEndpoint(
     return { executed: true, result };
   }
 
-  assertWriteAuthorized(deps, caller, op);
+  // A write refused here is the most interesting event in the audit channel, so it is logged
+  // like any other attempt, not dropped for never having reached a preview.
+  try {
+    assertWriteAuthorized(deps, caller, op);
+  } catch (err) {
+    await deps.notifyAudit({ type: "preview", operationId, caller: caller.role, url, outcome: "rejected" });
+    throw err;
+  }
 
   const write: PendingWrite = { method: op.method, url, body: params.body, operationId: op.operationId };
   const confirmToken = createConfirmToken(write, deps.tokenSecret);

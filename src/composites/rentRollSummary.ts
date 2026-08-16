@@ -37,7 +37,7 @@ function isOccupied(status: unknown): boolean {
 export async function rentRollSummary(
   reportsHttp: Pick<AppFolioHttpClient, "request">,
   opts: { asOf: string; properties?: string[] }
-): Promise<{ portfolio: PropertyTotals; byProperty: Record<string, PropertyTotals> }> {
+): Promise<{ portfolio: PropertyTotals; byProperty: Record<string, PropertyTotals>; truncated: boolean }> {
   const filters: Record<string, unknown> = { as_of_to: opts.asOf };
   if (opts.properties) filters.properties = { properties_ids: opts.properties };
 
@@ -70,5 +70,8 @@ export async function rentRollSummary(
     }
   }
 
-  return { portfolio, byProperty };
+  // The underlying report caps its rows, so a portfolio larger than that cap would otherwise
+  // produce confident totals computed from only part of it. Pass the flag through so callers
+  // can tell a complete answer from a partial one.
+  return { portfolio, byProperty, truncated: report.truncated };
 }

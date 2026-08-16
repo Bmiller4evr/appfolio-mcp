@@ -32,6 +32,9 @@ export interface WorkOrderAgingResult {
   byProperty: Record<string, AgedWorkOrder[]>;
   byVendor: Record<string, AgedWorkOrder[]>;
   byPriority: Record<string, AgedWorkOrder[]>;
+  // True when the underlying report hit its row cap, so these groupings cover only part of
+  // the open work orders and any count drawn from them is a floor, not a total.
+  truncated: boolean;
 }
 
 export async function workOrderAging(
@@ -79,5 +82,5 @@ export async function workOrderAging(
     (byPriority[entry.priority] ??= []).push(entry);
   }
 
-  return { workOrders, byProperty, byVendor, byPriority };
+  return { workOrders, byProperty, byVendor, byPriority, truncated: report.truncated };
 }

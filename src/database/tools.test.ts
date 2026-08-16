@@ -128,6 +128,32 @@ describe("callEndpoint: writes", () => {
     );
   });
 
+  it("audits a role-denied write as rejected, without sending the request", async () => {
+    const deps = makeDeps();
+    await expect(callEndpoint(deps, { role: "owner" }, "updateBill", { pathParams: { id: "1" } })).rejects.toThrow(
+      PermissionError
+    );
+    expect(deps.notifyAudit).toHaveBeenCalledWith({
+      type: "preview",
+      operationId: "updateBill",
+      caller: "owner",
+      url: "/bills/1",
+      outcome: "rejected",
+    });
+    expect(deps.http.request).not.toHaveBeenCalled();
+  });
+
+  it("audits a flag-disabled write as rejected, without sending the request", async () => {
+    const deps = makeDeps({ writesEnabled: false });
+    await expect(
+      callEndpoint(deps, { role: "owner" }, "createWorkOrderNote", { pathParams: { id: "42" }, body: {} })
+    ).rejects.toThrow(WritesDisabledError);
+    expect(deps.notifyAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "preview", operationId: "createWorkOrderNote", caller: "owner", outcome: "rejected" })
+    );
+    expect(deps.http.request).not.toHaveBeenCalled();
+  });
+
   it("rejects a write with WritesDisabledError when writesEnabled is false", async () => {
     const deps = makeDeps({ writesEnabled: false });
     await expect(
@@ -156,7 +182,9 @@ describe("callEndpoint: writes", () => {
       callEndpoint(deps, { role: "admin" }, "deleteInspection", { pathParams: { id: "1" } })
     ).rejects.toThrow(WritesDisabledError);
     expect(deps.http.request).not.toHaveBeenCalled();
-    expect(deps.notifyAudit).not.toHaveBeenCalled();
+    expect(deps.notifyAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "preview", operationId: "deleteInspection", caller: "admin", outcome: "rejected" })
+    );
   });
 });
 
@@ -358,6 +386,9 @@ describe("confirmWrite", () => {
 
     await expect(confirmWrite(deps, { role: "owner" }, preview.confirmToken)).rejects.toThrow(NotFoundError);
     expect(deps.http.request).not.toHaveBeenCalled();
+    expect(deps.notifyAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "confirmed", operationId: "deleteInspection", caller: "owner", outcome: "rejected" })
+    );
   });
 
   it("re-validation: a token minted for a destructive operation is rejected at confirm time once destructiveEnabled flips false", async () => {

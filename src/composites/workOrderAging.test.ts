@@ -87,6 +87,19 @@ describe("workOrderAging", () => {
     expect(result.workOrders[0].propertyId).toBe("p1");
   });
 
+  it("reports truncated: false when the report returned every row", async () => {
+    const result = await workOrderAging(makeHttp([BASE_ROW]), { asOf: "2026-08-13" });
+    expect(result.truncated).toBe(false);
+  });
+
+  it("reports truncated: true when the report hit its row cap, so the groupings are partial", async () => {
+    const rows = Array.from({ length: 501 }, () => ({ ...BASE_ROW }));
+    const result = await workOrderAging(makeHttp(rows), { asOf: "2026-08-13" });
+
+    expect(result.truncated).toBe(true);
+    expect(result.workOrders).toHaveLength(500);
+  });
+
   it("calls the real runReport gate for work_order and no longer gets UnverifiedReportError", async () => {
     const http = makeHttp([]);
     await expect(runReport(http, "work_order", {})).resolves.toEqual({

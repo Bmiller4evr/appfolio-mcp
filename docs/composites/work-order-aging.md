@@ -16,4 +16,6 @@
 
 **Assumptions:** age and both stall signals are presence/absence and before/after checks on the verified report's own date columns - no external clock or vendor-side data is consulted.
 
+**Truncation:** the underlying `run_report` call caps rows (500 by default), and this composite passes that cap's `truncated` flag straight through in its own result. Treat `truncated: true` as an incomplete answer: only the first 500 work orders were aged and grouped, so any count drawn from `byProperty`, `byVendor`, or `byPriority` is a floor rather than a total, and a stalled work order past the cap is simply absent. Narrow the request with `properties` or `status` and re-run rather than reporting the numbers as-is.
+
 **Read-only:** this composite only calls `runReport` against `work_order`, never a write-shaped operation.

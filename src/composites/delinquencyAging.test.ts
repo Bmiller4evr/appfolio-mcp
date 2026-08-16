@@ -53,6 +53,19 @@ describe("delinquencyAging", () => {
     });
   });
 
+  it("reports truncated: false when the report returned every row", async () => {
+    const result = await delinquencyAging(makeHttp(), { minBalance: 0 });
+    expect(result.truncated).toBe(false);
+  });
+
+  it("reports truncated: true when the report hit its row cap, so totals are partial", async () => {
+    const rows = Array.from({ length: 501 }, (_, i) => ({ ...FIXTURE_ROWS[0], occupancy_id: i }));
+    const result = await delinquencyAging(makeHttp(rows), { minBalance: 0 });
+
+    expect(result.truncated).toBe(true);
+    expect(result.totals.days0To30).toBeCloseTo(500 * 100, 5);
+  });
+
   it("calls the real runReport gate for delinquency and no longer gets UnverifiedReportError", async () => {
     const http = makeHttp([]);
     await expect(runReport(http, "delinquency", {})).resolves.toEqual({

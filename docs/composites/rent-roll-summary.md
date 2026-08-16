@@ -14,4 +14,6 @@
 
 **Assumptions:** one row per unit per the report's own `as_of_to` semantics; this tool does not de-duplicate or re-derive occupancy from lease dates itself.
 
+**Truncation:** the underlying `run_report` call caps rows (500 by default), and this composite passes that cap's `truncated` flag straight through in its own result. Treat `truncated: true` as an incomplete answer: occupancy counts, square footage, and rent gap were then computed over only the first 500 units, so every total is a floor rather than a portfolio figure. Narrow the request with `properties` and re-run rather than reporting the numbers as-is.
+
 **Read-only:** this composite only calls `runReport` against `rent_roll`, never a write-shaped operation.

@@ -17,4 +17,6 @@
 - `late_count` in the plan's original prose is actually named `late` on the live schema.
 - `collections_agency`, `payment_plan`, `nsf`, and `certified_funds_only` exist on the verified report but are not wired into this composite's output today - they're available on the raw report via `run_report` directly if needed.
 
+**Truncation:** the underlying `run_report` call caps rows (500 by default), and this composite passes that cap's `truncated` flag straight through in its own result. Treat `truncated: true` as an incomplete answer: the aging buckets were then summed over only the first 500 tenants, so both the totals and the tenant list are partial. Narrow the request with `properties` and re-run rather than reporting the numbers as-is.
+
 **Read-only:** this composite only calls `runReport` against `delinquency`, never a write-shaped operation.

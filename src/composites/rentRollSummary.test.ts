@@ -75,6 +75,22 @@ describe("rentRollSummary", () => {
     });
   });
 
+  it("reports truncated: false when the report returned every row", async () => {
+    const result = await rentRollSummary(makeHttp(), { asOf: "2026-08-13" });
+    expect(result.truncated).toBe(false);
+  });
+
+  it("reports truncated: true when the report hit its row cap, so totals are partial", async () => {
+    const rows = Array.from({ length: 501 }, (_, i) => ({
+      ...FIXTURE_ROWS[0],
+      unit_id: i,
+    }));
+    const result = await rentRollSummary(makeHttp(rows), { asOf: "2026-08-13" });
+
+    expect(result.truncated).toBe(true);
+    expect(result.portfolio.unitsOccupied).toBe(500);
+  });
+
   it("calls the real runReport gate for rent_roll and no longer gets UnverifiedReportError", async () => {
     const http = makeHttp([]);
     await expect(runReport(http, "rent_roll", { filters: { as_of_to: "2026-08-13" } })).resolves.toEqual({
