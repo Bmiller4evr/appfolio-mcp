@@ -1,5 +1,5 @@
-// ABOUTME: AppFolio Reports API (V2) catalog. vendor_directory and rent_roll have verified
-// ABOUTME: columns/filters, everything else is listed by id pending verification.
+// ABOUTME: AppFolio Reports API (V2) catalog. vendor_directory, rent_roll, and delinquency have
+// ABOUTME: verified columns/filters, everything else is listed by id pending verification.
 export interface ReportColumn {
   name: string;
   type: string;
@@ -76,8 +76,44 @@ export const REPORTS: ReportDescriptor[] = [
       { name: "non_revenue_units", type: "string" },
     ],
   },
+  // delinquency's V2 columns below are sourced from AppFolio's own Reports API OpenAPI schema
+  // export, provided by the project owner (components.schemas.DelinquencyRequest/Response), not
+  // browsed UI prose or a guess. See .superpowers/sdd/verified-report-columns.md.
+  {
+    id: "delinquency",
+    title: "Delinquency",
+    summary: "Aging balances by tenant.",
+    tags: ["financial"],
+    verified: true,
+    source: "AppFolio Reports API OpenAPI schema export",
+    columns: [
+      { name: "property_id", type: "integer" },
+      { name: "property_name", type: "string" },
+      { name: "unit", type: "string" },
+      { name: "unit_id", type: "integer" },
+      { name: "occupancy_id", type: "integer" },
+      { name: "name", type: "string" },
+      { name: "tenant_status", type: "string" },
+      { name: "00_to30", type: "string" },
+      { name: "30_to60", type: "string" },
+      { name: "60_to90", type: "string" },
+      { name: "90_plus", type: "string" },
+      { name: "in_collections", type: "string" },
+      { name: "collections_agency", type: "string" },
+      { name: "payment_plan", type: "string" },
+      { name: "nsf", type: "integer" },
+      { name: "late", type: "integer" },
+      { name: "certified_funds_only", type: "string" },
+    ],
+    filters: [
+      { name: "properties.properties_ids", type: "array" },
+      { name: "tenant_statuses", type: "array" },
+      { name: "amount_owed_in_account", type: "string" },
+      { name: "balance_operator.amount", type: "string" },
+      { name: "balance_operator.comparator", type: "string" },
+    ],
+  },
   // Known by id (V1 CSV export + AppFolio's Reports API), V2 columns NOT yet verified.
-  // Tasks 13-14 each verify and fill in the report they depend on before using it.
-  { id: "delinquency", title: "Delinquency", summary: "Aging balances by tenant.", tags: ["financial"], verified: false, columns: [], filters: [] },
+  // Task 14 verifies and fills in the report it depends on before using it.
   { id: "work_order", title: "Work Orders", summary: "Open and closed maintenance tickets.", tags: ["maintenance"], verified: false, columns: [], filters: [] },
 ];

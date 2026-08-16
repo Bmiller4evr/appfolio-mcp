@@ -7,7 +7,7 @@ describe("listReports", () => {
   it("lists all reports, flagging which are verified", () => {
     const results = listReports();
     expect(results.find((r) => r.id === "vendor_directory")?.verified).toBe(true);
-    expect(results.find((r) => r.id === "delinquency")?.verified).toBe(false);
+    expect(results.find((r) => r.id === "work_order")?.verified).toBe(false);
   });
 
   it("filters by search text", () => {
@@ -45,7 +45,7 @@ describe("runReport", () => {
 
   it("refuses to run an unverified report rather than guess at its columns", async () => {
     const http = { request: vi.fn() };
-    await expect(runReport(http, "delinquency")).rejects.toThrow(UnverifiedReportError);
+    await expect(runReport(http, "work_order")).rejects.toThrow(UnverifiedReportError);
     expect(http.request).not.toHaveBeenCalled();
   });
 });
