@@ -22,16 +22,26 @@ export function resolveRole(orgRole: string): Role {
 }
 
 // jose caches JWKS fetches internally per remote-set instance, so we memoize the remote set
-// itself per AuthKit domain rather than creating a fresh one (and losing that cache) on every call.
-const jwksByDomain = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
+// itself rather than creating a fresh one (and losing that cache) on every call. AuthKit
+// publishes one key set per client, so the cache is keyed by both domain and client id.
+const jwksByClient = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
-function getJwks(authkitDomain: string): ReturnType<typeof createRemoteJWKSet> {
-  let jwks = jwksByDomain.get(authkitDomain);
+function getJwks(authkitDomain: string, clientId: string): ReturnType<typeof createRemoteJWKSet> {
+  const cacheKey = `${authkitDomain}:${clientId}`;
+  let jwks = jwksByClient.get(cacheKey);
   if (!jwks) {
-    jwks = createRemoteJWKSet(new URL(`${authkitDomain}/oauth2/jwks`));
-    jwksByDomain.set(authkitDomain, jwks);
+    jwks = createRemoteJWKSet(new URL(`${authkitDomain}/sso/jwks/${clientId}`));
+    jwksByClient.set(cacheKey, jwks);
   }
   return jwks;
+}
+
+// WorkOS's own documentation is inconsistent about whether the issuer carries a trailing
+// slash, so compare with trailing slashes stripped rather than gambling on a byte-exact match.
+// A different issuer domain still fails this comparison.
+function isSameIssuer(tokenIssuer: string, configuredDomain: string): boolean {
+  const strip = (value: string) => value.replace(/\/+$/, "");
+  return strip(tokenIssuer) === strip(configuredDomain);
 }
 
 // Takes (req, bearerToken, config) rather than mcp-handler's withMcpAuth's expected
@@ -45,12 +55,19 @@ export async function verifyToken(
 ): Promise<AuthInfo | undefined> {
   if (!bearerToken) return undefined;
 
-  const jwks = getJwks(config.authkitDomain);
+  const jwks = getJwks(config.authkitDomain, config.clientId);
   try {
-    const { payload } = await jwtVerify(bearerToken, jwks, {
-      issuer: config.authkitDomain,
-      audience: config.clientId,
-    });
+    const { payload } = await jwtVerify(bearerToken, jwks);
+
+    // Checked here rather than through jose's `issuer` option, which demands an exact string
+    // match and would reject a token differing only by a trailing slash.
+    const issuer = payload.iss;
+    if (typeof issuer !== "string" || !isSameIssuer(issuer, config.authkitDomain)) return undefined;
+
+    // AuthKit access tokens identify the application with a `client_id` claim and carry no
+    // `aud` claim at all, so this is what rejects a token minted for a different WorkOS client.
+    if ((payload as { client_id?: string }).client_id !== config.clientId) return undefined;
+
     const userId = payload.sub;
     if (typeof userId !== "string" || !userId) return undefined;
 
