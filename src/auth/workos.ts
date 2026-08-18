@@ -30,7 +30,11 @@ function getJwks(authkitDomain: string, clientId: string): ReturnType<typeof cre
   const cacheKey = `${authkitDomain}:${clientId}`;
   let jwks = jwksByClient.get(cacheKey);
   if (!jwks) {
-    jwks = createRemoteJWKSet(new URL(`${authkitDomain}/sso/jwks/${clientId}`));
+    // Stripped for the same reason as the issuer comparison below: WorkOS's own documentation
+    // is inconsistent about whether the configured domain carries a trailing slash, and one
+    // would otherwise produce a double slash here that 404s against the real JWKS endpoint.
+    const domain = authkitDomain.replace(/\/+$/, "");
+    jwks = createRemoteJWKSet(new URL(`${domain}/sso/jwks/${clientId}`));
     jwksByClient.set(cacheKey, jwks);
   }
   return jwks;

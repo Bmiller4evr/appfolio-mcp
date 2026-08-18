@@ -163,8 +163,25 @@ describe("verifyToken", () => {
 
     await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
 
+    expect(jwtVerify).toHaveBeenCalled();
     const options = vi.mocked(jwtVerify).mock.calls.at(-1)?.[2] ?? {};
     expect(options).not.toHaveProperty("audience");
+  });
+
+  it("builds a JWKS URL with no double slash when authkitDomain has a trailing slash", async () => {
+    const config = { ...CONFIG, authkitDomain: "https://trailing-slash.example.com/" };
+    vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ iss: "https://trailing-slash.example.com" }));
+
+    await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", config);
+
+    const urls = vi
+      .mocked(createRemoteJWKSet)
+      .mock.calls.map(([url]) => url as URL)
+      .filter((url) => url.origin === "https://trailing-slash.example.com");
+    expect(urls).not.toHaveLength(0);
+    for (const url of urls) {
+      expect(url.pathname).toBe(`/sso/jwks/${config.clientId}`);
+    }
   });
 
   it("accepts an issuer that differs from the configured domain only by a trailing slash", async () => {
