@@ -1,0 +1,31 @@
+{
+  "name": "appfolio-mcp",
+  "version": "1.0.0",
+  "description": "Remote MCP server for AppFolio's Reports and Database APIs",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "test": "vitest run",
+    "generate:catalog": "tsx scripts/generate-database-catalog.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@workos-inc/node": "^10.10.0",
+    "jose": "^6.2.9",
+    "mcp-handler": "^2.1.1",
+    "next": "^16.3.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}
