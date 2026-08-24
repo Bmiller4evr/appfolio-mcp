@@ -17,6 +17,10 @@ const CONFIG = {
   organizationId: "org_123",
 };
 
+// The resource identifier every test's request resolves to, which is also the audience the
+// authorization server stamps on a token issued for that RFC 8707 resource parameter.
+const RESOURCE = "https://mcp.example.com";
+
 describe("resolveRole", () => {
   it("maps the WorkOS admin org role to admin", () => {
     expect(resolveRole("admin")).toBe("admin");
@@ -33,6 +37,7 @@ function payloadWith(overrides: Record<string, unknown> = {}) {
   return {
     payload: {
       iss: CONFIG.authkitDomain,
+      aud: RESOURCE,
       client_id: CONFIG.clientId,
       sub: "user_123",
       org_id: "org_123",
@@ -126,7 +131,7 @@ describe("verifyToken", () => {
     expect(result).toBeUndefined();
   });
 
-  it("points the JWKS remote set at the AuthKit per-client JWKS path", async () => {
+  it("points the JWKS remote set at the jwks_uri path the authorization server publishes", async () => {
     const config = { ...CONFIG, authkitDomain: "https://jwks-path.example.com" };
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ iss: config.authkitDomain }));
 
@@ -138,7 +143,8 @@ describe("verifyToken", () => {
       .filter((url) => url.origin === "https://jwks-path.example.com");
     expect(urls).not.toHaveLength(0);
     for (const url of urls) {
-      expect(url.pathname).toBe(`/sso/jwks/${config.clientId}`);
+      expect(url.pathname).toBe("/oauth2/jwks");
+      expect(url.pathname).not.toContain(config.clientId);
     }
   });
 
@@ -158,14 +164,44 @@ describe("verifyToken", () => {
     expect(result).toBeUndefined();
   });
 
-  it("does not ask jose to validate an aud claim, since AuthKit tokens carry none", async () => {
+  it("asks jose to validate the aud claim against the resource this server is reached at", async () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith());
 
-    await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+    await verifyToken(new Request("https://mcp.example.com/api/mcp"), "valid.jwt.token", CONFIG);
 
     expect(jwtVerify).toHaveBeenCalled();
     const options = vi.mocked(jwtVerify).mock.calls.at(-1)?.[2] ?? {};
-    expect(options).not.toHaveProperty("audience");
+    expect(options).toHaveProperty("audience", RESOURCE);
+  });
+
+  it("takes the expected audience from the forwarded host a proxy puts the server behind", async () => {
+    vi.mocked(jwtVerify).mockResolvedValue(payloadWith());
+
+    await verifyToken(
+      new Request("http://localhost:3000/api/mcp", {
+        headers: { "x-forwarded-host": "public.example.com", "x-forwarded-proto": "https" },
+      }),
+      "valid.jwt.token",
+      CONFIG
+    );
+
+    const options = vi.mocked(jwtVerify).mock.calls.at(-1)?.[2] ?? {};
+    expect(options).toHaveProperty("audience", "https://public.example.com");
+  });
+
+  it("takes the expected audience from an RFC 7239 Forwarded header when that is all a proxy sends", async () => {
+    vi.mocked(jwtVerify).mockResolvedValue(payloadWith());
+
+    await verifyToken(
+      new Request("http://localhost:3000/api/mcp", {
+        headers: { forwarded: 'proto=https;host="public.example.com", proto=http;host=hop-two.example.com' },
+      }),
+      "valid.jwt.token",
+      CONFIG
+    );
+
+    const options = vi.mocked(jwtVerify).mock.calls.at(-1)?.[2] ?? {};
+    expect(options).toHaveProperty("audience", "https://public.example.com");
   });
 
   it("builds a JWKS URL with no double slash when authkitDomain has a trailing slash", async () => {
@@ -180,7 +216,7 @@ describe("verifyToken", () => {
       .filter((url) => url.origin === "https://trailing-slash.example.com");
     expect(urls).not.toHaveLength(0);
     for (const url of urls) {
-      expect(url.pathname).toBe(`/sso/jwks/${config.clientId}`);
+      expect(url.pathname).toBe("/oauth2/jwks");
     }
   });
 
@@ -222,13 +258,11 @@ describe("verifyToken", () => {
 
     const jwksCallsForDomain = vi
       .mocked(createRemoteJWKSet)
-      .mock.calls.filter(
-        ([url]) => url.toString() === `https://cache-test.example.com/sso/jwks/${config.clientId}`
-      );
+      .mock.calls.filter(([url]) => url.toString() === "https://cache-test.example.com/oauth2/jwks");
     expect(jwksCallsForDomain).toHaveLength(1);
   });
 
-  it("builds a separate JWKS remote set per client on the same domain", async () => {
+  it("shares one JWKS remote set across clients on the same domain", async () => {
     const domain = "https://multi-client.example.com";
     const first = { ...CONFIG, authkitDomain: domain, clientId: "client_first" };
     const second = { ...CONFIG, authkitDomain: domain, clientId: "client_second" };
@@ -237,11 +271,11 @@ describe("verifyToken", () => {
     await verifyToken(new Request("https://mcp.example.com"), "token.one", first);
     await verifyToken(new Request("https://mcp.example.com"), "token.two", second);
 
-    const paths = vi
+    const urls = vi
       .mocked(createRemoteJWKSet)
       .mock.calls.map(([url]) => url as URL)
       .filter((url) => url.origin === domain)
-      .map((url) => url.pathname);
-    expect(paths).toEqual(["/sso/jwks/client_first", "/sso/jwks/client_second"]);
+      .map((url) => url.toString());
+    expect(urls).toEqual([`${domain}/oauth2/jwks`]);
   });
 });

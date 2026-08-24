@@ -5,3 +5,6 @@ node_modules/
 .env.*.local
 .vercel
 .env*
+next-env.d.ts
+tsconfig.tsbuildinfo
+.superpowers-adhoc-report.md

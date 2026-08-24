@@ -43,12 +43,13 @@ function mcpRequest(body: unknown, bearerToken?: string): Request {
   return new Request("https://mcp.example.com/api/mcp", { method: "POST", headers, body: JSON.stringify(body) });
 }
 
-// Mirrors the claims a real AuthKit access token carries, including the iss and client_id
-// that verifyToken checks and the absence of any aud claim.
+// Mirrors the claims a real access token carries, including the iss and client_id that
+// verifyToken checks and the aud naming the resource the token was requested for.
 function authenticateAs(role: string): void {
   vi.mocked(jwtVerify).mockResolvedValue({
     payload: {
       iss: process.env.WORKOS_AUTHKIT_DOMAIN,
+      aud: "https://mcp.example.com",
       client_id: process.env.WORKOS_CLIENT_ID,
       sub: "user_123",
       org_id: "org_123",

@@ -22,20 +22,21 @@ export function resolveRole(orgRole: string): Role {
 }
 
 // jose caches JWKS fetches internally per remote-set instance, so we memoize the remote set
-// itself rather than creating a fresh one (and losing that cache) on every call. AuthKit
-// publishes one key set per client, so the cache is keyed by both domain and client id.
-const jwksByClient = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
+// itself rather than creating a fresh one (and losing that cache) on every call. The
+// authorization server publishes one key set per issuer, so the domain alone keys the cache.
+const jwksByDomain = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
-function getJwks(authkitDomain: string, clientId: string): ReturnType<typeof createRemoteJWKSet> {
-  const cacheKey = `${authkitDomain}:${clientId}`;
-  let jwks = jwksByClient.get(cacheKey);
+// The path the authorization server's RFC 8414 discovery document names as its jwks_uri, e.g.
+// {"jwks_uri": "https://<your-authkit-domain>/oauth2/jwks", ...}.
+function getJwks(authkitDomain: string): ReturnType<typeof createRemoteJWKSet> {
+  // Stripped for the same reason as the issuer comparison below: WorkOS's own documentation
+  // is inconsistent about whether the configured domain carries a trailing slash, and one
+  // would otherwise produce a double slash here that 404s against the real JWKS endpoint.
+  const domain = authkitDomain.replace(/\/+$/, "");
+  let jwks = jwksByDomain.get(domain);
   if (!jwks) {
-    // Stripped for the same reason as the issuer comparison below: WorkOS's own documentation
-    // is inconsistent about whether the configured domain carries a trailing slash, and one
-    // would otherwise produce a double slash here that 404s against the real JWKS endpoint.
-    const domain = authkitDomain.replace(/\/+$/, "");
-    jwks = createRemoteJWKSet(new URL(`${domain}/sso/jwks/${clientId}`));
-    jwksByClient.set(cacheKey, jwks);
+    jwks = createRemoteJWKSet(new URL(`${domain}/oauth2/jwks`));
+    jwksByDomain.set(domain, jwks);
   }
   return jwks;
 }
@@ -48,28 +49,58 @@ function isSameIssuer(tokenIssuer: string, configuredDomain: string): boolean {
   return strip(tokenIssuer) === strip(configuredDomain);
 }
 
+// The RFC 8707 resource indicator this server is reached at, which clients send as `resource`
+// on the authorization request and the authorization server stamps into the token's aud.
+// Derived from the request exactly as mcp-handler's protectedResourceHandler derives the
+// `resource` it advertises (public origin behind any proxy), so the value we advertise and the
+// value we demand can never disagree.
+function resourceIdentifier(req: Request): string {
+  const forwardedHost = req.headers.get("x-forwarded-host");
+  if (forwardedHost) {
+    const host = forwardedHost.split(",")[0].trim();
+    const proto = req.headers.get("x-forwarded-proto")?.split(",")[0].trim() || "https";
+    return `${proto}://${host}`;
+  }
+  const forwarded = req.headers.get("forwarded");
+  if (forwarded) {
+    const directives = new Map<string, string>();
+    for (const pair of forwarded.split(",")[0].split(";")) {
+      const [key, value] = pair.split("=").map((part) => part.trim().toLowerCase());
+      if (key && value) directives.set(key, value.replace(/^"|"$/g, ""));
+    }
+    const host = directives.get("host");
+    if (host) return `${directives.get("proto") || "https"}://${host}`;
+  }
+  return new URL(req.url).origin;
+}
+
 // Takes (req, bearerToken, config) rather than mcp-handler's withMcpAuth's expected
 // (req, bearerToken) => AuthInfo | undefined shape, since config has no default value. Task 16
 // must wrap this in a closure before passing it to withMcpAuth, not pass it directly, e.g.:
 //   withMcpAuth(handler, (req, token) => verifyToken(req, token, config), opts)
 export async function verifyToken(
-  _req: Request,
+  req: Request,
   bearerToken: string | undefined,
   config: WorkOSConfig
 ): Promise<AuthInfo | undefined> {
   if (!bearerToken) return undefined;
 
-  const jwks = getJwks(config.authkitDomain, config.clientId);
+  const jwks = getJwks(config.authkitDomain);
   try {
-    const { payload } = await jwtVerify(bearerToken, jwks);
+    // jose does the aud comparison itself, which also covers an array-valued aud claim. A token
+    // issued for some other resource server, or carrying no aud at all, fails here.
+    const { payload } = await jwtVerify(bearerToken, jwks, { audience: resourceIdentifier(req) });
 
     // Checked here rather than through jose's `issuer` option, which demands an exact string
     // match and would reject a token differing only by a trailing slash.
     const issuer = payload.iss;
     if (typeof issuer !== "string" || !isSameIssuer(issuer, config.authkitDomain)) return undefined;
 
-    // AuthKit access tokens identify the application with a `client_id` claim and carry no
-    // `aud` claim at all, so this is what rejects a token minted for a different WorkOS client.
+    // The `client_id` claim names the OAuth client the token was issued to. Requiring our own
+    // application's client id is what stops a token issued to some other client, for a user of
+    // our organization, from being replayed here. This is stricter than the aud check above:
+    // a client registered dynamically through the authorization server's registration endpoint
+    // gets its own client id and is refused, so the connector must use our configured client.
     if ((payload as { client_id?: string }).client_id !== config.clientId) return undefined;
 
     const userId = payload.sub;
