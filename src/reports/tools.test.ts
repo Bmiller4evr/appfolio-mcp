@@ -98,4 +98,25 @@ describe("runReport", () => {
     );
     expect(http.request).not.toHaveBeenCalled();
   });
+
+  it("handles reports whose V2 endpoint returns a raw array instead of { results }", async () => {
+    // Confirmed live against a real account: balance_sheet, cash_flow_detail, and several other
+    // financial reports return a bare JSON array as the whole response body, not { results }.
+    // A caller has no way to know which shape a given report id will use ahead of time.
+    const http = { request: vi.fn().mockResolvedValue([{ account_name: "Cash", balance: "100.00" }]) };
+    const result = await runReport(http, "balance_sheet", { filters: { posted_on_to: "2026-08-24" } });
+    expect(result).toEqual({
+      rows: [{ account_name: "Cash", balance: "100.00" }],
+      count: 1,
+      truncated: false,
+      nextPageUrl: undefined,
+    });
+  });
+
+  it("truncates a raw-array response to maxRows and reports truncation", async () => {
+    const http = { request: vi.fn().mockResolvedValue([{ id: 1 }, { id: 2 }, { id: 3 }]) };
+    const result = await runReport(http, "balance_sheet", { maxRows: 2 });
+    expect(result.count).toBe(2);
+    expect(result.truncated).toBe(true);
+  });
 });

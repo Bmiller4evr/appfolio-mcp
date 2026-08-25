@@ -41,15 +41,22 @@ export async function runReport(
   const body: Record<string, unknown> = { filters: opts.filters ?? {} };
   if (opts.columns) body.columns = opts.columns;
 
-  const response = (await http.request("POST", `/reports/${reportId}`, { body })) as {
-    results: Record<string, unknown>[];
-    next_page_url?: string;
-  };
-  const rows = response.results.slice(0, maxRows);
+  const response = await http.request("POST", `/reports/${reportId}`, { body });
+
+  // Confirmed live against several real reports (balance_sheet, cash_flow_detail, and other
+  // financial reports among them): AppFolio returns a bare JSON array as the whole response body
+  // for some V2 reports, and { results: [...] } for others. Nothing in a report's own catalog
+  // entry predicts which shape it'll use, so both have to be handled here.
+  const allRows = Array.isArray(response)
+    ? (response as Record<string, unknown>[])
+    : (response as { results: Record<string, unknown>[] }).results;
+  const nextPageUrl = Array.isArray(response) ? undefined : (response as { next_page_url?: string }).next_page_url;
+
+  const rows = allRows.slice(0, maxRows);
   return {
     rows,
     count: rows.length,
-    truncated: response.results.length > maxRows,
-    nextPageUrl: response.next_page_url,
+    truncated: allRows.length > maxRows,
+    nextPageUrl,
   };
 }
