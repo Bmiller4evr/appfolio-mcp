@@ -12,7 +12,22 @@ describe("listReports", () => {
   });
 
   it("filters by search text", () => {
-    expect(listReports("vendor").map((r) => r.id)).toEqual(["vendor_directory"]);
+    expect(listReports("vendor_directory").map((r) => r.id)).toEqual(["vendor_directory"]);
+    const vendorish = listReports("vendor").map((r) => r.id);
+    expect(vendorish).toContain("vendor_directory");
+    expect(vendorish).toContain("vendor_ledger");
+    expect(vendorish).not.toContain("balance_sheet");
+  });
+
+  it("lists the reports ingested from CryptoCultCurt and from live verification", () => {
+    const ids = listReports().map((r) => r.id);
+    expect(ids).toContain("balance_sheet");
+    expect(ids).toContain("tenant_directory");
+    expect(ids).toContain("in_progress_workflows");
+  });
+
+  it("omits screening_assessment, which is not a real report id for this account", () => {
+    expect(listReports().map((r) => r.id)).not.toContain("screening_assessment");
   });
 });
 
@@ -22,8 +37,31 @@ describe("describeReport", () => {
     expect(report.columns.map((c) => c.name)).toContain("liability_ins_expires");
   });
 
+  it("returns verified columns for a report sourced from CryptoCultCurt", () => {
+    const report = describeReport("balance_sheet");
+    expect(report.verified).toBe(true);
+    expect(report.source).toBe("cryptocultcurt-v2 (ISC, attributed)");
+    expect(report.columns).toEqual([
+      { name: "account_name", type: "string" },
+      { name: "balance", type: "number" },
+      { name: "account_number", type: "string" },
+    ]);
+    expect(report.filters.map((f) => f.name)).toContain("properties.property_groups_ids");
+  });
+
+  it("returns live-verified columns for the reports CryptoCultCurt got wrong", () => {
+    const report = describeReport("tenant_directory");
+    expect(report.verified).toBe(true);
+    expect(report.source).toBe("live-verified against Perpetual Realty account, 2026-08-25");
+    expect(report.columns.map((c) => c.name)).toContain("tenant_portal_activated");
+  });
+
   it("throws NotFoundError for an unknown report", () => {
     expect(() => describeReport("nope")).toThrow(NotFoundError);
+  });
+
+  it("throws NotFoundError for screening_assessment, confirmed not to be a real report", () => {
+    expect(() => describeReport("screening_assessment")).toThrow(NotFoundError);
   });
 });
 
