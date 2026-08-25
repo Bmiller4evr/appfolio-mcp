@@ -17,9 +17,11 @@ const CONFIG = {
   organizationId: "org_123",
 };
 
-// The resource identifier every test's request resolves to, which is also the audience the
-// authorization server stamps on a token issued for that RFC 8707 resource parameter.
-const RESOURCE = "https://mcp.example.com";
+// The request verifyToken is handed. Nothing about it decides whether a token is accepted:
+// every check reads the token's own claims and the config, never the request.
+function mcpRequest(): Request {
+  return new Request("https://mcp.example.com/api/mcp");
+}
 
 // verifyToken reports every rejection through console.error, so the spy both keeps the suite's
 // output pristine and gives the logging tests below the exact arguments each path passed.
@@ -49,7 +51,7 @@ function payloadWith(overrides: Record<string, unknown> = {}) {
   return {
     payload: {
       iss: CONFIG.authkitDomain,
-      aud: RESOURCE,
+      aud: CONFIG.clientId,
       client_id: CONFIG.clientId,
       sub: "user_123",
       org_id: "org_123",
@@ -61,14 +63,14 @@ function payloadWith(overrides: Record<string, unknown> = {}) {
 
 describe("verifyToken", () => {
   it("returns undefined when no bearer token is present", async () => {
-    const result = await verifyToken(new Request("https://mcp.example.com"), undefined, CONFIG);
+    const result = await verifyToken(mcpRequest(), undefined, CONFIG);
     expect(result).toBeUndefined();
   });
 
   it("returns AuthInfo with the resolved role in extra, for a valid token", async () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith());
 
-    const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+    const result = await verifyToken(mcpRequest(), "valid.jwt.token", CONFIG);
 
     expect(result).toEqual({
       token: "valid.jwt.token",
@@ -80,14 +82,14 @@ describe("verifyToken", () => {
 
   it("returns undefined when jwtVerify rejects an invalid token", async () => {
     vi.mocked(jwtVerify).mockRejectedValue(new Error("signature invalid"));
-    const result = await verifyToken(new Request("https://mcp.example.com"), "garbage", CONFIG);
+    const result = await verifyToken(mcpRequest(), "garbage", CONFIG);
     expect(result).toBeUndefined();
   });
 
   it("maps a non-admin role claim to owner", async () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ role: "member" }));
 
-    const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+    const result = await verifyToken(mcpRequest(), "valid.jwt.token", CONFIG);
 
     expect(result).toEqual({
       token: "valid.jwt.token",
@@ -100,7 +102,7 @@ describe("verifyToken", () => {
   it("returns undefined when the token has no role claim at all", async () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ role: undefined }));
 
-    const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+    const result = await verifyToken(mcpRequest(), "valid.jwt.token", CONFIG);
 
     expect(result).toBeUndefined();
   });
@@ -108,7 +110,7 @@ describe("verifyToken", () => {
   it("returns undefined for a token from another organization", async () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ org_id: "org_someone_else" }));
 
-    const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+    const result = await verifyToken(mcpRequest(), "valid.jwt.token", CONFIG);
 
     expect(result).toBeUndefined();
   });
@@ -116,7 +118,7 @@ describe("verifyToken", () => {
   it("returns undefined for a token with no organization claim", async () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ org_id: undefined }));
 
-    const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+    const result = await verifyToken(mcpRequest(), "valid.jwt.token", CONFIG);
 
     expect(result).toBeUndefined();
   });
@@ -126,11 +128,7 @@ describe("verifyToken", () => {
       new Error('JWTExpired: "exp" claim timestamp check failed')
     );
 
-    const result = await verifyToken(
-      new Request("https://mcp.example.com"),
-      "expired.jwt.token",
-      CONFIG
-    );
+    const result = await verifyToken(mcpRequest(), "expired.jwt.token", CONFIG);
 
     expect(result).toBeUndefined();
   });
@@ -138,7 +136,7 @@ describe("verifyToken", () => {
   it("returns undefined when the token payload has no sub claim", async () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ sub: undefined }));
 
-    const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+    const result = await verifyToken(mcpRequest(), "valid.jwt.token", CONFIG);
 
     expect(result).toBeUndefined();
   });
@@ -147,7 +145,7 @@ describe("verifyToken", () => {
     const config = { ...CONFIG, authkitDomain: "https://jwks-path.example.com" };
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ iss: config.authkitDomain }));
 
-    await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", config);
+    await verifyToken(mcpRequest(), "valid.jwt.token", config);
 
     const urls = vi
       .mocked(createRemoteJWKSet)
@@ -166,7 +164,7 @@ describe("verifyToken", () => {
   it("accepts a token minted for a dynamically registered client of our organization", async () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ client_id: "https://claude.ai/.well-known/oauth-client" }));
 
-    const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+    const result = await verifyToken(mcpRequest(), "valid.jwt.token", CONFIG);
 
     expect(result).toEqual({
       token: "valid.jwt.token",
@@ -179,56 +177,47 @@ describe("verifyToken", () => {
   it("accepts a token with no client_id claim", async () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ client_id: undefined }));
 
-    const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+    const result = await verifyToken(mcpRequest(), "valid.jwt.token", CONFIG);
 
     expect(result?.extra.userId).toBe("user_123");
   });
 
-  it("asks jose to validate the aud claim against the resource this server is reached at, tolerating a trailing slash", async () => {
+  // A real access token from a live CIMD-registered connector was decoded and carried our own
+  // WorkOS application's client id in aud, so that is the single value jose is asked to match.
+  it("asks jose to validate the aud claim against our WorkOS application's client id", async () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith());
 
-    await verifyToken(new Request("https://mcp.example.com/api/mcp"), "valid.jwt.token", CONFIG);
+    await verifyToken(mcpRequest(), "valid.jwt.token", CONFIG);
 
     expect(jwtVerify).toHaveBeenCalled();
     const options = vi.mocked(jwtVerify).mock.calls.at(-1)?.[2] ?? {};
-    expect(options).toHaveProperty("audience", [RESOURCE, `${RESOURCE}/`]);
+    expect(options).toHaveProperty("audience", CONFIG.clientId);
   });
 
-  it("takes the expected audience from the forwarded host a proxy puts the server behind", async () => {
+  it("asks for the same audience whatever host and proxy headers the request carries", async () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith());
 
     await verifyToken(
       new Request("http://localhost:3000/api/mcp", {
-        headers: { "x-forwarded-host": "public.example.com", "x-forwarded-proto": "https" },
+        headers: {
+          "x-forwarded-host": "public.example.com",
+          "x-forwarded-proto": "https",
+          forwarded: 'proto=https;host="another.example.com"',
+        },
       }),
       "valid.jwt.token",
       CONFIG
     );
 
     const options = vi.mocked(jwtVerify).mock.calls.at(-1)?.[2] ?? {};
-    expect(options).toHaveProperty("audience", ["https://public.example.com", "https://public.example.com/"]);
-  });
-
-  it("takes the expected audience from an RFC 7239 Forwarded header when that is all a proxy sends", async () => {
-    vi.mocked(jwtVerify).mockResolvedValue(payloadWith());
-
-    await verifyToken(
-      new Request("http://localhost:3000/api/mcp", {
-        headers: { forwarded: 'proto=https;host="public.example.com", proto=http;host=hop-two.example.com' },
-      }),
-      "valid.jwt.token",
-      CONFIG
-    );
-
-    const options = vi.mocked(jwtVerify).mock.calls.at(-1)?.[2] ?? {};
-    expect(options).toHaveProperty("audience", ["https://public.example.com", "https://public.example.com/"]);
+    expect(options).toHaveProperty("audience", CONFIG.clientId);
   });
 
   it("builds a JWKS URL with no double slash when authkitDomain has a trailing slash", async () => {
     const config = { ...CONFIG, authkitDomain: "https://trailing-slash.example.com/" };
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ iss: "https://trailing-slash.example.com" }));
 
-    await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", config);
+    await verifyToken(mcpRequest(), "valid.jwt.token", config);
 
     const urls = vi
       .mocked(createRemoteJWKSet)
@@ -243,7 +232,7 @@ describe("verifyToken", () => {
   it("accepts an issuer that differs from the configured domain only by a trailing slash", async () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ iss: `${CONFIG.authkitDomain}/` }));
 
-    const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+    const result = await verifyToken(mcpRequest(), "valid.jwt.token", CONFIG);
 
     expect(result).toEqual({
       token: "valid.jwt.token",
@@ -256,7 +245,7 @@ describe("verifyToken", () => {
   it("returns undefined for a token from a genuinely different issuer domain", async () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ iss: "https://auth.attacker.example.com" }));
 
-    const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+    const result = await verifyToken(mcpRequest(), "valid.jwt.token", CONFIG);
 
     expect(result).toBeUndefined();
   });
@@ -264,7 +253,7 @@ describe("verifyToken", () => {
   it("returns undefined when the token carries no issuer claim", async () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ iss: undefined }));
 
-    const result = await verifyToken(new Request("https://mcp.example.com"), "valid.jwt.token", CONFIG);
+    const result = await verifyToken(mcpRequest(), "valid.jwt.token", CONFIG);
 
     expect(result).toBeUndefined();
   });
@@ -273,8 +262,8 @@ describe("verifyToken", () => {
     const config = { ...CONFIG, authkitDomain: "https://cache-test.example.com" };
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ iss: config.authkitDomain }));
 
-    await verifyToken(new Request("https://mcp.example.com"), "token.one", config);
-    await verifyToken(new Request("https://mcp.example.com"), "token.two", config);
+    await verifyToken(mcpRequest(), "token.one", config);
+    await verifyToken(mcpRequest(), "token.two", config);
 
     const jwksCallsForDomain = vi
       .mocked(createRemoteJWKSet)
@@ -288,8 +277,8 @@ describe("verifyToken", () => {
     const second = { ...CONFIG, authkitDomain: domain, clientId: "client_second" };
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ iss: domain }));
 
-    await verifyToken(new Request("https://mcp.example.com"), "token.one", first);
-    await verifyToken(new Request("https://mcp.example.com"), "token.two", second);
+    await verifyToken(mcpRequest(), "token.one", first);
+    await verifyToken(mcpRequest(), "token.two", second);
 
     const urls = vi
       .mocked(createRemoteJWKSet)
@@ -329,13 +318,13 @@ describe("verifyToken rejection logging", () => {
   async function logsFor(payload: Record<string, unknown>): Promise<unknown[][]> {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith(payload));
     consoleError.mockClear();
-    await verifyToken(new Request(RESOURCE), TOKEN, CONFIG);
+    await verifyToken(mcpRequest(), TOKEN, CONFIG);
     return consoleError.mock.calls;
   }
 
   it("names the missing bearer token", async () => {
     consoleError.mockClear();
-    await verifyToken(new Request(RESOURCE), undefined, CONFIG);
+    await verifyToken(mcpRequest(), undefined, CONFIG);
     expect(consoleError.mock.calls).toEqual([["verifyToken: rejected, no bearer token"]]);
   });
 
@@ -343,7 +332,7 @@ describe("verifyToken rejection logging", () => {
     vi.mocked(jwtVerify).mockRejectedValue(new Error("signature verification failed"));
     consoleError.mockClear();
 
-    await verifyToken(new Request(RESOURCE), TOKEN, CONFIG);
+    await verifyToken(mcpRequest(), TOKEN, CONFIG);
 
     expect(consoleError.mock.calls).toEqual([["verifyToken: rejected, jose verification threw"]]);
   });
@@ -376,7 +365,7 @@ describe("verifyToken rejection logging", () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith());
     consoleError.mockClear();
 
-    await verifyToken(new Request(RESOURCE), TOKEN, CONFIG);
+    await verifyToken(mcpRequest(), TOKEN, CONFIG);
 
     expect(consoleError.mock.calls).toEqual([]);
   });
@@ -394,7 +383,7 @@ describe("verifyToken rejection logging", () => {
     }
     vi.mocked(jwtVerify).mockRejectedValue(new Error(`invalid signature on ${TOKEN}`));
     consoleError.mockClear();
-    await verifyToken(new Request(RESOURCE), TOKEN, CONFIG);
+    await verifyToken(mcpRequest(), TOKEN, CONFIG);
     logged.push(...consoleError.mock.calls.flat());
 
     expect(logged).not.toHaveLength(0);

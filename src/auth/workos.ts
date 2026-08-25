@@ -1,7 +1,6 @@
 // ABOUTME: Verifies WorkOS AuthKit bearer tokens for the remote MCP connector and maps
 // ABOUTME: WorkOS org role to our owner/admin role, since WorkOS knows identity, not our roles.
 import { createRemoteJWKSet, jwtVerify } from "jose";
-import { getPublicOrigin } from "mcp-handler";
 import type { Role } from "../config";
 
 export interface WorkOSConfig {
@@ -79,18 +78,12 @@ export async function verifyToken(
 
   const jwks = getJwks(config.authkitDomain);
   try {
-    // The RFC 8707 resource indicator this server is reached at, which clients send as
-    // `resource` on the authorization request and the authorization server stamps into the
-    // token's aud. Derived from the request with mcp-handler's own getPublicOrigin (public
-    // origin behind any proxy), the same helper protectedResourceHandler uses to derive the
-    // `resource` it advertises, so the value we advertise and the value we demand can never
-    // disagree. jose does the aud comparison itself, which also covers an array-valued aud
-    // claim on the token side. A token issued for some other resource server, or carrying no
-    // aud at all, fails here. Accepting the origin both with and without a trailing slash
-    // tolerates an authorization server that canonicalizes the resource indicator with one,
-    // the same tolerance already given to the issuer comparison below.
-    const origin = getPublicOrigin(req);
-    const { payload } = await jwtVerify(bearerToken, jwks, { audience: [origin, `${origin}/`] });
+    // Confirmed by decoding a real access token from a live CIMD-registered connector: WorkOS
+    // stamps `aud` with our own WorkOS AuthKit application's client id, not the RFC 8707
+    // `resource` value the client requested and not the connecting client's own (CIMD) client
+    // id. jose does the aud comparison itself, which also covers an array-valued aud claim on
+    // the token side. A token minted for a different WorkOS application fails here.
+    const { payload } = await jwtVerify(bearerToken, jwks, { audience: config.clientId });
 
     // Checked here rather than through jose's `issuer` option, which demands an exact string
     // match and would reject a token differing only by a trailing slash.

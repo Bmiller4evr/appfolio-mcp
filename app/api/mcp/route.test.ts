@@ -43,13 +43,14 @@ function mcpRequest(body: unknown, bearerToken?: string): Request {
   return new Request("https://mcp.example.com/api/mcp", { method: "POST", headers, body: JSON.stringify(body) });
 }
 
-// Mirrors the claims a real access token carries, including the iss and client_id that
-// verifyToken checks and the aud naming the resource the token was requested for.
+// Mirrors the claims a real access token carries, including the iss verifyToken checks and the
+// aud holding our own WorkOS application's client id. jose is mocked here, so the aud claim is
+// not what admits this token: src/auth/workos.signedToken.test.ts checks that against real jose.
 function authenticateAs(role: string): void {
   vi.mocked(jwtVerify).mockResolvedValue({
     payload: {
       iss: process.env.WORKOS_AUTHKIT_DOMAIN,
-      aud: "https://mcp.example.com",
+      aud: process.env.WORKOS_CLIENT_ID,
       client_id: process.env.WORKOS_CLIENT_ID,
       sub: "user_123",
       org_id: "org_123",
