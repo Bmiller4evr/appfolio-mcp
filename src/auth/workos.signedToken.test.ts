@@ -1,6 +1,6 @@
 // ABOUTME: Verifies bearer tokens through the real jose library using a locally signed token
 // ABOUTME: shaped like a real OAuth 2.1 access token, carrying client_id and the resource as aud.
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from "vitest";
 
 // Only the network-fetching JWKS lookup is replaced, so jwtVerify below is the real jose
 // implementation doing real signature and claim checks against this local key.
@@ -31,6 +31,18 @@ const RESOURCE = "https://mcp.example.com";
 function mcpRequest(): Request {
   return new Request(`${RESOURCE}/api/mcp`);
 }
+
+// verifyToken reports every rejection through console.error, so the spy both keeps the suite's
+// output pristine and gives the audience test below the exact arguments that path passed.
+let consoleError: MockInstance;
+
+beforeEach(() => {
+  consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+});
+
+afterEach(() => {
+  consoleError.mockRestore();
+});
 
 // Mirrors the claim set an OAuth 2.1 access token from this authorization server carries: an
 // iss, a client_id, and an aud naming the resource the token was requested for.
@@ -129,12 +141,24 @@ describe("verifyToken against a real OAuth-shaped token", () => {
     expect(result).toBeUndefined();
   });
 
-  it("rejects a token minted for a different client", async () => {
-    const token = await signAccessToken({ client_id: "client_someone_else" });
+  // A connector registered through a client id metadata document holds its own client id, so
+  // the token it presents carries a client_id that is not our configured one. Its aud and
+  // org_id still bind it to this server and this organization, which is what decides it.
+  it("accepts a token minted for a dynamically registered client of our organization", async () => {
+    const token = await signAccessToken({ client_id: "https://claude.ai/.well-known/oauth-client" });
 
     const result = await verifyToken(mcpRequest(), token, CONFIG);
 
-    expect(result).toBeUndefined();
+    expect(result?.extra.userId).toBe("user_123");
+  });
+
+  it("names the audience check when jose refuses a token minted for another resource", async () => {
+    const token = await signAccessToken({ aud: "https://someone-elses-mcp.example.com" });
+    consoleError.mockClear();
+
+    await verifyToken(mcpRequest(), token, CONFIG);
+
+    expect(consoleError.mock.calls).toEqual([["verifyToken: rejected, audience mismatch"]]);
   });
 
   it("rejects a token signed with a key the JWKS does not vouch for", async () => {

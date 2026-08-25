@@ -75,11 +75,16 @@ describe("MCP route", () => {
     vi.mocked(jwtVerify).mockRejectedValue(new Error("no token"));
   });
 
-  it("rejects a request with no bearer token", async () => {
+  it("rejects a request with no bearer token, naming the check that refused it", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+
     const res = await POST(
       mcpRequest({ jsonrpc: "2.0", id: 1, method: "tools/list" })
     );
+
     expect(res.status).toBe(401);
+    expect(consoleError.mock.calls).toEqual([["verifyToken: rejected, no bearer token"]]);
+    consoleError.mockRestore();
   });
 
   it("gives an admin caller the destructive operation", async () => {

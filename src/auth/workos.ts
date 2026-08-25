@@ -50,6 +50,22 @@ function isSameIssuer(tokenIssuer: string, configuredDomain: string): boolean {
   return strip(tokenIssuer) === strip(configuredDomain);
 }
 
+// Records which named check refused a token, and nothing else. The label is a fixed string
+// chosen at the call site: never the token, the payload, a claim value, or an error, so this
+// is safe to leave on in production and still tells an operator which check to look at.
+function reject(label: string): undefined {
+  console.error(`verifyToken: rejected, ${label}`);
+  return undefined;
+}
+
+// jose validates the audience itself and signals a mismatch by throwing, so that one failure
+// is told apart from every other jose failure by the claim name its error carries. Only the
+// claim's name is read here, never its value.
+function isAudienceFailure(err: unknown): boolean {
+  const { code, claim } = (err ?? {}) as { code?: string; claim?: string };
+  return code === "ERR_JWT_CLAIM_VALIDATION_FAILED" && claim === "aud";
+}
+
 // Takes (req, bearerToken, config) rather than mcp-handler's withMcpAuth's expected
 // (req, bearerToken) => AuthInfo | undefined shape, since config has no default value. Task 16
 // must wrap this in a closure before passing it to withMcpAuth, not pass it directly, e.g.:
@@ -59,7 +75,7 @@ export async function verifyToken(
   bearerToken: string | undefined,
   config: WorkOSConfig
 ): Promise<AuthInfo | undefined> {
-  if (!bearerToken) return undefined;
+  if (!bearerToken) return reject("no bearer token");
 
   const jwks = getJwks(config.authkitDomain);
   try {
@@ -79,30 +95,25 @@ export async function verifyToken(
     // Checked here rather than through jose's `issuer` option, which demands an exact string
     // match and would reject a token differing only by a trailing slash.
     const issuer = payload.iss;
-    if (typeof issuer !== "string" || !isSameIssuer(issuer, config.authkitDomain)) return undefined;
-
-    // The `client_id` claim names the OAuth client the token was issued to. Requiring our own
-    // application's client id is what stops a token issued to some other client, for a user of
-    // our organization, from being replayed here. This is stricter than the aud check above.
-    // Whether this holds up against a real MCP connector that registers dynamically through the
-    // authorization server's registration endpoint is unverified: it's not yet observed whether
-    // such a connector presents our configured client id or its own. If real connector tokens
-    // start getting refused here, revisit this check.
-    if ((payload as { client_id?: string }).client_id !== config.clientId) return undefined;
+    if (typeof issuer !== "string" || !isSameIssuer(issuer, config.authkitDomain)) {
+      return reject("issuer mismatch");
+    }
 
     const userId = payload.sub;
-    if (typeof userId !== "string" || !userId) return undefined;
+    if (typeof userId !== "string" || !userId) return reject("missing or invalid sub claim");
 
     // This server serves one WorkOS organization (Bret's and Justin's), not open AuthKit
     // signup, so a token minted for any other organization is refused like any other
     // verification failure.
-    if ((payload as { org_id?: string }).org_id !== config.organizationId) return undefined;
+    if ((payload as { org_id?: string }).org_id !== config.organizationId) {
+      return reject("org_id mismatch");
+    }
 
     // AuthKit access tokens carry the organization role as `role`, not `org_role`. A token
     // with no role claim at all is refused rather than mapped to owner: a caller whose role
     // we cannot read is a caller we cannot scope.
     const orgRole = (payload as { role?: string }).role;
-    if (typeof orgRole !== "string" || !orgRole) return undefined;
+    if (typeof orgRole !== "string" || !orgRole) return reject("missing or invalid role claim");
 
     return {
       token: bearerToken,
@@ -110,7 +121,8 @@ export async function verifyToken(
       scopes: [],
       extra: { userId, role: resolveRole(orgRole) },
     };
-  } catch {
-    return undefined;
+  } catch (err) {
+    if (isAudienceFailure(err)) return reject("audience mismatch");
+    return reject("jose verification threw");
   }
 }
