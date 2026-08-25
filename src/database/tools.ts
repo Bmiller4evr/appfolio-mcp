@@ -57,14 +57,38 @@ export function listEndpoints(
   return visible.map((op) => toListing(op, caller));
 }
 
-export function describeEndpoint(ops: ScopedOperation[], caller: CallerContext, operationId: string): ScopedOperation {
+// Everything a caller needs to build the request: the operation's scope plus its path params,
+// its query params under the exact keys AppFolio expects, its body properties, and any
+// constraint AppFolio enforces at request time without stating it in the schema.
+export interface EndpointDescription extends ScopedOperation {
+  notes: string[];
+}
+
+// AppFolio's spec marks every filter key optional, but its server refuses an unfiltered GET list
+// request with a plain-text 400 naming a filter the caller never saw mentioned. The constraint is
+// real and unexpressible in the schema, so it is stated here rather than left to be discovered by
+// failing a call.
+const GET_LIST_FILTER_NOTE =
+  "AppFolio answers this request with a 400 unless it carries at least one of filters[Id] or " +
+  "filters[LastUpdatedAtFrom], even though the schema marks every filter optional. Filter keys go " +
+  "on the query string under the bracketed names listed in queryParams, e.g. " +
+  "filters[LastUpdatedAtFrom]=2026-08-01T00:00:00Z; a flat LastUpdatedAtFrom is ignored and earns " +
+  "the same 400.";
+
+function hasFiltersParam(op: ScopedOperation): boolean {
+  return op.queryParams.some((param) => param.name === "filters" || param.name.startsWith("filters["));
+}
+
+export function describeEndpoint(ops: ScopedOperation[], caller: CallerContext, operationId: string): EndpointDescription {
   const visible = discoverableTo(ops, caller);
   const op = describeItem(
     visible.map((o) => ({ ...o, id: o.operationId, title: o.summary })),
     operationId
   );
   if (!op) throw new NotFoundError(`Unknown operation: ${operationId}`);
-  return visible.find((o) => o.operationId === operationId)!;
+  const found = visible.find((o) => o.operationId === operationId)!;
+  const notes = found.method === "GET" && hasFiltersParam(found) ? [GET_LIST_FILTER_NOTE] : [];
+  return { ...found, notes };
 }
 
 export class PermissionError extends Error {}

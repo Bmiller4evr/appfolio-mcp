@@ -5,9 +5,17 @@ import { classifyOperation, scopeOperations, OWNER_WRITE_OPERATION_IDS } from ".
 import { DATABASE_OPERATIONS } from "./operations.generated";
 import type { RawOperation } from "./catalogGen";
 
+// Classification reads only method/operationId/path, so these fixtures leave the request-shape
+// fields empty rather than restating parameter detail no assertion here looks at.
+const rawOp = (op: Omit<RawOperation, "pathParams" | "queryParams">): RawOperation => ({
+  ...op,
+  pathParams: [],
+  queryParams: [],
+});
+
 describe("classifyOperation", () => {
   it("classifies GET as READ, discoverable and executable by both roles", () => {
-    const op: RawOperation = { method: "GET", path: "/tenants", operationId: "getTenants", summary: "", tag: "Tenants" };
+    const op = rawOp({ method: "GET", path: "/tenants", operationId: "getTenants", summary: "", tag: "Tenants" });
     const scoped = classifyOperation(op);
     expect(scoped.class).toBe("READ");
     expect(scoped.executableBy).toEqual(["owner", "admin"]);
@@ -15,13 +23,13 @@ describe("classifyOperation", () => {
   });
 
   it("classifies DELETE as DESTRUCTIVE, hidden from owner entirely", () => {
-    const op: RawOperation = {
+    const op = rawOp({
       method: "DELETE",
       path: "/units/{UnitId}/photos/{PhotoId}",
       operationId: "deleteUnitPhoto",
       summary: "",
       tag: "Units",
-    };
+    });
     const scoped = classifyOperation(op);
     expect(scoped.class).toBe("DESTRUCTIVE");
     expect(scoped.executableBy).toEqual(["admin"]);
@@ -29,25 +37,25 @@ describe("classifyOperation", () => {
   });
 
   it("classifies bulk operations as DESTRUCTIVE even when the method is POST", () => {
-    const op: RawOperation = { method: "POST", path: "/tenants/bulk", operationId: "bulkCreateTenants", summary: "", tag: "Tenants" };
+    const op = rawOp({ method: "POST", path: "/tenants/bulk", operationId: "bulkCreateTenants", summary: "", tag: "Tenants" });
     expect(classifyOperation(op).class).toBe("DESTRUCTIVE");
   });
 
   it("classifies an owner-allowlisted write as WRITE, executable by both roles", () => {
-    const op: RawOperation = {
+    const op = rawOp({
       method: "POST",
       path: "/work_orders/{WorkOrderId}/notes",
       operationId: "createWorkOrderNote",
       summary: "",
       tag: "Work Orders",
-    };
+    });
     const scoped = classifyOperation(op);
     expect(scoped.class).toBe("WRITE");
     expect(scoped.executableBy).toEqual(["owner", "admin"]);
   });
 
   it("classifies a non-allowlisted write as admin-only to execute but discoverable by owner", () => {
-    const op: RawOperation = { method: "PATCH", path: "/bills/{billId}", operationId: "updateBill", summary: "", tag: "Bills" };
+    const op = rawOp({ method: "PATCH", path: "/bills/{billId}", operationId: "updateBill", summary: "", tag: "Bills" });
     const scoped = classifyOperation(op);
     expect(scoped.class).toBe("WRITE");
     expect(scoped.executableBy).toEqual(["admin"]);

@@ -8,1056 +8,9579 @@ export const DATABASE_OPERATIONS: RawOperation[] = [
     "path": "/bank_accounts",
     "operationId": "getBankAccounts",
     "summary": "List All Bank Accounts",
-    "tag": "Bank Accounts"
+    "tag": "Bank Accounts",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=3b5344d0-482b-4b50-b30f-2dd67412b517,1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the bank account. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/bank_accounts/bulk",
     "operationId": "bulkCreateBankAccounts",
     "summary": "Bulk Create Bank Accounts",
-    "tag": "Bank Accounts"
+    "tag": "Bank Accounts",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual bank accounts in the bulk-creation process."
+            },
+            {
+              "name": "AccountNumber",
+              "type": "string",
+              "required": true,
+              "description": "Account number of the bank account"
+            },
+            {
+              "name": "AccountName",
+              "type": "string",
+              "required": true,
+              "description": "The user-provided name for the bank account"
+            },
+            {
+              "name": "AccountType",
+              "type": "string",
+              "required": true,
+              "description": "The type of bank account\n#### Status Options\n| Options            | Description                                                                    |\n|--------------------|--------------------------------------------------------------------------------|\n| Personal Checking  | The bank account is a personal checking account                                |\n| Personal Savings   | The bank account is a personal savings account                                 |\n| Business Checking  | The bank account is a business checking account                                |\n| Business Saving    | The bank account is a business savings account                                 |\n| Other              | A BankAccountType was not stipulated by AppFolio is in use for the bank account|\n"
+            },
+            {
+              "name": "BankName",
+              "type": "string",
+              "required": true,
+              "description": "Name of the bank associated with the the bank account"
+            },
+            {
+              "name": "RoutingNumber",
+              "type": "string",
+              "required": true,
+              "description": "The routing number of the bank associated with the bank account"
+            },
+            {
+              "name": "NextCheckNumber",
+              "type": "integer",
+              "required": false,
+              "description": "The number checks for this bank account should start at. Must be a positive integer (not zero)"
+            },
+            {
+              "name": "BankAddress1",
+              "type": "string",
+              "required": true,
+              "description": "The primary street address of the bank associated with the bank account"
+            },
+            {
+              "name": "BankAddress2",
+              "type": "string",
+              "required": false,
+              "description": "Additional street address information pertaining to the bank associated with the bank account"
+            },
+            {
+              "name": "BankCity",
+              "type": "string",
+              "required": true,
+              "description": "The city where the bank associated with the bank account is located"
+            },
+            {
+              "name": "BankState",
+              "type": "string",
+              "required": false,
+              "description": "The state where the bank associated with the bank account is located"
+            },
+            {
+              "name": "BankZip",
+              "type": "string",
+              "required": false,
+              "description": "The zip code where the bank associated with the bank account is located"
+            },
+            {
+              "name": "CompanyAddress1",
+              "type": "string",
+              "required": false,
+              "description": "The primary street address of the company. Will be printed on any blank checkstock"
+            },
+            {
+              "name": "CompanyAddress2",
+              "type": "string",
+              "required": false,
+              "description": "Additional street address information of the company"
+            },
+            {
+              "name": "CompanyCity",
+              "type": "string",
+              "required": false,
+              "description": "The city where the company is located. Must be provided if entering a company address"
+            },
+            {
+              "name": "CompanyState",
+              "type": "string",
+              "required": false,
+              "description": "The state where the company is located. Must be provided if entering a company address"
+            },
+            {
+              "name": "CompanyZip",
+              "type": "string",
+              "required": false,
+              "description": "The zip code where the company is located. Must be provided if entering a company address"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/bank_adjustments/bulk",
     "operationId": "bulkBankAdjustments",
     "summary": "Bulk Create Bank Adjustments",
-    "tag": "Bank Adjustments"
+    "tag": "Bank Adjustments",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual bank adjustment in the bulk-creation process."
+            },
+            {
+              "name": "Amount",
+              "type": "number",
+              "required": true,
+              "description": "The amount positive or negative for the bank adjustment. Valid format is \"DD.CC\", e.g. \"23.33\""
+            },
+            {
+              "name": "BankAccountId",
+              "type": "string",
+              "required": true,
+              "description": "Unique identifier of the bank account related to the balance"
+            },
+            {
+              "name": "Date",
+              "type": "string",
+              "required": true,
+              "description": "The date of the bank adjustment. Used for reporting and reconciliation."
+            },
+            {
+              "name": "Description",
+              "type": "string",
+              "required": false,
+              "description": "A brief description for the bank adjustment."
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/bank_statements/bulk",
     "operationId": "bulkCreateBankStatements",
     "summary": "Bulk Create Bank Statements",
-    "tag": "Bank Statements"
+    "tag": "Bank Statements",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual bank statements in the bulk-creation process."
+            },
+            {
+              "name": "BankAccountId",
+              "type": "string",
+              "required": true,
+              "description": "Unique identifier of the bank account related to the balance"
+            },
+            {
+              "name": "BankBalance",
+              "type": "string",
+              "required": true,
+              "description": "The cleared balance from the reconciliation"
+            },
+            {
+              "name": "CheckRegisterBalance",
+              "type": "string",
+              "required": true,
+              "description": "The book balance from the reconciliation, or the cleared balance minus any uncleared items"
+            },
+            {
+              "name": "CutoffDate",
+              "type": "string",
+              "required": true,
+              "description": "The date of reconciliation for the cleared balance (bank balance). Valid format is \"YYYY-MM-DD\" e.g. \"2022-03-03\""
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/bills",
     "operationId": "getBills",
     "summary": "List All Bills",
-    "tag": "Bills"
+    "tag": "Bills",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[ApprovalStatus]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[ApprovalStatus]=Approved` <br> The bill's approval status. Filter the results based on a single value. Valid values include `All`, `Pending Approval`, `On Hold` or `Approved`.",
+        "format": "string"
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=537b8cd8-381d-11ea-827d-b083fed171ad,648b8cd8-381d-11ea-827d-b083fed171da` <br> Unique identifier of the bill to filter by. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns bill records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[IncludeHidden]",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Example: `filters[IncludeHidden]=true` <br> Indicates whether or not to include bills associated with a property hidden by an AppFolio Property Manager user in the response"
+      },
+      {
+        "name": "filters[ManagementCompanyAsPayee]",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Example: `filters[ManagementCompanyAsPayee]=true` <br> Indicates whether or not to include bills where the management company is the payee for the bill"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/bills",
     "operationId": "createBill",
     "summary": "Create Bill",
-    "tag": "Bills"
+    "tag": "Bills",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "AccountNumber",
+          "type": "string",
+          "required": false,
+          "description": "For utility billing. The account number associated with the bill, used by a utility vendor to identify the account. <br> <br>**Note**: `WorkOrderId` and `AccountNumber` are mutually exclusive. Therefore, only one of them can be provided in the request."
+        },
+        {
+          "name": "CashAccountId",
+          "type": "string",
+          "required": false,
+          "description": "The general ledger account ID of the Cash Account the bill will be paid out of. If the property is corporate, the CashAccountID must be a corporate gl account. If it is not, it cannot be a corporate GL account"
+        },
+        {
+          "name": "CheckMemo",
+          "type": "string",
+          "required": false,
+          "description": "The memo on the check"
+        },
+        {
+          "name": "DueDate",
+          "type": "string",
+          "required": true,
+          "description": "The date the bill is due"
+        },
+        {
+          "name": "InvoiceDate",
+          "type": "string",
+          "required": true,
+          "description": "The date the invoice was received"
+        },
+        {
+          "name": "LineItems",
+          "type": "array",
+          "required": true,
+          "description": "Array of line item attributes present on the bill(s)\n#### Bill Line Items\n| Attributes  | Type   | Description                                                                                                                 | Notes                                                   |\n|-------------|--------|-----------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------|\n| Amount      | String | The amount due for the line item                                                                                            | Valid format is \"DD.CC\", e.g. \"23.33\"                   |\n| Description | String | A brief description of the line item                                                                                        |                                                         |\n| GlAccountId | String | The general ledger account ID relevant to the line item                                                                     | UUID format e.g. \"d9009724-9f32-11ec-bc31-d46a96ab9b08\" |\n| PropertyId  | String | The `PropertyId` associated with the line item. This takes precedence over the top-level `PropertyId` connected to the bill. | UUID format e.g. \"d9009724-9f32-11ec-bc31-d46a96ab9b08\" |\n| ServiceFrom | String | The start date of the utility vendor's service                                                                              | Valid format is \"YYYY-MM-DD\"                            |\n| ServiceTo   | String | The end date of the utility vendor's service                                                                                | Valid format is \"YYYY-MM-DD\"                            |\n| UnitId      | String | The unit ID relevant to the line item                                                                                       | UUID format e.g. \"914a2a8e-f5d3-11e9-a485-1876da4c83b5\" |\n",
+          "properties": [
+            {
+              "name": "Amount",
+              "type": "string",
+              "required": false,
+              "description": "The amount due for the line item"
+            },
+            {
+              "name": "Description",
+              "type": "string",
+              "required": false,
+              "description": "A brief description of line item"
+            },
+            {
+              "name": "GlAccountId",
+              "type": "string",
+              "required": false,
+              "description": "The general ledger account ID relevant to line item"
+            },
+            {
+              "name": "PropertyId",
+              "type": "string",
+              "required": false,
+              "description": "The `PropertyId` associated with the line item. This takes precedence over the top-level `PropertyId` connected to the bill."
+            },
+            {
+              "name": "ServiceFrom",
+              "type": "string",
+              "required": false,
+              "description": "The start date of the utility vendor's service"
+            },
+            {
+              "name": "ServiceTo",
+              "type": "string",
+              "required": false,
+              "description": "The end date of the utility vendor's service"
+            },
+            {
+              "name": "UnitId",
+              "type": "string",
+              "required": false,
+              "description": "The unit ID relevant to the line item"
+            }
+          ]
+        },
+        {
+          "name": "ManagementCompanyAsPayee",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether the management company is the payee for the bill. Required and must be true when VendorId is null or not provided."
+        },
+        {
+          "name": "PostingDate",
+          "type": "string",
+          "required": false,
+          "description": "The accrual-accounting invoice date"
+        },
+        {
+          "name": "PropertyId",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier of the property on the bill. If a `PropertyId` is not found within the `LineItem` array, use this value for reference purposes."
+        },
+        {
+          "name": "Reference",
+          "type": "string",
+          "required": false,
+          "description": "The reference number of the bill. This number must be unique, no duplicate record is allowed."
+        },
+        {
+          "name": "Remarks",
+          "type": "string",
+          "required": false,
+          "description": "A description or summary of the bill"
+        },
+        {
+          "name": "TotalAmount",
+          "type": "string",
+          "required": true,
+          "description": "The total amount due. Ensure that the total amount is equal to the total of all line items summed."
+        },
+        {
+          "name": "VendorId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the the payee's vendor ID. Required when ManagementCompanyAsPayee is false or not provided. When present, ManagementCompanyAsPayee cannot be true."
+        },
+        {
+          "name": "WorkOrderId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the work order corresponding to the bill(s). The value of `WorkOrderId` cannot be null. <br> <br>**Note**: `WorkOrderId` and `AccountNumber` are mutually exclusive. Therefore, only one of them can be provided in the request."
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/bills/{billId}",
     "operationId": "updateBill",
     "summary": "Update Bill",
-    "tag": "Bills"
+    "tag": "Bills",
+    "pathParams": [
+      {
+        "name": "billId",
+        "required": true,
+        "description": "Unique identifier of the bill to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "AccountNumber",
+          "type": "string",
+          "required": false,
+          "description": "For utility billing. The account number associated with the bill, used by a utility vendor to identify the account"
+        },
+        {
+          "name": "CheckMemo",
+          "type": "string",
+          "required": false,
+          "description": "The memo on the check"
+        },
+        {
+          "name": "DueDate",
+          "type": "string",
+          "required": false,
+          "description": "The date the invoice is due"
+        },
+        {
+          "name": "InvoiceDate",
+          "type": "string",
+          "required": false,
+          "description": "The date the invoice was received"
+        },
+        {
+          "name": "LineItems",
+          "type": "array",
+          "required": false,
+          "description": "Array of line item attributes present on the bill(s). **DO NOT INCLUDE Line Items unless one or more details have changed** (including them causes other parts of system to assume changes and create new Auditing/version history entries)\n#### Bill Line Items\n| Attributes  | Type   | Description                                                                                                                 | Notes                                                   |\n|-------------|--------|-----------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------|\n| Amount      | String | The amount due for the line item                                                                                            | Valid format is \"DD.CC\", e.g. \"23.33\"                   |\n| Description | String | A brief description of the line item                                                                                        |                                                         |\n| GlAccountId | String | The general ledger account ID relevant to the line item                                                                     | UUID format e.g. \"d9009724-9f32-11ec-bc31-d46a96ab9b08\" |\n| PropertyId  | String | The `PropertyId` associated with the line item. This takes precedence over the top-level `PropertyId` connected to the bill. | UUID format e.g. \"d9009724-9f32-11ec-bc31-d46a96ab9b08\" |\n| ServiceFrom | String | The start date of the utility vendor's service                                                                              | Valid format is \"YYYY-MM-DD\"                            |\n| ServiceTo   | String | The end date of the utility vendor's service                                                                                | Valid format is \"YYYY-MM-DD\"                            |\n| UnitId      | String | The unit ID relevant to the line item                                                                                       | UUID format e.g. \"914a2a8e-f5d3-11e9-a485-1876da4c83b5\" |\n",
+          "properties": [
+            {
+              "name": "Amount",
+              "type": "string",
+              "required": false,
+              "description": "The amount due for the line item"
+            },
+            {
+              "name": "Description",
+              "type": "string",
+              "required": false,
+              "description": "A brief description of line item"
+            },
+            {
+              "name": "GlAccountId",
+              "type": "string",
+              "required": false,
+              "description": "The general ledger account ID relevant to line item"
+            },
+            {
+              "name": "PropertyId",
+              "type": "string",
+              "required": false,
+              "description": "The `PropertyId` associated with the line item. This takes precedence over the top-level `PropertyId` connected to the bill."
+            },
+            {
+              "name": "ServiceFrom",
+              "type": "string",
+              "required": false,
+              "description": "The start date of the utility vendor's service"
+            },
+            {
+              "name": "ServiceTo",
+              "type": "string",
+              "required": false,
+              "description": "The end date of the utility vendor's service"
+            },
+            {
+              "name": "UnitId",
+              "type": "string",
+              "required": false,
+              "description": "The unit ID relevant to the line item"
+            }
+          ]
+        },
+        {
+          "name": "ManagementCompanyAsPayee",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether the management company is the payee for the bill. Required and must be true when VendorId is null or not provided."
+        },
+        {
+          "name": "PostingDate",
+          "type": "string",
+          "required": false,
+          "description": "The accrual-accounting invoice date"
+        },
+        {
+          "name": "PropertyId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the the property associated with the bill. If a PropertyId is not found within the `LineItem` array, use this value for reference purposes."
+        },
+        {
+          "name": "Reference",
+          "type": "string",
+          "required": false,
+          "description": "The reference number to the invoice number. This number must be unique, no duplicate record is allowed."
+        },
+        {
+          "name": "Remarks",
+          "type": "string",
+          "required": false,
+          "description": "A description or summary of the invoice"
+        },
+        {
+          "name": "TotalAmount",
+          "type": "string",
+          "required": false,
+          "description": "The total amount due. Ensure that the total amount is equal to the total of all items summed."
+        },
+        {
+          "name": "VendorId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the payee's vendor ID. Required when ManagementCompanyAsPayee is false or not provided. When present, ManagementCompanyAsPayee cannot be true."
+        },
+        {
+          "name": "WorkOrderId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the work order corresponding to the invoice. The value of `WorkOrderId` cannot be null."
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/bills/{BillId}/attachments",
     "operationId": "createBillAttachment",
     "summary": "Create Bill Attachment",
-    "tag": "Bills"
+    "tag": "Bills",
+    "pathParams": [
+      {
+        "name": "BillId",
+        "required": true,
+        "description": "The bill to which the file will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "multipart/form-data",
+      "required": true,
+      "properties": [
+        {
+          "name": "File",
+          "type": "string",
+          "required": false,
+          "description": "Filename.file-extension"
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/bills/bulk",
     "operationId": "bulkCreateBill",
     "summary": "Bulk Create Bills",
-    "tag": "Bills"
+    "tag": "Bills",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "AttachmentURL",
+              "type": "string",
+              "required": false,
+              "description": "The public link to the bill PDF that the developer hosts. This downloadable PDF creates the attachment and should not exceed 30MB. <br> <br>**Note**: Validation of the content type of this file is done in a background job. It is up to the developer to reconcile any validation failures at a later time."
+            },
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual bills in the bulk-creation of bills."
+            },
+            {
+              "name": "PaymentDate",
+              "type": "string",
+              "required": false,
+              "description": "The date of the payment. Supplying this value with a `PaymentReference` will mark the bill as paid."
+            },
+            {
+              "name": "PaymentReference",
+              "type": "string",
+              "required": false,
+              "description": "Unique reference number of the payment. Supplying this value with a `PaymentDate` will mark the bill as paid."
+            },
+            {
+              "name": "AccountNumber",
+              "type": "string",
+              "required": false,
+              "description": "For utility billing. The account number associated with the bill, used by a utility vendor to identify the account. <br> <br>**Note**: `WorkOrderId` and `AccountNumber` are mutually exclusive. Therefore, only one of them can be provided in the request."
+            },
+            {
+              "name": "CashAccountId",
+              "type": "string",
+              "required": false,
+              "description": "The general ledger account ID of the Cash Account the bill will be paid out of. If the property is corporate, the CashAccountID must be a corporate gl account. If it is not, it cannot be a corporate GL account"
+            },
+            {
+              "name": "CheckMemo",
+              "type": "string",
+              "required": false,
+              "description": "The memo on the check"
+            },
+            {
+              "name": "DueDate",
+              "type": "string",
+              "required": true,
+              "description": "The date the bill is due"
+            },
+            {
+              "name": "InvoiceDate",
+              "type": "string",
+              "required": true,
+              "description": "The date the invoice was received"
+            },
+            {
+              "name": "LineItems",
+              "type": "array",
+              "required": true,
+              "description": "Array of line item attributes present on the bill(s)\n#### Bill Line Items\n| Attributes  | Type   | Description                                                                                                                 | Notes                                                   |\n|-------------|--------|-----------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------|\n| Amount      | String | The amount due for the line item                                                                                            | Valid format is \"DD.CC\", e.g. \"23.33\"                   |\n| Description | String | A brief description of the line item                                                                                        |                                                         |\n| GlAccountId | String | The general ledger account ID relevant to the line item                                                                     | UUID format e.g. \"d9009724-9f32-11ec-bc31-d46a96ab9b08\" |\n| PropertyId  | String | The `PropertyId` associated with the line item. This takes precedence over the top-level `PropertyId` connected to the bill. | UUID format e.g. \"d9009724-9f32-11ec-bc31-d46a96ab9b08\" |\n| ServiceFrom | String | The start date of the utility vendor's service                                                                              | Valid format is \"YYYY-MM-DD\"                            |\n| ServiceTo   | String | The end date of the utility vendor's service                                                                                | Valid format is \"YYYY-MM-DD\"                            |\n| UnitId      | String | The unit ID relevant to the line item                                                                                       | UUID format e.g. \"914a2a8e-f5d3-11e9-a485-1876da4c83b5\" |\n"
+            },
+            {
+              "name": "ManagementCompanyAsPayee",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the management company is the payee for the bill. Required and must be true when VendorId is null or not provided."
+            },
+            {
+              "name": "PostingDate",
+              "type": "string",
+              "required": false,
+              "description": "The accrual-accounting invoice date"
+            },
+            {
+              "name": "PropertyId",
+              "type": "string",
+              "required": true,
+              "description": "Unique identifier of the property on the bill. If a `PropertyId` is not found within the `LineItem` array, use this value for reference purposes."
+            },
+            {
+              "name": "Reference",
+              "type": "string",
+              "required": false,
+              "description": "The reference number of the bill. This number must be unique, no duplicate record is allowed."
+            },
+            {
+              "name": "Remarks",
+              "type": "string",
+              "required": false,
+              "description": "A description or summary of the bill"
+            },
+            {
+              "name": "TotalAmount",
+              "type": "string",
+              "required": true,
+              "description": "The total amount due. Ensure that the total amount is equal to the total of all line items summed."
+            },
+            {
+              "name": "VendorId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the the payee's vendor ID. Required when ManagementCompanyAsPayee is false or not provided. When present, ManagementCompanyAsPayee cannot be true."
+            },
+            {
+              "name": "WorkOrderId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the work order corresponding to the bill(s). The value of `WorkOrderId` cannot be null. <br> <br>**Note**: `WorkOrderId` and `AccountNumber` are mutually exclusive. Therefore, only one of them can be provided in the request."
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/ca/bank_balances",
     "operationId": "getCaBankBalances",
     "summary": "List All Community Association Bank Account Balances",
-    "tag": "Community Association Bank Balances"
+    "tag": "Community Association Bank Balances",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[AssociationId]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[AssociationId]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the association attached to the bank account. Filter the results based on one or more `AssociationId`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/ca/board_members",
     "operationId": "getCaBoardMembers",
     "summary": "List All Community Association Board Members",
-    "tag": "Community Association Board Members"
+    "tag": "Community Association Board Members",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[AssociationId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[AssociationId]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the association the CA board member belongs to. Filter the results based on one or more `AssociationId`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns CA board member records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/ca/homeowners",
     "operationId": "getCaHomeowners",
     "summary": "List All Community Association Homeowners",
-    "tag": "Community Association Homeowners"
+    "tag": "Community Association Homeowners",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[AssociationId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[AssociationId]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the association the CA homeowner belongs to. Filter the results based on one or more `AssociationId`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=537b8cd8-381d-11ea-827d-b083fed171ad,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the CA homeowner. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns CA homeowner records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[Status]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "The status can be a combination of any of the following values: `Current`, `Past`, `Future`, `Notice`, `Foreclosure`. Multiple values should be separated by commas. <br> Example: `filters[Status]=Current,Future` <br> The status of the Community Association homeowner\n#### Status Options\n| Options       | Description                                                          | Notes |\n|---------------|----------------------------------------------------------------------|-------|\n| Current       | The homeowner currently resides within the Community Association     |\n| Past          | The homeowner resided within the Community Association in the past   |\n| Future        | The homeowner will reside in the Community Association in the future |\n| Notice        | The homeowner has communicated intent to vacate the residency        |\n| Foreclosure   | A foreclosure was filed against the homeowner                        |If a homeowner's status is changed to `Foreclosure`, their status will be updated and considered as both their previous status and foreclosure status. For example, if a `Current` homeowner's status is changed to `Foreclosure`, filtering for \"Current\" will return the homeowner with a status of `Foreclosure`.|\n"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/ca/homeowner_ledgers",
     "operationId": "getCaHomeownerLedgers",
     "summary": "List All Community Association Homeowner Ledgers",
-    "tag": "Community Association Homeowner Ledgers"
+    "tag": "Community Association Homeowner Ledgers",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[DateFrom]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[DateFrom]=2021-12-15` <br> Date range from the date stipulated. `DateFrom` and `DateTo` can be at most 2 years apart.",
+        "format": "date"
+      },
+      {
+        "name": "filters[DateTo]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[DateTo]=2021-12-15` <br> Date range to the date stipulated. `DateFrom` and `DateTo` can be at most 2 years apart.",
+        "format": "date"
+      },
+      {
+        "name": "filters[AssociationId]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[AssociationId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the Community Association associated with the homeowner ledger. Filter the results based on a single value.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns transaction records that have been updated since the date provided. The value must adhere to the ISO 8601 format: `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[OccupancyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[OccupancyId]=1abcae23-c343-466e-adc9-923455789cba,1abcde43-c543-456e-abc9-123456789abc` <br> Unique identifier of the occupancy associated with the homeowner ledger. Filter the results based on one or more OccupancyIds. Multiple values should be separated by commas.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/ca/renters",
     "operationId": "getCaRenters",
     "summary": "List All Community Association Renters",
-    "tag": "Community Association Renters"
+    "tag": "Community Association Renters",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the CA renter. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[AssociationId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[AssociationId]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the association related to the CA renter. Filter the results based on one or more `AssociationId`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns CA Renter records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/ca/rules",
     "operationId": "getCaRules",
     "summary": "List All Community Association Rules",
-    "tag": "Community Association Rules"
+    "tag": "Community Association Rules",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[AssociationId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[AssociationId]=1abcde23-c543-456e-abc9-123456789cba,537b8cd8-381d-11ea-827d-b083fed171ad` <br> Unique identifier of the association to retrieve the rule(s) for. Filter the results based on one or more `AssociationId`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns CA rule records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/ca/units",
     "operationId": "getCaUnits",
     "summary": "List All Community Association Units",
-    "tag": "Community Association Units"
+    "tag": "Community Association Units",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[AssociationId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[AssociationId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the Community Association the unit belongs to. Filter the results based on a single value.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns Community Association unit records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/ca/violations",
     "operationId": "getCaViolations",
     "summary": "List All Community Association Violations",
-    "tag": "Community Association Violations"
+    "tag": "Community Association Violations",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[AssociationId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[AssociationId]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the association to retrieve violations for. Filter the results based on one or more `AssociationId`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[InspectionDateFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[InspectionDateFrom]=2021-12-15` <br> Returns CA violations records with an inspection date from the date specified. Valid format is \"YYYY-MM-DD\" e.g. \"2021-12-15\"."
+      },
+      {
+        "name": "filters[InspectionDateTo]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[InspectionDateFrom]=2022-01-15` <br> Returns CA violations records with an inspection date up to the date specified. Valid format is \"YYYY-MM-DD\" e.g. \"2022-01-15\"."
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns CA violations records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/ca/violations",
     "operationId": "createCaViolation",
     "summary": "Create Community Association Violations ",
-    "tag": "Community Association Violations"
+    "tag": "Community Association Violations",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Description",
+          "type": "string",
+          "required": false,
+          "description": "A brief summary or description of the CA violation"
+        },
+        {
+          "name": "InspectionDate",
+          "type": "string",
+          "required": true,
+          "description": "The date of the CA unit’s inspection"
+        },
+        {
+          "name": "MarkedForEscalation",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the CA violation was marked for escalation"
+        },
+        {
+          "name": "UnitId",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier of the unit associated with the CA violation"
+        },
+        {
+          "name": "ViolatedRuleId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the CA rule that was violated"
+        },
+        {
+          "name": "Status",
+          "type": "string",
+          "required": true,
+          "description": "Indicates the current status of the CA violation\n#### Status Options\n| Options          | Description                                                          |\n|------------------|----------------------------------------------------------------------|\n| In Progress      | The processing of the CA violation is in progress                    |\n| In Dispute       | The CA violation is being disputed by the accused party              |\n| Corrected        | The offense resulting in the CA violation has been corrected         |\n| On Hold          | The proceeding pertaining to the CA violation has been placed on hold|                                                                                                                                         |\n"
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/ca/violations/{violationId}/attachments",
     "operationId": "createCaViolationAttachment",
     "summary": "Create Community Association Violations Attachment",
-    "tag": "Community Association Violations"
+    "tag": "Community Association Violations",
+    "pathParams": [
+      {
+        "name": "violationId",
+        "required": true,
+        "description": "The CA violation to which the file will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "multipart/form-data",
+      "required": true,
+      "properties": [
+        {
+          "name": "File",
+          "type": "string",
+          "required": false,
+          "description": "Filename.file-extension"
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/ca/violations/{violationId}",
     "operationId": "updateCaViolation",
     "summary": "Update Community Association Violations",
-    "tag": "Community Association Violations"
+    "tag": "Community Association Violations",
+    "pathParams": [
+      {
+        "name": "violationId",
+        "required": true,
+        "description": "Unique identifier of the violation to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Description",
+          "type": "string",
+          "required": false,
+          "description": "A brief summary or description of the CA violation"
+        },
+        {
+          "name": "InspectionDate",
+          "type": "string",
+          "required": false,
+          "description": "The date of the CA unit’s inspection"
+        },
+        {
+          "name": "MarkedForEscalation",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the CA violation was marked for escalation"
+        },
+        {
+          "name": "UnitId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the unit associated with the CA violation"
+        },
+        {
+          "name": "ViolatedRuleId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the CA rule that was violated"
+        },
+        {
+          "name": "Status",
+          "type": "string",
+          "required": false,
+          "description": "Indicates the current status of the CA violation\n#### Status Options\n| Options          | Description                                                          |\n|------------------|----------------------------------------------------------------------|\n| In Progress      | The processing of the CA violation is in progress                    |\n| In Dispute       | The CA violation is being disputed by the accused party              |\n| Corrected        | The offense resulting in the CA violation has been corrected         |\n| On Hold          | The proceeding pertaining to the CA violation has been placed on hold|                                                                                                                                         |\n"
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/charges",
     "operationId": "getCharges",
     "summary": "List All Charges",
-    "tag": "Charges"
+    "tag": "Charges",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=1abcde23-c543-456e-abc9-123456789cee,1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the charge. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PropertyId]=3b5344d0-482b-4b50-b30f-2dd67412b517` <br> Unique identifier of the property or association related to the charge. Filter the results based on a single value.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/charges",
     "operationId": "createCharge",
     "summary": "Create Charges",
-    "tag": "Charges"
+    "tag": "Charges",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "AmountDue",
+          "type": "string",
+          "required": true,
+          "description": "The dollar amount of the charge"
+        },
+        {
+          "name": "ChargedOn",
+          "type": "string",
+          "required": true,
+          "description": "`ChargedOn` dates from the past indicate an outstanding charge that has not yet been paid that is \"owed.\"\n\n`ChargedOn` dates in the future indicate an upcoming charge during the next monthly period.\n"
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "required": true,
+          "description": "A brief summary or description of the charge"
+        },
+        {
+          "name": "GlAccountId",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier of the general ledger account associated with the charge"
+        },
+        {
+          "name": "OccupancyId",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier of the occupancy associated with the charge"
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/charges/bulk",
     "operationId": "bulkCreateCharge",
     "summary": "Bulk Create Charges",
-    "tag": "Charges"
+    "tag": "Charges",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "AmountDue",
+              "type": "string",
+              "required": true,
+              "description": "The dollar amount of the charge"
+            },
+            {
+              "name": "ChargedOn",
+              "type": "string",
+              "required": true,
+              "description": "`ChargedOn` dates from the past indicate an outstanding charge that has not yet been paid that is \"owed.\"\n\n`ChargedOn` dates in the future indicate an upcoming charge during the next monthly period.\n"
+            },
+            {
+              "name": "Description",
+              "type": "string",
+              "required": false,
+              "description": "A brief summary or description of the charge"
+            },
+            {
+              "name": "GlAccountId",
+              "type": "string",
+              "required": true,
+              "description": "Unique identifier of the general ledger account associated with the charge"
+            },
+            {
+              "name": "OccupancyId",
+              "type": "string",
+              "required": true,
+              "description": "Unique identifier of the occupancy associated with the charge"
+            },
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual charges in the bulk-creation of charges."
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/charges/{ChargeId}/attachments",
     "operationId": "createChargeAttachment",
     "summary": "Create Charge Attachment",
-    "tag": "Charges"
+    "tag": "Charges",
+    "pathParams": [
+      {
+        "name": "ChargeId",
+        "required": true,
+        "description": "The charge to which the file will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "multipart/form-data",
+      "required": true,
+      "properties": [
+        {
+          "name": "File",
+          "type": "string",
+          "required": false,
+          "description": "Filename.file-extension"
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/ca/associations",
     "operationId": "getCommunityAssociations",
     "summary": "List All Community Associations",
-    "tag": "Community Associations"
+    "tag": "Community Associations",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the Community Association(s) that are sought for retrieval. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns Community Association records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/corporate_entities",
     "operationId": "getCorporateEntities",
     "summary": "List All Corporate Entities",
-    "tag": "Corporate Entities"
+    "tag": "Corporate Entities",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=234abcde-c543-456e-abc9-123456789abc` <br> Unique identifier of the corporate entity. Filter the results based on a single `Id`.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[Ids]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Ids]=234abcde-c543-456e-abc9-123456789abc,cfcb95e8-d5fb-448c-b811-88d9f832e79c` <br> Unique identifiers of the corporate entities that are sought for retrieval. Filter the results based on one or more `Ids`. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[Name]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Name]=Acme Corporation` <br> Filter the results by the display name of the corporate entity. This filter can be combined with required filters for more specific searches."
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns corporate entity records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[HiddenAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[HiddenAtFrom]=2021-12-15T16:30:46Z` <br> Returns corporate entity records that have been hidden since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC). When this filter is used, only hidden entities are returned.",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[IncludeHidden]",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Example: `filters[IncludeHidden]=true` <br> Indicates whether or not to include corporate entities hidden by an AppFolio Property Manager user in the response. By default, hidden entities are excluded."
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/corporate/gl_accounts/bulk",
     "operationId": "bulkCreateCorporateGlAccounts",
     "summary": "Bulk Create Corporate General Ledger Accounts",
-    "tag": "Corporate General Ledger Accounts"
+    "tag": "Corporate General Ledger Accounts",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual gl account in the bulk-creation of corporate gl accounts."
+            },
+            {
+              "name": "Name",
+              "type": "string",
+              "required": true,
+              "description": "The user-provided name of the corporate general ledger account. This name must be unique, no duplicate record is allowed."
+            },
+            {
+              "name": "Number",
+              "type": "string",
+              "required": false,
+              "description": "The user-provided number of the corporate general ledger account. This number must be unique, no duplicate record is allowed."
+            },
+            {
+              "name": "Type",
+              "type": "string",
+              "required": true,
+              "description": "The account type or category of the corporate GL account. Valid values include `asset` `capital` `cash` `expense` `income` `liability` `other_expense` or `other_income`."
+            },
+            {
+              "name": "OffsetAccountId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the corporate offset account"
+            },
+            {
+              "name": "ParentGlAccountId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the parent general ledger account. If present, it indicates the parent account to which the sub-account belongs."
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/custom_fields",
     "operationId": "getCustomFields",
     "summary": "List All Custom Fields",
-    "tag": "Custom Fields"
+    "tag": "Custom Fields",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns custom field records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/delinquent_charges",
     "operationId": "getDelinquentCharges",
     "summary": "List All Delinquent Charges",
-    "tag": "Delinquent Charges"
+    "tag": "Delinquent Charges",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=1abcde23-c543-456e-abc9-123456789cee,1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the delinquent charge. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PropertyId]=3b5344d0-482b-4b50-b30f-2dd67412b517` <br> Unique identifier of the property or association related to the delinquent charge. Filter the results based on a single value.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/gl_accounts",
     "operationId": "getGlAccounts",
     "summary": "List All General Ledger Accounts",
-    "tag": "General Ledger Accounts"
+    "tag": "General Ledger Accounts",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "filters[IsCorporateAccount]",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Example: `filters[IsCorporateAccount]=true` <br> Indicates whether the GL account is a corporate or non-corporate (standard) GL account. Do not include this query parameter in the request to return both corporate and non-corporate GL accounts."
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns GL account records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PropertyId]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789cba ` <br> Unique identifier of the property to filter by. Filter the results based on one or more PropertyIds. Multiple values should be separated by commas.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/gl_accounts/bulk",
     "operationId": "bulkCreateGlAccounts",
     "summary": "Bulk Create General Ledger Accounts",
-    "tag": "General Ledger Accounts"
+    "tag": "General Ledger Accounts",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual gl account in the bulk-creation of gl accounts."
+            },
+            {
+              "name": "Name",
+              "type": "string",
+              "required": true,
+              "description": "The user-provided name of the general ledger account. This name must be unique, no duplicate record is allowed."
+            },
+            {
+              "name": "Number",
+              "type": "string",
+              "required": false,
+              "description": "The user-provided number of the general ledger account. This number must be unique, no duplicate record is allowed."
+            },
+            {
+              "name": "Type",
+              "type": "string",
+              "required": true,
+              "description": "The account type or category of the GL account. Valid values include `asset` `capital` `cash` `expense` `income` `liability` `other_expense` or `other_income`."
+            },
+            {
+              "name": "FundAccount",
+              "type": "object",
+              "required": false,
+              "description": "The type of fund account\n#### FundAccount Options\n| Options         | Description                                                                                     |\n|-----------------|-------------------------------------------------------------------------------------------------|\n| Reserve         | The fund account is a reserve account, holding funds set aside for specific future purposes     |\n| Operating       | The fund account is an operating account holding funds set aside for regular operating expenses |\n"
+            },
+            {
+              "name": "OffsetAccountId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the offset account"
+            },
+            {
+              "name": "ParentGlAccountId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the parent general ledger account. If present, it indicates the parent account to which the sub-account belongs."
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/gl_details",
     "operationId": "getGlDetail",
     "summary": "List All General Ledger Details",
-    "tag": "General Ledger Details"
+    "tag": "General Ledger Details",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[AccountingBasis]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Default: `Cash` <br> Example: `filters[AccountingBasis]=Accrual` <br> The account basis of the GL account. Filter the results based on a single value. Valid values are 'Accrual' or 'Cash'."
+      },
+      {
+        "name": "filters[DateFrom]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[DateFrom]=2021-12-15` <br> Date range from the date stipulated. `DateFrom` and `DateTo` can be at most 3 months apart.",
+        "format": "date"
+      },
+      {
+        "name": "filters[DateTo]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[DateTo]=2021-12-15` <br> Date range to the date stipulated. `DateFrom` and `DateTo` can be at most 3 months apart.",
+        "format": "date"
+      },
+      {
+        "name": "filters[GlAccountId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[GlAccountId]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the GL Account. Filter the results based on one or more GL Accounts. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PropertyId]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the property associated with the General Ledger Detail. Filter the results based on one or more PropertyIds. Multiple values should be separated by commas. This parameter is required unless both `LastUpdatedOnFrom` and `LastUpdatedOnTo` are provided and the time range between them is 2 days or less.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedOnFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedOnFrom]=2021-12-15` <br> Returns General Ledger Detail records that have been updated since the date provided.",
+        "format": "date"
+      },
+      {
+        "name": "filters[LastUpdatedOnTo]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedOnTo]=2021-12-15` <br> Returns General Ledger Detail records that have been updated before or at the date provided.",
+        "format": "date"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/inspections/{InspectionId}/attachments",
     "operationId": "createInspectionAttachment",
     "summary": "Create Inspection Attachment",
-    "tag": "Inspections"
+    "tag": "Inspections",
+    "pathParams": [
+      {
+        "name": "InspectionId",
+        "required": true,
+        "description": "The inspection to which the file will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "multipart/form-data",
+      "required": true,
+      "properties": [
+        {
+          "name": "File",
+          "type": "string",
+          "required": false,
+          "description": "Filename.file-extension"
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/inspections",
     "operationId": "createInspection",
     "summary": "Create Inspection",
-    "tag": "Inspections"
+    "tag": "Inspections",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "inspection",
+          "type": "object",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "Name",
+              "type": "string",
+              "required": true,
+              "description": "The user-provided name of the inspection."
+            },
+            {
+              "name": "URL",
+              "type": "string",
+              "required": true,
+              "description": "The URL link to an external page hosted by the partner with additional details about the inspection."
+            },
+            {
+              "name": "InspectionDate",
+              "type": "string",
+              "required": true,
+              "description": "The date the inspection was conducted. Valid format is \"YYYY-MM-DD\" e.g. \"2025-03-25\"."
+            },
+            {
+              "name": "OccupancyId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the occupancy or association related to the inspection. <br> <br>**Note**: `OccupancyId`, `PropertyId`, and `UnitId` are mutually exclusive. One of the three are required, and only one of them can be provided in the request."
+            },
+            {
+              "name": "PropertyId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the property or association related to the inspection. <br> <br>**Note**: `OccupancyId`, `PropertyId`, and `UnitId` are mutually exclusive. One of the three are required, and only one of them can be provided in the request."
+            },
+            {
+              "name": "UnitId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the unit or association related to the inspection. <br> <br>**Note**: `OccupancyId`, `PropertyId`, and `UnitId` are mutually exclusive. One of the three are required, and only one of them can be provided in the request."
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/inspections/bulk",
     "operationId": "bulkCreateInspections",
     "summary": "Bulk Create Inspections",
-    "tag": "Inspections"
+    "tag": "Inspections",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual inspection in the bulk-creation of inspections."
+            },
+            {
+              "name": "Name",
+              "type": "string",
+              "required": true,
+              "description": "The user-provided name of the inspections."
+            },
+            {
+              "name": "URL",
+              "type": "string",
+              "required": true,
+              "description": "The URL link to an external page hosted by the partner with additional details about the inspection."
+            },
+            {
+              "name": "InspectionDate",
+              "type": "string",
+              "required": false,
+              "description": "The date the inspection was conducted. Valid format is \"YYYY-MM-DD\" e.g. \"2025-03-25\". If not provided, defaults to the current date."
+            },
+            {
+              "name": "OccupancyId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the occupancy related to the inspection. Only one of OccupancyId, PropertyId, or UnitId may be specified."
+            },
+            {
+              "name": "PropertyId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the property related to the inspection. Only one of OccupancyId, PropertyId, or UnitId may be specified."
+            },
+            {
+              "name": "UnitId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the unit related to the inspection. Only one of OccupancyId, PropertyId, or UnitId may be specified."
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/inspections/{InspectionId}",
     "operationId": "updateInspection",
     "summary": "Update Inspection",
-    "tag": "Inspections"
+    "tag": "Inspections",
+    "pathParams": [
+      {
+        "name": "InspectionId",
+        "required": true,
+        "description": "Unique identifier of the inspection to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Name",
+          "type": "string",
+          "required": false,
+          "description": "The user-provided name of the inspection."
+        },
+        {
+          "name": "InspectionDate",
+          "type": "string",
+          "required": false,
+          "description": "The date the inspection was or is scheduled to be conducted. Valid format is \"YYYY-MM-DD\" e.g. \"2025-03-25\"."
+        },
+        {
+          "name": "Status",
+          "type": "string",
+          "required": false,
+          "description": "Indicates the current status of the inspection. Valid values for update include “NEW”, “IN PROGRESS”, “DONE”, “OUT FOR SIGNING”, or “SIGNED”.\n| Status Option          | Description                                     |\n|------------------------|----------------------------------------------------|\n| NEW                    | The inspection has not yet been started         |\n| IN PROGRESS            | The inspection is in progress                   |\n| DONE                   | The inspection is completed                     |\n| OUT FOR SIGNING        | The inspection is sent to tenant(s) for signing |\n| SIGNED                 | The inspection is signed by tenant(s)           |\n"
+        },
+        {
+          "name": "OccupancyId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the occupancy to associate with the inspection. Only one of OccupancyId, PropertyId, or UnitId may be specified."
+        },
+        {
+          "name": "PropertyId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the property to associate with the inspection. Only one of OccupancyId, PropertyId, or UnitId may be specified."
+        },
+        {
+          "name": "UnitId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the unit to associate with the inspection. Only one of OccupancyId, PropertyId, or UnitId may be specified."
+        }
+      ]
+    }
   },
   {
     "method": "DELETE",
     "path": "/inspections/{InspectionId}",
     "operationId": "deleteInspection",
     "summary": "Delete Inspection",
-    "tag": "Inspections"
+    "tag": "Inspections",
+    "pathParams": [
+      {
+        "name": "InspectionId",
+        "required": true,
+        "description": "Unique identifier of the inspection to delete"
+      }
+    ],
+    "queryParams": []
   },
   {
     "method": "GET",
     "path": "/inventory_locations",
     "operationId": "getInventoryLocations",
     "summary": "List All Inventory Locations",
-    "tag": "Inventory Locations"
+    "tag": "Inventory Locations",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns inventory location records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789cba ` <br> Unique identifier of the inventory location to filter by. Filter the results based on one or more Ids. Multiple values should be separated by commas.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/jobs",
     "operationId": "getjobs",
     "summary": "List All Jobs",
-    "tag": "Jobs"
+    "tag": "Jobs",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[Id]=3b5344d0-482b-4b50-b30f-2dd67412b517,1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the job. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/journal_entries",
     "operationId": "getJournalEntries",
     "summary": "List All Journal Entries",
-    "tag": "Journal Entries"
+    "tag": "Journal Entries",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789cba` <br> Unique identifier of the journal entries sought for retrieval. Filter the results based on one or more `Id`s. Multiple values should be separated by commas",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns AppFolio Property Manager journal entry records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC)..",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PropertyId]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789cba` <br> Unique Identifier of the property or association related to the the journal entry. Filter the results based on one or more PropertyIds. Multiple values should be separated by commas.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/journal_entries",
     "operationId": "createJournalEntry",
     "summary": "Create Journal Entries",
-    "tag": "Journal Entries"
+    "tag": "Journal Entries",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Id",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the journal entry"
+        },
+        {
+          "name": "EntryDate",
+          "type": "string",
+          "required": true,
+          "description": "The date the journal entry was created. Valid format is \"YYYY-MM-DD\" e.g. \"2022-03-03\"."
+        },
+        {
+          "name": "LineItems",
+          "type": "array",
+          "required": true,
+          "description": "Array of line-item objects. Two or more line-item objects must be passed to create a journal entry. The sum of the total debits must equal the total credits for all line-item objects.\n#### Journal Entry Line Item\n| Attributes  | Type                  | Description                         | Notes |\n|-------------|-----------------------|-------------------------------------|--------|\n| Credit      | String or `null` | The credit amount  | Total debits and credits must be equal. For example, if line-item 1 has a credit of \"10.00\", line-item 2 must have a debit of \"10.00\". |\n| Debit       | String or `null` | The debit amount   | Total debits and credits must be equal. For example, if line-item 1 has a credit of \"10.00\", line-item 2 must have a debit of \"10.00\". |\n| Description | String | A brief, informative description of the journal entry’s line item |\n| GlAccountId | String | Unique identifier of the general ledger account associated with the journal entry line item |\n",
+          "properties": [
+            {
+              "name": "Credit",
+              "type": "string",
+              "required": false,
+              "description": "The credit amount. Total debits and credits must be equal. For example, if line-item 1 has a credit of \"10.00\", line-item 2 must have a debit of \"10.00\"."
+            },
+            {
+              "name": "Debit",
+              "type": "string",
+              "required": false,
+              "description": "The debit amount. Total debits and credits must be equal. For example, if line-item 1 has a credit of \"10.00\", line-item 2 must have a debit of \"10.00\"."
+            },
+            {
+              "name": "Description",
+              "type": "string",
+              "required": false,
+              "description": "A brief, informative description of the journal entry’s line item"
+            },
+            {
+              "name": "GlAccountId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the general ledger account associated with the journal entry line item"
+            }
+          ]
+        },
+        {
+          "name": "PropertyId",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier of the property or association related to the journal entry"
+        },
+        {
+          "name": "Remarks",
+          "type": "string",
+          "required": false,
+          "description": "A description or summary of the journal entry"
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/journal_entries/{JournalEntryId}",
     "operationId": "updateJournalEntry",
     "summary": "Update Journal Entries",
-    "tag": "Journal Entries"
+    "tag": "Journal Entries",
+    "pathParams": [
+      {
+        "name": "JournalEntryId",
+        "required": true,
+        "description": "Unique identifier of the journal entry to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Id",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the journal entry"
+        },
+        {
+          "name": "EntryDate",
+          "type": "string",
+          "required": false,
+          "description": "The date the journal entry was created. Valid format is \"YYYY-MM-DD\" e.g. \"2022-03-03\"."
+        },
+        {
+          "name": "LineItems",
+          "type": "array",
+          "required": false,
+          "description": "Array of line-item objects. Two or more line-item objects must be passed to create a journal entry. The sum of the total debits must equal the total credits for all line-item objects.\n#### Journal Entry Line Item\n| Attributes  | Type                  | Description                         | Notes |\n|-------------|-----------------------|-------------------------------------|--------|\n| Credit      | String or `null` | The credit amount  | Total debits and credits must be equal. For example, if line-item 1 has a credit of \"10.00\", line-item 2 must have a debit of \"10.00\". |\n| Debit       | String or `null` | The debit amount   | Total debits and credits must be equal. For example, if line-item 1 has a credit of \"10.00\", line-item 2 must have a debit of \"10.00\". |\n| Description | String | A brief, informative description of the journal entry’s line item |\n| GlAccountId | String | Unique identifier of the general ledger account associated with the journal entry line item |\n",
+          "properties": [
+            {
+              "name": "Credit",
+              "type": "string",
+              "required": false,
+              "description": "The credit amount. Total debits and credits must be equal. For example, if line-item 1 has a credit of \"10.00\", line-item 2 must have a debit of \"10.00\"."
+            },
+            {
+              "name": "Debit",
+              "type": "string",
+              "required": false,
+              "description": "The debit amount. Total debits and credits must be equal. For example, if line-item 1 has a credit of \"10.00\", line-item 2 must have a debit of \"10.00\"."
+            },
+            {
+              "name": "Description",
+              "type": "string",
+              "required": false,
+              "description": "A brief, informative description of the journal entry’s line item"
+            },
+            {
+              "name": "GlAccountId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the general ledger account associated with the journal entry line item"
+            }
+          ]
+        },
+        {
+          "name": "PropertyId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the property or association related to the journal entry"
+        },
+        {
+          "name": "Remarks",
+          "type": "string",
+          "required": false,
+          "description": "A description or summary of the journal entry"
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/journal_entries/bulk",
     "operationId": "bulkCreateJournalEntries",
     "summary": "Bulk Create Journal Entries",
-    "tag": "Journal Entries"
+    "tag": "Journal Entries",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference an individual journal entry in the bulk-creation of journal entries."
+            },
+            {
+              "name": "ReferenceNumber",
+              "type": "string",
+              "required": false,
+              "description": "The reference number representing the transaction in your ledger. This will be automatically assigned unless provided."
+            },
+            {
+              "name": "Id",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the journal entry"
+            },
+            {
+              "name": "EntryDate",
+              "type": "string",
+              "required": true,
+              "description": "The date the journal entry was created. Valid format is \"YYYY-MM-DD\" e.g. \"2022-03-03\"."
+            },
+            {
+              "name": "LineItems",
+              "type": "array",
+              "required": true,
+              "description": "Array of line-item objects. Two or more line-item objects must be passed to create a journal entry. The sum of the total debits must equal the total credits for all line-item objects.\n#### Journal Entry Line Item\n| Attributes  | Type                  | Description                         | Notes |\n|-------------|-----------------------|-------------------------------------|--------|\n| Credit      | String or `null` | The credit amount  | Total debits and credits must be equal. For example, if line-item 1 has a credit of \"10.00\", line-item 2 must have a debit of \"10.00\". |\n| Debit       | String or `null` | The debit amount   | Total debits and credits must be equal. For example, if line-item 1 has a credit of \"10.00\", line-item 2 must have a debit of \"10.00\". |\n| Description | String | A brief, informative description of the journal entry’s line item |\n| GlAccountId | String | Unique identifier of the general ledger account associated with the journal entry line item |\n"
+            },
+            {
+              "name": "PropertyId",
+              "type": "string",
+              "required": true,
+              "description": "Unique identifier of the property or association related to the journal entry"
+            },
+            {
+              "name": "Remarks",
+              "type": "string",
+              "required": false,
+              "description": "A description or summary of the journal entry"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/journal_entries/{JournalEntryId}/attachments",
     "operationId": "createJournalEntryAttachment",
     "summary": "Create Journal Entry Attachment",
-    "tag": "Journal Entries"
+    "tag": "Journal Entries",
+    "pathParams": [
+      {
+        "name": "JournalEntryId",
+        "required": true,
+        "description": "The journal entry to which the file will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "multipart/form-data",
+      "required": true,
+      "properties": [
+        {
+          "name": "File",
+          "type": "string",
+          "required": false,
+          "description": "Filename.file-extension"
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/late_fee_policies",
     "operationId": "getLateFeePolicies",
     "summary": "List All Late Fee Policies",
-    "tag": "Late Fee Policies"
+    "tag": "Late Fee Policies",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=bca5de23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier for the late fee policies. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PropertyId]=1abcde23-c543-456e-abc9-123456789cee,bca5de23-c543-456e-abc9-123456789cba` <br> Unique identifier of the property associated with the late fee policy. Filter the results based on one or more `PropertyId`s. Multiple values should be separated by commas. For SFR Properties, a single property-based policy will be included in the response. For a Multi-family, the response will include a property-based (default) policy along with any occupancy-based policies to residents of the property.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[OccupancyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[OccupancyId]=1abcde23-c543-456e-abc9-123456789cee,bca5de23-c543-456e-abc9-123456789cba` <br> Unique identifier of the occupancy associated with the late fee policy. Filter the results based on one or more `OccupancyId`s. Multiple values should be separated by commas. Must not be provided when `PartyType` is Property.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[PartyType]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PartyType]=Property` <br> Returns late fee policy records that are associated with the type provided. Must be either Occupancy or Property."
+      },
+      {
+        "name": "filters[EffectiveOnFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[EffectiveOnFrom]=2020-12-15` <br> Returns late fee policy records that have started since the date provided.",
+        "format": "date"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2020-12-15T16:30:46Z` <br> Returns late fee policy records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/late_fee_policies/bulk",
     "operationId": "bulkCreateLateFeePolicies",
     "summary": "Bulk Create Late Fee Policies",
-    "tag": "Late Fee Policies"
+    "tag": "Late Fee Policies",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual late fee policy in the bulk-creation of late fee policies."
+            },
+            {
+              "name": "EligibleCharges",
+              "type": "string",
+              "required": true,
+              "description": "The specific charges to which the late fee will be applied"
+            },
+            {
+              "name": "FeeType",
+              "type": "string",
+              "required": true,
+              "description": "The late fee type"
+            },
+            {
+              "name": "FlatAmount",
+              "type": "string",
+              "required": false,
+              "description": "The flat fee. Must be provided when `FeeType` is `Flat`. Must be greater than 0 when `LateFeePerDay` is not 0 and `FeeType` is `Flat`."
+            },
+            {
+              "name": "GracePeriodType",
+              "type": "string",
+              "required": true,
+              "description": "The type of Grace Period to enforce"
+            },
+            {
+              "name": "GracePeriodValue",
+              "type": "integer",
+              "required": true,
+              "description": "A number of days after the charge, or a number of days into the following month. Must be between 0 and 365 when `GracePeriodType` is `Fixed Period`. Must be between 1 and 28 when `GracePeriodType` is `Fixed Day of Month`."
+            },
+            {
+              "name": "LateFeePerDay",
+              "type": "string",
+              "required": false,
+              "description": "The daily late fees"
+            },
+            {
+              "name": "LateFeeGraceBalance",
+              "type": "string",
+              "required": true,
+              "description": "The late fee grace balance"
+            },
+            {
+              "name": "MaxDailyLateFeesAmount",
+              "type": "string",
+              "required": false,
+              "description": "The maximum daily late fees"
+            },
+            {
+              "name": "OccupancyId",
+              "type": "string",
+              "required": false,
+              "description": "When present, the Late Fee Policy belongs to a specific occupancy within a MFR property. "
+            },
+            {
+              "name": "Percentage",
+              "type": "string",
+              "required": false,
+              "description": "The percentage of late fee. Must be a number 0 or greater. Must be provided when `FeeType` is `Percentage`. Must be greater than 0 when `LateFeePerDay` is not 0 and `FeeType` is `Percentage`."
+            },
+            {
+              "name": "PolicyEffectiveOn",
+              "type": "string",
+              "required": true,
+              "description": "The date at which the late fee policy will start. It must be in the future. There can only be one current and future late fee policy per property. If you try to create a late fee policy for a property that already has a future late fee policy, it should replace the existing future late fee policy."
+            },
+            {
+              "name": "PropertyId",
+              "type": "string",
+              "required": false,
+              "description": "It is filled for both property-based and occupancy-based policies. PropertyId can be used to tie an occupancy-based policy to its MFR building. "
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/leads",
     "operationId": "getLeads",
     "summary": "List All Leads",
-    "tag": "Leads"
+    "tag": "Leads",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=bca5de23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier for the lead. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2020-12-15T16:30:46Z` <br> Returns lead records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PropertyId]=eea5de23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the property associated with the lead. Filter the results based on one or more PropertyIds. Multiple values should be separated by commas.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/leads",
     "operationId": "createLead",
     "summary": "Create Leads",
-    "tag": "Leads"
+    "tag": "Leads",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "AdditionalOccupants",
+          "type": "integer",
+          "required": false,
+          "description": "The number of other potential occupants of the residency"
+        },
+        {
+          "name": "AssignedUserId",
+          "type": "string",
+          "required": false,
+          "description": "The AppFolio Property Manager user responsible for the lead. Reference the **Users** endpoint for any necessary associations."
+        },
+        {
+          "name": "Bathrooms",
+          "type": "string",
+          "required": false,
+          "description": "The number of desired bathrooms"
+        },
+        {
+          "name": "Bedrooms",
+          "type": "integer",
+          "required": false,
+          "description": "The number of desired bedrooms"
+        },
+        {
+          "name": "CreatedAt",
+          "type": "string",
+          "required": false,
+          "description": "The date the lead was created. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC)."
+        },
+        {
+          "name": "CreditScore",
+          "type": "string",
+          "required": false,
+          "description": "The self-reported credit score of the interested party"
+        },
+        {
+          "name": "DesiredMoveIn",
+          "type": "string",
+          "required": false,
+          "description": "The date the prospective resident desires to move in"
+        },
+        {
+          "name": "FirstName",
+          "type": "string",
+          "required": true,
+          "description": "The first name of the interested person"
+        },
+        {
+          "name": "Email",
+          "type": "string",
+          "required": false,
+          "description": "The email address of the interested person"
+        },
+        {
+          "name": "HasCats",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the interested person has cat(s)"
+        },
+        {
+          "name": "HasDogs",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the interested person has dog(s)"
+        },
+        {
+          "name": "HasOtherPet",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the interested person has other pet(s)"
+        },
+        {
+          "name": "LastName",
+          "type": "string",
+          "required": true,
+          "description": "The last name of the interested person"
+        },
+        {
+          "name": "MaxRent",
+          "type": "string",
+          "required": false,
+          "description": "The max amount the interested person is willing to pay monthly for rent"
+        },
+        {
+          "name": "Messages",
+          "type": "array",
+          "required": false,
+          "description": "Array of objects representing messages sent about a lead",
+          "properties": [
+            {
+              "name": "PropertyId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the property associated with the message"
+            },
+            {
+              "name": "UnitId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the unit associated with the message"
+            },
+            {
+              "name": "Message",
+              "type": "string",
+              "required": false,
+              "description": "The content of the message sent by the lead"
+            },
+            {
+              "name": "Source",
+              "type": "string",
+              "required": false,
+              "description": "The source of the message"
+            },
+            {
+              "name": "Timestamp",
+              "type": "string",
+              "required": false,
+              "description": "The date and time the message was sent, in Coordinated Universal Time (UTC)"
+            }
+          ]
+        },
+        {
+          "name": "MiddleInitial",
+          "type": "string",
+          "required": false,
+          "description": "The middle initial of the interested person"
+        },
+        {
+          "name": "MonthlyIncome",
+          "type": "string",
+          "required": false,
+          "description": "The self-reported monthly income of interested person"
+        },
+        {
+          "name": "PhoneNumber",
+          "type": "string",
+          "required": false,
+          "description": "The phone number of the interested person"
+        },
+        {
+          "name": "PropertyId",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier of the property associated with the lead"
+        },
+        {
+          "name": "Source",
+          "type": "string",
+          "required": false,
+          "description": "The mechanism through which this lead was submitted"
+        },
+        {
+          "name": "Status",
+          "type": "string",
+          "required": false,
+          "description": "Indicates the current phase of engagement with a prospective resident\n#### Status Options\n| Options    | Description                                                                                                                                                                                             |\n|------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|\n| active     | A prospective resident is interested in a unit or property                                                                                                                                                |\n| cold       | A prospective resident has ceased to show interest                                                                                                                                                                      |\n| inactive   | A prospective resident is unqualified, or has stated a reason for their lack of interest |\n| waitlisted | A prospective resident is interested in a unit or property, but there are currently no units available that fit their interests. If a prospect submits an additional lead, the status will revert to \"active\" |\n"
+        },
+        {
+          "name": "UnitIds",
+          "type": "array",
+          "required": false,
+          "description": "Unique identifier of the unit(s) that the interested party is interested in"
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/leads/{leadId}",
     "operationId": "updateLead",
     "summary": "Update Lead",
-    "tag": "Leads"
+    "tag": "Leads",
+    "pathParams": [
+      {
+        "name": "leadId",
+        "required": true,
+        "description": "Unique identifier of the lead to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "AdditionalOccupants",
+          "type": "integer",
+          "required": false,
+          "description": "The number of other potential occupants of the residency"
+        },
+        {
+          "name": "AssignedUserId",
+          "type": "string",
+          "required": false,
+          "description": "The AppFolio Property Manager user assigned to the lead. A `null` value passed to `AssignedUserId` will unassign the user previously assigned to the lead. Omitting `AssignedUserId` from the request body will not update the assigned user. Reference the **Users** endpoint for any necessary associations."
+        },
+        {
+          "name": "Bathrooms",
+          "type": "string",
+          "required": false,
+          "description": "The number of desired bathrooms"
+        },
+        {
+          "name": "Bedrooms",
+          "type": "integer",
+          "required": false,
+          "description": "The number of desired bedrooms"
+        },
+        {
+          "name": "CreatedAt",
+          "type": "string",
+          "required": false,
+          "description": "The date the lead was created. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC)."
+        },
+        {
+          "name": "CreditScore",
+          "type": "string",
+          "required": false,
+          "description": "The self-reported credit score of the interested party"
+        },
+        {
+          "name": "DesiredMoveIn",
+          "type": "string",
+          "required": false,
+          "description": "The date the prospective resident desires to move in"
+        },
+        {
+          "name": "FirstName",
+          "type": "string",
+          "required": false,
+          "description": "The first name of the interested person"
+        },
+        {
+          "name": "Email",
+          "type": "string",
+          "required": false,
+          "description": "The email address of the interested person"
+        },
+        {
+          "name": "HasCats",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the interested person has cat(s)"
+        },
+        {
+          "name": "HasDogs",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the interested person has dog(s)"
+        },
+        {
+          "name": "HasOtherPet",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the interested person has other pet(s)"
+        },
+        {
+          "name": "InactiveReason",
+          "type": "string",
+          "required": false,
+          "description": "The reason why the lead was marked inactive\n#### InactiveReason Options\n| Options                     | Description                                                                                                                                                                                               |\n|-----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|\n| price                       | The price caused the lead to be marked inactive                                                                                                                                           |\n| location                    | The location caused the lead to be marked inactive                                                                                                                             |\n| amenities                   | The amenities caused the lead to be marked inactive                                                                                                                                                     |\n| no_response                 | No reason or response was provided\n| decided_not_to_move         | The prospective resident decided not to move                                                                                                                                                                    |\n| leasing_criteria_not_met    | The prospective resident was unqualified to move                                                                                                                            |\n| looking_for_move_in_special | The prospective resident was looking for a move-in special                                                                                                                                                          |\n| no_availability             | Due to no availability the lead was marked inactive                                                                                                                                                   |\n| duplicate                   | The lead was a duplicate                                                                                                                                     |\n| other                       | Other reason(s) not already provided                                                                                                                               |\n"
+        },
+        {
+          "name": "LastName",
+          "type": "string",
+          "required": false,
+          "description": "The last name of the interested person"
+        },
+        {
+          "name": "MaxRent",
+          "type": "string",
+          "required": false,
+          "description": "The max amount the interested person is willing to pay monthly for rent"
+        },
+        {
+          "name": "MiddleInitial",
+          "type": "string",
+          "required": false,
+          "description": "The middle initial of the interested person"
+        },
+        {
+          "name": "MonthlyIncome",
+          "type": "string",
+          "required": false,
+          "description": "The self-reported monthly income of interested person"
+        },
+        {
+          "name": "PhoneNumber",
+          "type": "string",
+          "required": false,
+          "description": "The phone number of the interested person"
+        },
+        {
+          "name": "Source",
+          "type": "string",
+          "required": false,
+          "description": "The mechanism through which this lead was submitted"
+        },
+        {
+          "name": "Status",
+          "type": "string",
+          "required": false,
+          "description": "Indicates the current phase of engagement with a prospective resident\n#### Status Options\n| Options    | Description                                                                                                                                                                                             |\n|------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|\n| active     | A prospective resident is interested in a unit or property                                                                                                                                                |\n| cold       | A prospective resident has ceased to show interest                                                                                                                                                                      |\n| inactive   | A prospective resident is unqualified, or has stated a reason for their lack of interest If the status is set to inactive, you must specify the reason the lead was marked inactive by setting a value for \"InactiveReason\" |\n| waitlisted | A prospective resident is interested in a unit or property, but there are currently no units available that fit their interests. If a prospect submits an additional lead, the status will revert to \"active\" |\n"
+        },
+        {
+          "name": "UnitIds",
+          "type": "array",
+          "required": false,
+          "description": "Array of `UnitIds` to update on the lead. To maintain a unit's association with a lead, pass in that unit's `Id`.<br />Passing an empty array of `UnitIds` will drop all unit interests from the lead.<br />Passing in `null` for this array or omitting it from the request will not change the units."
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/leads/notes",
     "operationId": "getLeadsNotes",
     "summary": "List All Leads Notes",
-    "tag": "Leads"
+    "tag": "Leads",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[GuestCardId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[GuestCardId]=1abcde23-c543-456e-abc9-123456789cba` <br> The unique identifier of the Guest Card to which the note will be attached. Guest Cards can be linked to multiple leads. Filter the results based on a single value.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns lead note records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/leads/{GuestCardId}/notes",
     "operationId": "createLeadNote",
     "summary": "Create Lead Note",
-    "tag": "Leads"
+    "tag": "Leads",
+    "pathParams": [
+      {
+        "name": "GuestCardId",
+        "required": true,
+        "description": "The unique identifier of the Guest Card to which the note will be attached. Guest Cards can be linked to multiple leads."
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the lead note. A lead note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/leads/{GuestCardId}/notes/{Id}",
     "operationId": "updateLeadNote",
     "summary": "Update Lead Note",
-    "tag": "Leads"
+    "tag": "Leads",
+    "pathParams": [
+      {
+        "name": "GuestCardId",
+        "required": true,
+        "description": "The unique identifier of the Guest Card to which the note will be attached. Guest Cards can be linked to multiple leads."
+      },
+      {
+        "name": "Id",
+        "required": true,
+        "description": "Unique identifier of the note to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the lead note. A lead note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/leases",
     "operationId": "getLeases",
     "summary": "List All Leases",
-    "tag": "Leases"
+    "tag": "Leases",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[LeaseId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LeaseId]=1abcde23-c543-456e-abc9-123456789cee,1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the lease. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[OccupancyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[OccupancyId]=3b5344d0-482b-4b50-b30f-2dd67412b517` <br> Unique identifier of the occupancy related to the lease. Filter the results based on multiple values.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2025-11-18T01:26:34Z` <br> Returns Lease records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/leases/renewal_pricings",
     "operationId": "getLeaseRenewalPricings",
     "summary": "List All Lease Renewal Pricings",
-    "tag": "Leases"
+    "tag": "Leases",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[LeaseId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LeaseId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the lease. Filter the results based on one or more lease UUIDs. Multiple values should be separated by commas.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "PUT",
     "path": "/leases/renewal_pricings/bulk",
     "operationId": "putBulkLeaseRenewalPricings",
     "summary": "Bulk Put Lease Renewal Pricings",
-    "tag": "Leases"
+    "tag": "Leases",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": true,
+          "description": "",
+          "properties": [
+            {
+              "name": "LeaseId",
+              "type": "string",
+              "required": true,
+              "description": "Unique identifier of the lease"
+            },
+            {
+              "name": "StartDate",
+              "type": "string",
+              "required": true,
+              "description": "Start date of the renewal pricing option"
+            },
+            {
+              "name": "Price",
+              "type": "number",
+              "required": true,
+              "description": "Monthly rent amount for the renewal option"
+            },
+            {
+              "name": "LeaseTerm",
+              "type": "integer",
+              "required": true,
+              "description": "Lease term in months for the renewal option"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/listings",
     "operationId": "getListings",
     "summary": "List All Listings",
-    "tag": "Listings"
+    "tag": "Listings",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns listing records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[PostedToWebsite]",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Example: `filters[PostedToWebsite]=true` <br> Returns listings posted (if PostedToWebsite is true) or not posted (if PostedToWebsite is false) to the AppFolio listings page."
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/mailing_letter",
     "operationId": "getMailingLetters",
     "summary": "List Mailing Letters",
-    "tag": "Mailing Letters"
+    "tag": "Mailing Letters",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[CreatedAtFrom]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[CreatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns letters created on or after the specified date. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the letter. Filter the results based on one or more `Id`s. Multiple values should be separated by commas."
+      },
+      {
+        "name": "filters[Status]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Status]=new` <br> The status of the mailing letter. Filter the results based on one or more statuses. Multiple values should be separated by commas.\n#### Status Options\n| Status Option | Type   | Description                                                          |\n|---------------|--------|----------------------------------------------------------------------|\n| New           | String | The letter has been created but not yet processed by the partner     |\n| Accepted      | String | The letter has been accepted by the partner for sending              |\n| Not Accepted  | String | The letter was not accepted due to a partner validation error        |\n| Mailed        | String | The letter was successfully mailed by the partner                    |\n| Canceled      | String | The letter was canceled by the customer in the partner's platform    |\n",
+        "enum": [
+          "New",
+          "Accepted",
+          "Not Accepted",
+          "Mailed",
+          "Canceled"
+        ]
+      }
+    ]
   },
   {
     "method": "PATCH",
     "path": "/mailing_letter/{mailingLetterId}",
     "operationId": "updateMailingLetter",
     "summary": "Update Mailing Letter",
-    "tag": "Mailing Letters"
+    "tag": "Mailing Letters",
+    "pathParams": [
+      {
+        "name": "mailingLetterId",
+        "required": true,
+        "description": "Unique identifier of the letter to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Id",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the letter"
+        },
+        {
+          "name": "LetterUrl",
+          "type": "string",
+          "required": false,
+          "description": "The URL link to an external page hosted by the partner with additional details about the letter"
+        },
+        {
+          "name": "Status",
+          "type": "string",
+          "required": false,
+          "description": "Indicates the current status of the letter. Valid values include “Accepted”, “Not Accepted”, “Mailed”, or “Canceled”. Status must be provided with StatusOccurredAt for updates.\n| Status Option          | Description                                                       |\n|------------------------|-------------------------------------------------------------------|\n| Accepted               | The letter has been accepted by the partner for sending           |\n| Not Accepted           | The letter was not accepted due to a partner validation error     |\n| Mailed                 | The letter was successfully mailed by the partner                 |\n| Canceled               | The letter was canceled by the customer in the partner's platform |\n"
+        },
+        {
+          "name": "StatusOccurredAt",
+          "type": "string",
+          "required": false,
+          "description": "The date and time the status of the letter was applied. StatusOccurredAt will not update unless a corresponding Status is provided in the request. Valid format is in UTC in ISO 8601 format: \"YYYY-MM-DDTHH:mm:ssZ"
+        },
+        {
+          "name": "StatusReason",
+          "type": "string",
+          "required": false,
+          "description": "Explains the reason behind the letter's status (e.g., if a partner sets the status to Not Accepted, StatusReason will include the reason). StatusReason will not update unless a corresponding Status is provided in the request."
+        },
+        {
+          "name": "TrackingNumber",
+          "type": "string",
+          "required": false,
+          "description": "The letter’s tracking number"
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/mailing_letter/bulk_update",
     "operationId": "bulkUpdateMailingLetter",
     "summary": "Bulk Update Mailing Letters",
-    "tag": "Mailing Letters"
+    "tag": "Mailing Letters",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "Id",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the letter"
+            },
+            {
+              "name": "LetterUrl",
+              "type": "string",
+              "required": false,
+              "description": "The URL link to an external page hosted by the partner with additional details about the letter"
+            },
+            {
+              "name": "Status",
+              "type": "string",
+              "required": false,
+              "description": "Indicates the current status of the letter. Valid values include “Accepted”, “Not Accepted”, “Mailed”, or “Canceled”. Status must be provided with StatusOccurredAt for updates.\n| Status Option          | Description                                                       |\n|------------------------|-------------------------------------------------------------------|\n| Accepted               | The letter has been accepted by the partner for sending           |\n| Not Accepted           | The letter was not accepted due to a partner validation error     |\n| Mailed                 | The letter was successfully mailed by the partner                 |\n| Canceled               | The letter was canceled by the customer in the partner's platform |\n"
+            },
+            {
+              "name": "StatusOccurredAt",
+              "type": "string",
+              "required": false,
+              "description": "The date and time the status of the letter was applied. StatusOccurredAt will not update unless a corresponding Status is provided in the request. Valid format is in UTC in ISO 8601 format: \"YYYY-MM-DDTHH:mm:ssZ"
+            },
+            {
+              "name": "StatusReason",
+              "type": "string",
+              "required": false,
+              "description": "Explains the reason behind the letter's status (e.g., if a partner sets the status to Not Accepted, StatusReason will include the reason). StatusReason will not update unless a corresponding Status is provided in the request."
+            },
+            {
+              "name": "TrackingNumber",
+              "type": "string",
+              "required": false,
+              "description": "The letter’s tracking number"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/occupancies/{OccupancyId}/attachments",
     "operationId": "createOccupancyAttachment",
     "summary": "Create Occupancy Attachment",
-    "tag": "Occupancies"
+    "tag": "Occupancies",
+    "pathParams": [
+      {
+        "name": "OccupancyId",
+        "required": true,
+        "description": "The occupancy to which the file will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "multipart/form-data",
+      "required": true,
+      "properties": [
+        {
+          "name": "File",
+          "type": "string",
+          "required": false,
+          "description": "Filename.file-extension"
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/occupancies/documents",
     "operationId": "getOccupancyDocuments",
     "summary": "List All Occupancies Documents",
-    "tag": "Occupancies"
+    "tag": "Occupancies",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[OccupancyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[OccupancyId]=1abcde23-c543-456e-abc9-123456789cba,cfcb95e8-d5fb-448c-b811-88d9f832e79c` <br> Unique identifier of the occupancy. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns occupancy document records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/owners",
     "operationId": "getOwners",
     "summary": "List All Owners",
-    "tag": "Owners"
+    "tag": "Owners",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired.\n\n"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2020-12-15T16:30:46Z` <br> Returns owner records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PropertyId]=cfcb95e8-d5fb-448c-b811-88d9f832e79c,cfcb67w4-d5fb-448c-b811-99d9f832e79c` <br> Unique identifier of the property associated with the owner. Filter the results based on one or more PropertyIds. Multiple values should be separated by commas."
+      },
+      {
+        "name": "filters[IncludeHidden]",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Example: `filters[IncludeHidden]=true` <br> Indicates whether or not to include owners that were marked as inactive from the list of owners"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/owners",
     "operationId": "createOwner",
     "summary": "Create Owner",
-    "tag": "Owners"
+    "tag": "Owners",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "FirstName",
+          "type": "string",
+          "required": false,
+          "description": "The first name of the owner. This value is required when `CompanyName` is not provided."
+        },
+        {
+          "name": "LastName",
+          "type": "string",
+          "required": false,
+          "description": "The last name of the owner. This value is required when `CompanyName` is not provided."
+        },
+        {
+          "name": "CompanyName",
+          "type": "string",
+          "required": false,
+          "description": "The company name associated with the owner. This value is required when `FirstName` or `LastName` is not provided."
+        },
+        {
+          "name": "Email",
+          "type": "string",
+          "required": false,
+          "description": "The primary email address of the owner"
+        },
+        {
+          "name": "PhoneNumber",
+          "type": "string",
+          "required": false,
+          "description": "The owner’s primary phone number"
+        },
+        {
+          "name": "Address1",
+          "type": "string",
+          "required": false,
+          "description": "The primary street address of the owner"
+        },
+        {
+          "name": "Address2",
+          "type": "string",
+          "required": false,
+          "description": "Additional street address information pertaining to the owner"
+        },
+        {
+          "name": "City",
+          "type": "string",
+          "required": false,
+          "description": "The city where the owner is located"
+        },
+        {
+          "name": "State",
+          "type": "string",
+          "required": false,
+          "description": "The state where the owner is located. This attribute must not be an unincorporated US territory, i.e., (AS, FM, MH, MP, or VI) for primary address when `UseOnlinePayables` and `OwnerPaidByACH` are both `true`. This value must be valid when `UseOnlinePayables` is `true`, `OwnerPaidByACH` and `UseAlternatePayee` are both `false` or not provided."
+        },
+        {
+          "name": "Zip",
+          "type": "string",
+          "required": false,
+          "description": "The zip code where the owner is located. Must be a string in 5-digit ZIP code format (e.g., 93013) or ZIP+4 format (e.g., 93013-0429). This attribute is required for primary address when `UseOnlinePayables` and `OwnerPaidByACH` are both `true` or when `UseOnlinePayables` is `true`, `OwnerPaidByACH` and `UseAlternatePayee` are both `false` or not provided."
+        },
+        {
+          "name": "CountryCode",
+          "type": "string",
+          "required": false,
+          "description": "The country code of the owner (e.g. US for United states). This attribute must be `US` for primary address when `UseOnlinePayables` and `OwnerPaidByACH` are both `true` or when `UseOnlinePayables` is `true`, `OwnerPaidByACH` and `UseAlternatePayee` are both `false` or not provided."
+        },
+        {
+          "name": "OwnerPaidByACH",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether the owner is paid via ACH (Automated Clearing House) transfer"
+        },
+        {
+          "name": "UseOnlinePayables",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether the owner is paid via online payables"
+        },
+        {
+          "name": "BankAccountRoutingNumber",
+          "type": "string",
+          "required": false,
+          "description": "The owner’s bank account routing number. This attribute is required when `UseOnlinePayables` and `OwnerPaidByACH` are both `true`."
+        },
+        {
+          "name": "BankAccountNumber",
+          "type": "string",
+          "required": false,
+          "description": "The owner’s bank account number. This attribute is required when `UseOnlinePayables` and `OwnerPaidByACH` are both `true`."
+        },
+        {
+          "name": "SavingsAccount",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether the owner's bank account is a checking or savings account. If `true`, the owner is using a savings account; otherwise, the bank account in use is a checking account."
+        },
+        {
+          "name": "TaxpayerName",
+          "type": "string",
+          "required": false,
+          "description": "The name of the taxpayer associated with the owner’s account"
+        },
+        {
+          "name": "TaxpayerId",
+          "type": "string",
+          "required": false,
+          "description": "The tax identification number of the taxpayer associated with the owner’s account"
+        },
+        {
+          "name": "Send1099",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether a 1099 form is sent to the owner. Note: If `Send1099` is set to `false`, only `Send1099` will be considered in the request. The `OwnerConsentedToReceiveElectronic1099` and `Sending1099Preference` values will not be processed."
+        },
+        {
+          "name": "OwnerConsentedToReceiveElectronic1099",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether the owner has consented to receive the 1099 tax form electronically. If `true`, the owner’s Email must be provided in the request."
+        },
+        {
+          "name": "Sending1099Preference",
+          "type": "string",
+          "required": false,
+          "description": "Indicates the owner's 1099 sending preference. Valid values include \"Paper\", \"Electronic\" or \"PaperAndElectronic\".\n#### Status Options\n| Attribute            | Type   | Description                                                     |\n|----------------------|--------|-----------------------------------------------------------------|\n| Paper                | String | The 1099 will be sent to the owner by paper                     |\n| Electronic           | String | The 1099 will be sent to the owner eletronically                |\n| PaperAndElectronic | String | The 1099 will be sent to the owner electronically, and by paper |                                                                                                                                        |\n"
+        },
+        {
+          "name": "Tags",
+          "type": "array",
+          "required": false,
+          "description": "User-defined tag(s) that categorize the owner"
+        },
+        {
+          "name": "UseAlternatePayee",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the owner payments are submitted to an alternate person other than what is listed for Owner First, Last and/or Company Name"
+        },
+        {
+          "name": "AlternatePayeeName",
+          "type": "string",
+          "required": false,
+          "description": "The name of the alternate payee. This attribute can be provided only when `UseAlternatePayee` is `true`."
+        },
+        {
+          "name": "AlternatePaymentAddress1",
+          "type": "string",
+          "required": false,
+          "description": "The street address of the Alternate Payee. This attribute must be provided when `UseAlternatePayee` is `true`."
+        },
+        {
+          "name": "AlternatePaymentAddress2",
+          "type": "string",
+          "required": false,
+          "description": "Additional street address information pertaining to the alternate payee. This attribute can be provided only when `UseAlternatePayee` is `true`."
+        },
+        {
+          "name": "AlternatePaymentCity",
+          "type": "string",
+          "required": false,
+          "description": "The city where the alternate payee is located. This attribute must be provided when `UseAlternatePayee` is `true`."
+        },
+        {
+          "name": "AlternatePaymentState",
+          "type": "string",
+          "required": false,
+          "description": "The state where the alternate payee is located. This attribute can be provided only when `UseAlternatePayee` is `true`. This attribute is required and must be valid when `UseOnlinePayables` is `true` and `OwnerPaidByACH` is `false` or not provided."
+        },
+        {
+          "name": "AlternatePaymentPostalCode",
+          "type": "string",
+          "required": false,
+          "description": "The zip code where the alternate payee is located. This attribute can be provided only when `UseAlternatePayee` is `true`. Must be a string in 5-digit ZIP code format (e.g., 93013) or ZIP+4 format (e.g., 93013-0429). This attribute is required when `UseOnlinePayables` is `true` and `OwnerPaidByACH` is `false` or not provided."
+        },
+        {
+          "name": "AlternatePaymentCountryCode",
+          "type": "string",
+          "required": false,
+          "description": "The country code of the alternate payee (e.g. US for United states). This attribute must be provided when `UseAlternatePayee` is `true`. This attribute must be `US` when `UseOnlinePayables` is `true` and `OwnerPaidByACH` is `false` or not provided."
+        },
+        {
+          "name": "Emails",
+          "type": "array",
+          "required": false,
+          "description": "The owner's emails. This attribute must not be provided together with `Email`",
+          "properties": [
+            {
+              "name": "EmailAddress",
+              "type": "string",
+              "required": true,
+              "description": "The owner's email address"
+            },
+            {
+              "name": "IsPrimary",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the email address provided is the owner’s primary email address"
+            }
+          ]
+        },
+        {
+          "name": "PhoneNumbers",
+          "type": "array",
+          "required": false,
+          "description": "The owner's phone number(s). This attribute must not be provided together with `PhoneNumber`",
+          "properties": [
+            {
+              "name": "AdditionalDetails",
+              "type": "string",
+              "required": false,
+              "description": "Additional detailed information pertaining to the phone number associated with the owner"
+            },
+            {
+              "name": "IsPrimary",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the phone number provided is the owner’s main contact number"
+            },
+            {
+              "name": "Label",
+              "type": "string",
+              "required": false,
+              "description": "The label of the phone number, e.g. 'Home'"
+            },
+            {
+              "name": "Number",
+              "type": "string",
+              "required": true,
+              "description": "The owner's phone number"
+            }
+          ]
+        },
+        {
+          "name": "Addresses",
+          "type": "array",
+          "required": false,
+          "description": "The owner's address(es). This attribute must not be provided together with `Address1`, `Address2`, `City`, `State`, `Zip`, or `CountryCode`. The primary address is required when `UseOnlinePayables` and `OwnerPaidByACH` are both `true`, or when `UseOnlinePayables` is `true`, `OwnerPaidByACH` and `UseAlternatePayee` are both `false` or not provided.",
+          "properties": [
+            {
+              "name": "Address1",
+              "type": "string",
+              "required": true,
+              "description": "The primary street address of the owner"
+            },
+            {
+              "name": "Address2",
+              "type": "string",
+              "required": false,
+              "description": "The secondary street address of the owner"
+            },
+            {
+              "name": "City",
+              "type": "string",
+              "required": true,
+              "description": "The city where the owner resides"
+            },
+            {
+              "name": "State",
+              "type": "string",
+              "required": false,
+              "description": "The state where the owner resides. This attribute must not be an unincorporated US territory, i.e., (AS, FM, MH, MP, or VI) for primary address when `UseOnlinePayables` and `OwnerPaidByACH` are both `true`. This value must be valid when `UseOnlinePayables` is `true`, `OwnerPaidByACH` and `UseAlternatePayee` are both `false` or not provided."
+            },
+            {
+              "name": "PostalCode",
+              "type": "string",
+              "required": false,
+              "description": "The postal code where the owner resides. Must be a string in 5-digit ZIP code format (e.g., 93013) or ZIP+4 format (e.g., 93013-0429). This attribute is required for primary address when `UseOnlinePayables` and `OwnerPaidByACH` are both `true` or when `UseOnlinePayables` is `true`, `OwnerPaidByACH` and `UseAlternatePayee` are both `false` or not provided."
+            },
+            {
+              "name": "CountryCode",
+              "type": "string",
+              "required": true,
+              "description": "The country code of the owner (e.g. \"US\" for United States). This attribute must be `US` for primary address when `UseOnlinePayables` and `OwnerPaidByACH` are both `true` or when `UseOnlinePayables` is `true`, `OwnerPaidByACH` and `UseAlternatePayee` are both `false` or not provided."
+            },
+            {
+              "name": "IsPrimary",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the address provided is the owner’s primary address"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/owners/{ownerId}",
     "operationId": "getOwner",
     "summary": "Fetch an Owner by ID",
-    "tag": "Owners"
+    "tag": "Owners",
+    "pathParams": [
+      {
+        "name": "ownerId",
+        "required": true,
+        "description": "Unique identifier of the owner to fetch. Filter the results based on a single value."
+      }
+    ],
+    "queryParams": []
   },
   {
     "method": "PATCH",
     "path": "/owners/{ownerId}",
     "operationId": "updateOwner",
     "summary": "Update Owner",
-    "tag": "Owners"
+    "tag": "Owners",
+    "pathParams": [
+      {
+        "name": "ownerId",
+        "required": true,
+        "description": "Unique identifier of the owner to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "FirstName",
+          "type": "string",
+          "required": false,
+          "description": "The first name of the owner"
+        },
+        {
+          "name": "LastName",
+          "type": "string",
+          "required": false,
+          "description": "The last name of the owner"
+        },
+        {
+          "name": "CompanyName",
+          "type": "string",
+          "required": false,
+          "description": "The company name associated with the owner"
+        },
+        {
+          "name": "CustomFields",
+          "type": "object",
+          "required": false,
+          "description": "The custom fields for the associated entity",
+          "properties": [
+            {
+              "name": "CustomFieldId",
+              "type": "object",
+              "required": false,
+              "description": "The value of the `CustomField` to update. Ensure the value set for `CustomFieldId` matches the type that was set for the `CustomField` at creation.\nFor example, if `boolean` is the type set for the `CustomField` associated with this `CustomFieldId`, the value set here must be either `true` or `false`. *Note*: To clear the value of a `CustomField`, set `CustomFieldId` to `null` in the PATCH request. For array-type custom fields (select_multiple), use an empty array `[]` or empty string `\"\"` instead of `null`, as `null` will be ignored.\n"
+            }
+          ]
+        },
+        {
+          "name": "Email",
+          "type": "string",
+          "required": false,
+          "description": "The primary email address of the owner"
+        },
+        {
+          "name": "PhoneNumber",
+          "type": "string",
+          "required": false,
+          "description": "The owner’s primary phone number"
+        },
+        {
+          "name": "Address1",
+          "type": "string",
+          "required": false,
+          "description": "The primary street address of the owner"
+        },
+        {
+          "name": "Address2",
+          "type": "string",
+          "required": false,
+          "description": "Additional street address information pertaining to the owner"
+        },
+        {
+          "name": "City",
+          "type": "string",
+          "required": false,
+          "description": "The city where the owner is located"
+        },
+        {
+          "name": "State",
+          "type": "string",
+          "required": false,
+          "description": "The state where the owner is located. This value must be valid when `UseOnlinePayables` is `true`, `OwnerPaidByACH` and `UseAlternatePayee` are both `false` or not provided."
+        },
+        {
+          "name": "Zip",
+          "type": "string",
+          "required": false,
+          "description": "The zip code where the owner is located. Must be a string in 5-digit ZIP code format (e.g., 93013) or ZIP+4 format (e.g., 93013-0429). This attribute is required for primary address when `UseOnlinePayables` and `OwnerPaidByACH` are both `true` or when `UseOnlinePayables` is `true`, `OwnerPaidByACH` and `UseAlternatePayee` are both `false` or not provided."
+        },
+        {
+          "name": "CountryCode",
+          "type": "string",
+          "required": false,
+          "description": "The country code of the owner (e.g. US for United states). This attribute must be `US` for primary address when `UseOnlinePayables` and `OwnerPaidByACH` are both `true` or when `UseOnlinePayables` is `true`, `OwnerPaidByACH` and `UseAlternatePayee` are both `false` or not provided."
+        },
+        {
+          "name": "OwnerPaidByACH",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether the owner is paid via ACH (Automated Clearing House) transfer"
+        },
+        {
+          "name": "UseOnlinePayables",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether the owner is paid via online payables"
+        },
+        {
+          "name": "BankAccountRoutingNumber",
+          "type": "string",
+          "required": false,
+          "description": "The owner’s bank account routing number. This attribute is required when `UseOnlinePayables` and `OwnerPaidByACH` are both `true`."
+        },
+        {
+          "name": "BankAccountNumber",
+          "type": "string",
+          "required": false,
+          "description": "The owner’s bank account number. This attribute is required when `UseOnlinePayables` and `OwnerPaidByACH` are both `true`."
+        },
+        {
+          "name": "SavingsAccount",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether the owner's bank account is a checking or savings account. If `true`, the owner is using a savings account; otherwise, the bank account in use is a checking account."
+        },
+        {
+          "name": "TaxpayerName",
+          "type": "string",
+          "required": false,
+          "description": "The name of the taxpayer associated with the owner’s account"
+        },
+        {
+          "name": "TaxpayerId",
+          "type": "string",
+          "required": false,
+          "description": "The tax identification number of the taxpayer associated with the owner’s account"
+        },
+        {
+          "name": "Send1099",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether a 1099 form is sent to the owner. Note: If `Send1099` is set to `false`, only `Send1099` will be considered in the request. The `OwnerConsentedToReceiveElectronic1099` and `Sending1099Preference` values will not be processed."
+        },
+        {
+          "name": "OwnerConsentedToReceiveElectronic1099",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether the owner has consented to receive the 1099 tax form electronically. If true, the owner’s Email must be provided in the request."
+        },
+        {
+          "name": "Sending1099Preference",
+          "type": "string",
+          "required": false,
+          "description": "Indicates the owner's 1099 sending preference. Valid values include \"Paper\", \"Electronic\" or \"PaperAndElectronic\".\n#### Status Options\n| Attribute            | Type   | Description                                                     |\n|----------------------|--------|-----------------------------------------------------------------|\n| Paper                | String | The 1099 will be sent to the owner by paper                     |\n| Electronic           | String | The 1099 will be sent to the owner eletronically                |\n| PaperAndElectronic   | String | The 1099 will be sent to the owner electronically, and by paper |                                                                                                                                        |\n"
+        },
+        {
+          "name": "Tags",
+          "type": "array",
+          "required": false,
+          "description": "User-defined tag(s) that categorize the owner. Providing an array of valid strings will overwrite all existing tags. Passing in an empty array `[]` or an array of empty strings `[\"\"]` or `[\"\", \"\"]` will clear all existing tags. Passing in an array of a valid string and an empty string `[\"tag_name\", \"\"]` will result in `Tags: [\"tag_name\"]`. Passing in `null` will result in no change."
+        },
+        {
+          "name": "UseAlternatePayee",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the owner payments are submitted to an alternate person other than what is listed for Owner First, Last and/or Company Name"
+        },
+        {
+          "name": "AlternatePayeeName",
+          "type": "string",
+          "required": false,
+          "description": "The name of the alternate payee."
+        },
+        {
+          "name": "AlternatePaymentAddress1",
+          "type": "string",
+          "required": false,
+          "description": "The street address of the Alternate Payee."
+        },
+        {
+          "name": "AlternatePaymentAddress2",
+          "type": "string",
+          "required": false,
+          "description": "Additional street address information pertaining to the alternate payee."
+        },
+        {
+          "name": "AlternatePaymentCity",
+          "type": "string",
+          "required": false,
+          "description": "The city where the alternate payee is located."
+        },
+        {
+          "name": "AlternatePaymentState",
+          "type": "string",
+          "required": false,
+          "description": "The state where the alternate payee is located. This attribute is required and must be valid when `UseOnlinePayables` is `true` and `OwnerPaidByACH` is `false` or not provided."
+        },
+        {
+          "name": "AlternatePaymentPostalCode",
+          "type": "string",
+          "required": false,
+          "description": "The zip code where the alternate payee is located. Must be a string in 5-digit ZIP code format (e.g., 93013) or ZIP+4 format (e.g., 93013-0429). This attribute is required when `UseOnlinePayables` is `true` and `OwnerPaidByACH` is `false` or not provided."
+        },
+        {
+          "name": "AlternatePaymentCountryCode",
+          "type": "string",
+          "required": false,
+          "description": "The country code of the alternate payee (e.g. US for United states). This attribute must be `US` when `UseOnlinePayables` is `true` and `OwnerPaidByACH` is `false` or not provided."
+        },
+        {
+          "name": "Emails",
+          "type": "array",
+          "required": false,
+          "description": "The owner's emails. This attribute must not be provided together with `Email`. Passing any number of emails will replace all existing email addresses for the owner.",
+          "properties": [
+            {
+              "name": "EmailAddress",
+              "type": "string",
+              "required": true,
+              "description": "The owner's email address"
+            },
+            {
+              "name": "IsPrimary",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the email address provided is the owner’s primary email address"
+            }
+          ]
+        },
+        {
+          "name": "PhoneNumbers",
+          "type": "array",
+          "required": false,
+          "description": "The owner's phone number(s). This attribute must not be provided together with `PhoneNumber`. Passing any number of phone numbers will replace all existing phone numbers for the owner.",
+          "properties": [
+            {
+              "name": "AdditionalDetails",
+              "type": "string",
+              "required": false,
+              "description": "Additional detailed information pertaining to the phone number associated with the owner"
+            },
+            {
+              "name": "IsPrimary",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the phone number provided is the owner’s main contact number"
+            },
+            {
+              "name": "Label",
+              "type": "string",
+              "required": false,
+              "description": "The label of the phone number, e.g. 'Home'"
+            },
+            {
+              "name": "Number",
+              "type": "string",
+              "required": true,
+              "description": "The owner's phone number"
+            }
+          ]
+        },
+        {
+          "name": "Addresses",
+          "type": "array",
+          "required": false,
+          "description": "The owner's address(es). This attribute must not be provided together with `Address1`, `Address2`, `City`, `State`, `Zip`, or `CountryCode`. Passing any number of addresses will replace all existing addresses for the owner. The primary address is required when `UseOnlinePayables` and `OwnerPaidByACH` are both `true`, or when `UseOnlinePayables` is `true`, `OwnerPaidByACH` and `UseAlternatePayee` are both `false` or not provided.",
+          "properties": [
+            {
+              "name": "Address1",
+              "type": "string",
+              "required": true,
+              "description": "The primary street address of the owner"
+            },
+            {
+              "name": "Address2",
+              "type": "string",
+              "required": false,
+              "description": "The secondary street address of the owner"
+            },
+            {
+              "name": "City",
+              "type": "string",
+              "required": true,
+              "description": "The city where the owner resides"
+            },
+            {
+              "name": "State",
+              "type": "string",
+              "required": false,
+              "description": "The state where the owner resides. This attribute must not be an unincorporated US territory, i.e., (AS, FM, MH, MP, or VI) for primary address when `UseOnlinePayables` and `OwnerPaidByACH` are both `true`. This value must be valid when `UseOnlinePayables` is `true`, `OwnerPaidByACH` and `UseAlternatePayee` are both `false` or not provided."
+            },
+            {
+              "name": "PostalCode",
+              "type": "string",
+              "required": false,
+              "description": "The postal code where the owner resides. Must be a string in 5-digit ZIP code format (e.g., 93013) or ZIP+4 format (e.g., 93013-0429). This attribute is required for primary address when `UseOnlinePayables` and `OwnerPaidByACH` are both `true` or when `UseOnlinePayables` is `true`, `OwnerPaidByACH` and `UseAlternatePayee` are both `false` or not provided."
+            },
+            {
+              "name": "CountryCode",
+              "type": "string",
+              "required": true,
+              "description": "The country code of the owner (e.g. \"US\" for United States). This attribute must be `US` for primary address when `UseOnlinePayables` and `OwnerPaidByACH` are both `true` or when `UseOnlinePayables` is `true`, `OwnerPaidByACH` and `UseAlternatePayee` are both `false` or not provided."
+            },
+            {
+              "name": "IsPrimary",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the address provided is the owner’s primary address"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/owners/bulk",
     "operationId": "bulkCreateOwners",
     "summary": "Bulk Create Owners",
-    "tag": "Owners"
+    "tag": "Owners",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual owner in the bulk-creation of owners."
+            },
+            {
+              "name": "FirstName",
+              "type": "string",
+              "required": false,
+              "description": "The first name of the owner. This value is required when `CompanyName` is not provided."
+            },
+            {
+              "name": "LastName",
+              "type": "string",
+              "required": false,
+              "description": "The last name of the owner. This value is required when `CompanyName` is not provided."
+            },
+            {
+              "name": "CompanyName",
+              "type": "string",
+              "required": false,
+              "description": "The company name associated with the owner. This value is required when `FirstName` or `LastName` is not provided."
+            },
+            {
+              "name": "OwnerPaidByACH",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the owner is paid via ACH (Automated Clearing House) transfer"
+            },
+            {
+              "name": "UseOnlinePayables",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the owner is paid via online payables"
+            },
+            {
+              "name": "BankAccountRoutingNumber",
+              "type": "string",
+              "required": false,
+              "description": "The owner’s bank account routing number. This attribute is required when `UseOnlinePayables` and `OwnerPaidByACH` are both `true`."
+            },
+            {
+              "name": "BankAccountNumber",
+              "type": "string",
+              "required": false,
+              "description": "The owner’s bank account number. This attribute is required when `UseOnlinePayables` and `OwnerPaidByACH` are both `true`."
+            },
+            {
+              "name": "SavingsAccount",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the owner's bank account is a checking or savings account. If `true`, the owner is using a savings account; otherwise, the bank account in use is a checking account."
+            },
+            {
+              "name": "TaxpayerName",
+              "type": "string",
+              "required": false,
+              "description": "The name of the taxpayer associated with the owner’s account"
+            },
+            {
+              "name": "TaxpayerId",
+              "type": "string",
+              "required": false,
+              "description": "The tax identification number of the taxpayer associated with the owner’s account"
+            },
+            {
+              "name": "Send1099",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether a 1099 form is sent to the owner. Note: If Send1099 is set to false, only Send1099 will be considered in the request. TheOwnerConsentedToReceiveElectronic1099 and Sending1099Preference values will not be processed."
+            },
+            {
+              "name": "OwnerConsentedToReceiveElectronic1099",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the owner has consented to receive the 1099 tax form electronically. If true, the owner’s Email must be provided in the request."
+            },
+            {
+              "name": "Sending1099Preference",
+              "type": "string",
+              "required": false,
+              "description": "Indicates the owner's 1099 sending preference. Valid values include \"Paper\", \"Electronic\" or \"PaperAndElectronic\".\n#### Status Options\n| Attribute            | Type   | Description                                                     |\n|----------------------|--------|-----------------------------------------------------------------|\n| Paper                | String | The 1099 will be sent to the owner by paper                     |\n| Electronic           | String | The 1099 will be sent to the owner eletronically                |\n| PaperAndElectronic | String | The 1099 will be sent to the owner electronically, and by paper |                                                                                                                                        |\n"
+            },
+            {
+              "name": "Tags",
+              "type": "array",
+              "required": false,
+              "description": "User-defined tag(s) that categorize the owner"
+            },
+            {
+              "name": "UseAlternatePayee",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether or not the owner payments are submitted to an alternate person other than what is listed for Owner First, Last and/or Company Name"
+            },
+            {
+              "name": "AlternatePayeeName",
+              "type": "string",
+              "required": false,
+              "description": "The name of the alternate payee. This attribute can be provided only when `UseAlternatePayee` is `true`."
+            },
+            {
+              "name": "AlternatePaymentAddress1",
+              "type": "string",
+              "required": false,
+              "description": "The street address of the Alternate Payee. This attribute must be provided when `UseAlternatePayee` is `true`."
+            },
+            {
+              "name": "AlternatePaymentAddress2",
+              "type": "string",
+              "required": false,
+              "description": "Additional street address information pertaining to the alternate payee. This attribute can be provided only when `UseAlternatePayee` is `true`."
+            },
+            {
+              "name": "AlternatePaymentCity",
+              "type": "string",
+              "required": false,
+              "description": "The city where the alternate payee is located. This attribute must be provided when `UseAlternatePayee` is `true`."
+            },
+            {
+              "name": "AlternatePaymentState",
+              "type": "string",
+              "required": false,
+              "description": "The state where the alternate payee is located. This attribute can be provided only when `UseAlternatePayee` is `true`. This attribute is required and must be valid when `UseOnlinePayables` is `true` and `OwnerPaidByACH` is `false` or not provided."
+            },
+            {
+              "name": "AlternatePaymentPostalCode",
+              "type": "string",
+              "required": false,
+              "description": "The zip code where the alternate payee is located. This attribute can be provided only when `UseAlternatePayee` is `true`. Must be a string in 5-digit ZIP code format (e.g., 93013) or ZIP+4 format (e.g., 93013-0429). This attribute is required when `UseOnlinePayables` is `true` and `OwnerPaidByACH` is `false` or not provided."
+            },
+            {
+              "name": "AlternatePaymentCountryCode",
+              "type": "string",
+              "required": false,
+              "description": "The country code of the alternate payee (e.g. US for United states). This attribute must be provided when `UseAlternatePayee` is `true`. This attribute must be `US` when `UseOnlinePayables` is `true` and `OwnerPaidByACH` is `false` or not provided."
+            },
+            {
+              "name": "Emails",
+              "type": "array",
+              "required": false,
+              "description": "The owner's emails."
+            },
+            {
+              "name": "PhoneNumbers",
+              "type": "array",
+              "required": false,
+              "description": "The owner's phone number(s)."
+            },
+            {
+              "name": "Addresses",
+              "type": "array",
+              "required": false,
+              "description": "The owner's address(es). The primary address is required when `UseOnlinePayables` and `OwnerPaidByACH` are both `true`, or when `UseOnlinePayables` is `true`, `OwnerPaidByACH` and `UseAlternatePayee` are both `false` or not provided."
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/owners/{OwnerId}/attachments",
     "operationId": "createOwnerAttachment",
     "summary": "Create Owner Attachment",
-    "tag": "Owners"
+    "tag": "Owners",
+    "pathParams": [
+      {
+        "name": "OwnerId",
+        "required": true,
+        "description": "The owner to which the file will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "multipart/form-data",
+      "required": true,
+      "properties": [
+        {
+          "name": "File",
+          "type": "string",
+          "required": false,
+          "description": "Filename.file-extension"
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/owners/attachments",
     "operationId": "listOwnerAttachments",
     "summary": "List All Owner Attachments",
-    "tag": "Owners"
+    "tag": "Owners",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[CreatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: filters[CreatedAtFrom]=2021-12-15T16:30:46Z <br> Returns attachments created on or after the specified date. The value must adhere to the ISO 8601 format YYYY-MM-DDThh:mm:ssZ and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[OwnerId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "filters[OwnerId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the owner associated with the attachment. Can only filter by one owner at a time.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/owners/notes",
     "operationId": "getOwnersNotes",
     "summary": "List All Owners Notes",
-    "tag": "Owners"
+    "tag": "Owners",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[OwnerId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[OwnerId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the owner. Filter the results based on a single value.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns owner note records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/owners/{OwnerId}/notes",
     "operationId": "createOwnerNote",
     "summary": "Create Owner Note",
-    "tag": "Owners"
+    "tag": "Owners",
+    "pathParams": [
+      {
+        "name": "OwnerId",
+        "required": true,
+        "description": "The owner to which the note will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the owner note. An owner note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/owners/{OwnerId}/notes/{Id}",
     "operationId": "updateOwnerNote",
     "summary": "Update Owner Note",
-    "tag": "Owners"
+    "tag": "Owners",
+    "pathParams": [
+      {
+        "name": "OwnerId",
+        "required": true,
+        "description": "The owner to which the note will be attached"
+      },
+      {
+        "name": "Id",
+        "required": true,
+        "description": "Unique identifier of the note to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the owner note. An owner note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/owner_groups",
     "operationId": "getOwnerGroups",
     "summary": "List All Owner Groups",
-    "tag": "Owner Groups"
+    "tag": "Owner Groups",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Current]",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Example: `filters[Current]=true` <br> Indicates whether or not the owner currently owns the property"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2020-12-15T16:30:46Z` <br> Returns owner group records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PropertyId]=eea5de23-c543-456e-abc9-123456789cba,cfcb95e8-d5fb-448c-b811-88d9f832e79c` <br> Unique identifier of the property associated with the owner(s) within the owner group. Filter the results based on one or more PropertyIds. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=eea5de23-c543-456e-abc9-123456789cba,cfcb95e8-d5fb-448c-b811-88d9f832e79c` <br> Unique identifier of the owner group. Filter the results based on one or more ids. Multiple values should be separated by commas.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/owner_groups",
     "operationId": "createOwnerGroup",
     "summary": "Create Owner Group",
-    "tag": "Owner Groups"
+    "tag": "Owner Groups",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "FiscalYearEnd",
+          "type": "integer",
+          "required": true,
+          "description": "The month number representing the end of the fiscal year"
+        },
+        {
+          "name": "Owners",
+          "type": "array",
+          "required": true,
+          "description": "Array of owners and their associated ownership details for the property",
+          "properties": [
+            {
+              "name": "OwnerId",
+              "type": "string",
+              "required": true,
+              "description": "Unique identifier of the owner"
+            },
+            {
+              "name": "PercentOwned",
+              "type": "string",
+              "required": true,
+              "description": "The percentage of ownership assigned to this owner. The sum of PercentOwned across all owners must equal 100%."
+            },
+            {
+              "name": "ContractExpiration",
+              "type": "string",
+              "required": false,
+              "description": "The date when the owner's contract expires. The date must be in YYYY-MM-DD format."
+            }
+          ]
+        },
+        {
+          "name": "OwnerPacketBasis",
+          "type": "string",
+          "required": true,
+          "description": "The accounting method used for owner packet calculations. Valid values are \"Cash\" or \"Accrual\"."
+        },
+        {
+          "name": "PaymentType",
+          "type": "string",
+          "required": true,
+          "description": "The type of payment distribution for the owners. Valid values are \"Net Income\" or \"Flat\"."
+        },
+        {
+          "name": "PaymentAmount",
+          "type": "string",
+          "required": false,
+          "description": "The fixed payment amount to distribute to owners. This value is required when PaymentType is \"Flat\"."
+        },
+        {
+          "name": "PropertyId",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier of the property associated with all owners within the owner group"
+        },
+        {
+          "name": "StartDate",
+          "type": "string",
+          "required": true,
+          "description": "The date when this ownership group becomes effective. The date must be in YYYY-MM-DD format and cannot be set in the future. When updating an existing property's ownership, this date must be later than the current ownership group's StartDate. Creating a new owner group will automatically set the previous owner group's EndDate to one day before this StartDate to maintain ownership continuity."
+        },
+        {
+          "name": "ReserveFunds",
+          "type": "string",
+          "required": true,
+          "description": "The amount of funds to maintain in reserve for the property"
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/owner_groups/{id}",
     "operationId": "updateOwnerGroup",
     "summary": "Update Owner Group",
-    "tag": "Owner Groups"
+    "tag": "Owner Groups",
+    "pathParams": [
+      {
+        "name": "id",
+        "required": true,
+        "description": "Unique identifier of the owner group to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "FiscalYearEnd",
+          "type": "integer",
+          "required": false,
+          "description": "The month number representing the end of the fiscal year"
+        },
+        {
+          "name": "OwnerPacketBasis",
+          "type": "string",
+          "required": false,
+          "description": "The accounting method used for owner packet calculations. Valid values are \"Cash\" or \"Accrual\"."
+        },
+        {
+          "name": "PaymentType",
+          "type": "string",
+          "required": false,
+          "description": "The type of payment distribution for the owners. Valid values are \"Net Income\" or \"Flat\"."
+        },
+        {
+          "name": "PaymentAmount",
+          "type": "string",
+          "required": false,
+          "description": "The fixed payment amount to distribute to owners. This value is required when PaymentType is \"Flat\"."
+        },
+        {
+          "name": "StartDate",
+          "type": "string",
+          "required": false,
+          "description": "The date when this ownership group becomes effective. The date must be in YYYY-MM-DD format and cannot be set in the future. When updating an existing property's ownership, this date must be later than the current ownership group's StartDate. Creating a new owner group will automatically set the previous owner group's EndDate to one day before this StartDate to maintain ownership continuity."
+        },
+        {
+          "name": "ReserveFunds",
+          "type": "string",
+          "required": false,
+          "description": "The amount of funds to maintain in reserve for the property"
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/payables",
     "operationId": "getPayables",
     "summary": "List All Payables",
-    "tag": "Payables"
+    "tag": "Payables",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "filters[CreatedAt]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[CreatedAt]=2021-12-15T16:30:46Z` <br> Returns payables created on or after the specified date. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/prepayments/bulk",
     "operationId": "bulkCreatePrepayments",
     "summary": "Bulk Create Prepayments",
-    "tag": "Prepayments"
+    "tag": "Prepayments",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual prepayments in the bulk-creation of prepayments."
+            },
+            {
+              "name": "Amount",
+              "type": "string",
+              "required": true,
+              "description": "The amount paid for this GL Account. Must be a positive number."
+            },
+            {
+              "name": "GlAccountApplyOption",
+              "type": "string",
+              "required": false,
+              "description": "The GL Account you want this prepayment to apply to. Must be either a UUID of a GL Account, 'any' or 'none'"
+            },
+            {
+              "name": "OccupancyId",
+              "type": "string",
+              "required": true,
+              "description": "The UUID of the occupancy associated with the primary tenant"
+            },
+            {
+              "name": "Remarks",
+              "type": "string",
+              "required": false,
+              "description": "Remarks about the payment. Will only be visible internally for the clients"
+            },
+            {
+              "name": "Reference",
+              "type": "string",
+              "required": false,
+              "description": "An external value, which will only be visible on owner statements"
+            },
+            {
+              "name": "PrepaymentDate",
+              "type": "string",
+              "required": true,
+              "description": "The move-in date for this occupancy"
+            },
+            {
+              "name": "PrepaymentGlAccountId",
+              "type": "string",
+              "required": true,
+              "description": "UUID for the Gl Account used for this prepayment "
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/portfolios",
     "operationId": "getPortfolios",
     "summary": "List All Portfolios",
-    "tag": "Portfolios"
+    "tag": "Portfolios",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=234abcde-c543-456e-abc9-123456789abc,1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the portfolio. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns portfolio records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "PATCH",
     "path": "/portfolios/{portfolioId}",
     "operationId": "updatePortfolio",
     "summary": "Update a Portfolio",
-    "tag": "Portfolios"
+    "tag": "Portfolios",
+    "pathParams": [
+      {
+        "name": "portfolioId",
+        "required": true,
+        "description": "Unique identifier of the portfolio to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Name",
+          "type": "string",
+          "required": false,
+          "description": "The name of the portfolio"
+        },
+        {
+          "name": "PropertyIds",
+          "type": "array",
+          "required": false,
+          "description": "Unique identifier(s) of the properties to add or remove from the portfolio.\n- The portfolio you are updating will only include the properties passed in this array.\n- If `PropertyIds` previously in the portfolio are excluded from the updated array, they'll be added to the Default portfolio in APM\n- A property can only be linked to a single portfolio. If a `PropertyId` previously associated with another portfolio is passed, it will be removed from that association.\n"
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/properties",
     "operationId": "getProperties",
     "summary": "List All Properties",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=234abcde-c543-456e-abc9-123456789abc,cfcb95e8-d5fb-448c-b811-88d9f832e79c` <br> Unique identifier of the properties that are sought for retrieval. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[IncludeHidden]",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Example: `filters[IncludeHidden]=true` <br> Indicates whether or not to include properties hidden by an AppFolio Property Manager user in the response"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns property records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[PropertyType]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PropertyType]=Single-Family,Multi-Family,Commercial` <br> Returns property records that match one or more of the specified property types. Multiple values should be separated by commas. Acceptable values are: Commercial, Corporate, Manufactured-Housing, Mixed-Use, Multi-Family, Self-Storage, Single-Family, Student-Housing or Vacation"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/properties/bulk",
     "operationId": "bulkCreateProperties",
     "summary": "Bulk Create Properties",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual properties in the bulk-creation of properties."
+            },
+            {
+              "name": "Name",
+              "type": "string",
+              "required": true,
+              "description": "The name of the property"
+            },
+            {
+              "name": "ExpensesCashBankAccountId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the expenses cash bank account associated with the property. Used for Dual-Operating Bank Accounts."
+            },
+            {
+              "name": "AdditionalCashAccounts",
+              "type": "array",
+              "required": false,
+              "description": "Array of additional cash GL & bank account combinations associated with the property. Cash accounts can only be assigned once per property.\n#### Property Additional Cash Accounts\n| Attributes     | Type   | Description                                                                         | Notes                                                   |\n|----------------|--------|-------------------------------------------------------------------------------------|---------------------------------------------------------|\n| BankAccountId  | String | Unique identifier of the additional cash bank account associated with the property  | UUID format e.g. \"d9009724-9f32-11ec-bc31-d46a96ab9b08\" |\n| GlAccountId    | String | Unique identifier of the additional cash GL account associated with the property    | UUID format e.g. \"914a2a8e-f5d3-11e9-a485-1876da4c83b5\" |\n"
+            },
+            {
+              "name": "CurrentManagementFeePolicy",
+              "type": "object",
+              "required": false,
+              "description": "Contains details about the property’s management fee policy"
+            },
+            {
+              "name": "LeaseFeePolicy",
+              "type": "object",
+              "required": false,
+              "description": "Contains details about the property’s lease fee policy"
+            },
+            {
+              "name": "HomeWarrantyInfo",
+              "type": "object",
+              "required": false,
+              "description": "Object containing information about the property’s home warranty policy."
+            },
+            {
+              "name": "PropertyType",
+              "type": "string",
+              "required": true,
+              "description": "The type of property\n#### Property Type Options\n| Options         | Description                                |\n|-----------------|--------------------------------------------|\n| Single-Family   | The property is for single-family use                   |\n| Multi-Family    | The property is for multiple family use                            |\n| Self-Storage    | The property is for self-storage use                      |\n| Student-Housing | The property houses students, and supports by-the-bed units. |\n| Commercial      | The property is used for commercial purposes                                 |\n"
+            },
+            {
+              "name": "OperatingCashBankAccountId",
+              "type": "string",
+              "required": true,
+              "description": "Unique identifier of the operating cash bank account associated with the property"
+            },
+            {
+              "name": "EscrowCashBankAccountId",
+              "type": "string",
+              "required": true,
+              "description": "Unique identifier of the escrow cash bank account associated with the property"
+            },
+            {
+              "name": "AdminFee",
+              "type": "number",
+              "required": false,
+              "description": "The admin fee associated with the property"
+            },
+            {
+              "name": "Amenities",
+              "type": "array",
+              "required": false,
+              "description": "The amenities associated with the property"
+            },
+            {
+              "name": "CatsAllowed",
+              "type": "string",
+              "required": false,
+              "description": "The property’s cat policy. Valid values include “Yes”, “No” or `null`. A null value indicates that the property may not have specified a policy for cats.\n| Attribute | Type   | Description                                |\n|-----------|--------|--------------------------------------------|\n| Yes       | String | Cats are permitted on the property         |\n| No        | String | Cats are not permitted on the property     |\n| null      | String | No cat policy has been set for the property |\n"
+            },
+            {
+              "name": "Class",
+              "type": "string",
+              "required": false,
+              "description": "Indicates the type and quality of the property based on factors such as age, location, amenities, and overall condition. Valid values for the `Class` attribute include “A+“, “A“, “A-“, “B+”, “B”, “B-”, “C+“, “C“, and “C-“.\n#### Property Class Options\n| Attribute | Type   | Description                                                        |\n|-----------|--------|--------------------------------------------------------------------|\n| A+        | String | Exceptional properties with top amenities and prime location       |\n| A         | String | High-quality properties with above-average amenities               |\n| A-        | String | Well-maintained properties in desirable areas                      |\n| B+        | String | Properties with good amenities and minor issues                    |\n| B         | String | Properties with average amenities and minor maintenance issues     |\n| B-        | String | Properties with below-average amenities and some maintenance needs |\n| C+        | String | Properties needing renovation, with limited amenities              |\n| C         | String | Properties in fair condition with minimal amenities                |\n| C-        | String | Properties in poor condition with minimal amenities                |\n"
+            },
+            {
+              "name": "DogsAllowed",
+              "type": "string",
+              "required": false,
+              "description": "| Attribute     | Type   | Description                                    |\n|---------------|--------|------------------------------------------------|\n| Large & Small | String | Large and small dogs are permitted on property |\n| Small Only    | String | Only small dogs are permitted on the property  |\n| No            | String | No dogs are permitted on the property          |\n| null          | String | No dog policy has been set for the property    |\n"
+            },
+            {
+              "name": "InsuranceExpiration",
+              "type": "string",
+              "required": false,
+              "description": "The date the property’s insurance expires"
+            },
+            {
+              "name": "MaintenanceLimit",
+              "type": "string",
+              "required": false,
+              "description": "The dollar amount limit to not exceed for maintenance"
+            },
+            {
+              "name": "MaintenanceNotes",
+              "type": "string",
+              "required": false,
+              "description": "A brief informative message about the property's maintenance"
+            },
+            {
+              "name": "ManagementEndDate",
+              "type": "string",
+              "required": false,
+              "description": "The date when the current management of the property ended"
+            },
+            {
+              "name": "ManagementEndReason",
+              "type": "string",
+              "required": false,
+              "description": "The reason for the end of the current management of the property\n#### Management End Reason Options\n| Management End Reasons            | Type   | Description                                                                       |\n|-----------------------------------|--------|-----------------------------------------------------------------------------------|\n| Foreclosure                       | String | Property management ended due to foreclosure                                      |\n| Maintenance                       | String | Property management ended due to completion of maintenance tasks                  |\n| Management Company Concerns       | String | Property management ended due to concerns raised by the management company        |\n| Management Company Terminated     | String | Property management ended because the management company terminated the agreement |\n| Owner Moved In                    | String | Property management ended because the owner moved into the property               |\n| Owner Self-Managing               | String | Property management ended because the owner is managing the property themselves   |\n| Owner Terminated Management       | String | Property management ended because the owner terminated the management agreement   |\n| Property Uninhabitable/Demolition | String | Property management ended because the property uninhabitable or was demolished    |\n| Tenant Placement                  | String | Property management ended after tenant placement                                  |\n| Other                             | String | Property management ended due to a reason not listed\n"
+            },
+            {
+              "name": "ManagementStartDate",
+              "type": "string",
+              "required": false,
+              "description": "The date when the current management of the property began"
+            },
+            {
+              "name": "NsfFee",
+              "type": "number",
+              "required": false,
+              "description": "The non-sufficient funds (NSF) fee associated with the property. This fee is charged when a payment made for the property is rejected due to insufficient funds in the payer's account."
+            },
+            {
+              "name": "SiteManager",
+              "type": "object",
+              "required": false,
+              "description": "Contains the property site manager’s contact information and details"
+            },
+            {
+              "name": "UnitEntryPreAuthorized",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether or not entry to the unit was pre-authorized"
+            },
+            {
+              "name": "YearBuilt",
+              "type": "integer",
+              "required": false,
+              "description": "The year in which the property was constructed"
+            },
+            {
+              "name": "Address1",
+              "type": "string",
+              "required": true,
+              "description": "The primary street address of the property"
+            },
+            {
+              "name": "Address2",
+              "type": "string",
+              "required": false,
+              "description": "Additional street address information pertaining to the property"
+            },
+            {
+              "name": "City",
+              "type": "string",
+              "required": true,
+              "description": "The city where the property is located"
+            },
+            {
+              "name": "State",
+              "type": "string",
+              "required": true,
+              "description": "The state where the property is located"
+            },
+            {
+              "name": "Zip",
+              "type": "string",
+              "required": true,
+              "description": "The zip code where the property is located"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/properties/{propertyId}",
     "operationId": "updateProperty",
     "summary": "Update Property",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [
+      {
+        "name": "propertyId",
+        "required": true,
+        "description": "Unique identifier of the property to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Name",
+          "type": "string",
+          "required": false,
+          "description": "The name of the property"
+        },
+        {
+          "name": "Amenities",
+          "type": "array",
+          "required": false,
+          "description": "Array of strings to add to the property. Providing an array of valid strings will overwrite all existing amenities. Passing in an empty array `[]` or an array of empty strings `[\"\"]` or `[\"\", \"\"]` will clear all existing amenities. Passing in an array of a valid string and an empty string `[\"amenity_name\", \"\"]` will result in `Amenities: [\"amenity_name\"]`. Passing in `null` will result in no change."
+        },
+        {
+          "name": "HomeWarrantyInfo",
+          "type": "object",
+          "required": false,
+          "description": "Object containing information about the property’s home warranty policy. If HomeWarrantyInfo is set to null in an update request, all values within the HomeWarrantyInfo will be deleted from the updated property.",
+          "properties": [
+            {
+              "name": "CompanyName",
+              "type": "string",
+              "required": false,
+              "description": "The name of the company providing the home warranty coverage."
+            },
+            {
+              "name": "ContactNumber",
+              "type": "string",
+              "required": false,
+              "description": "The contact phone number for the home warranty company or policy administrator"
+            },
+            {
+              "name": "Expiration",
+              "type": "string",
+              "required": false,
+              "description": "The expiration date of the home warranty policy"
+            },
+            {
+              "name": "PolicyNumber",
+              "type": "string",
+              "required": false,
+              "description": "Unique reference number associated with the home warranty policy"
+            }
+          ]
+        },
+        {
+          "name": "LeaseFeePolicy",
+          "type": "object",
+          "required": false,
+          "description": "Contains details about the property’s lease fee policy",
+          "properties": [
+            {
+              "name": "FeeType",
+              "type": "string",
+              "required": false,
+              "description": "The property’s lease fee type. This type determines how much is billed to a property per executed lease by the management company.\n#### Management Fee Type Required Attributes\n| FeeType            | Required Attributes   |\n|--------------------|-----------------------|\n| Flat               | FlatAmount            |\n| Percentage         | Percentage            |\n"
+            },
+            {
+              "name": "FlatAmount",
+              "type": "string",
+              "required": false,
+              "description": "The dollar amount billed to an owner per move in. The attribute can only be used when LeaseFeeType is set to 'Flat'. If no value is provided, the default is 0.0"
+            },
+            {
+              "name": "Percentage",
+              "type": "string",
+              "required": false,
+              "description": "The percentage an owner is billed based on a full month’s rent amount of an executed lease after move in, rounded to 2 decimal places. The attribute can only be used when LeaseFeeType is set to 'Percent'. If no value is provided, will default to 0.0"
+            }
+          ]
+        },
+        {
+          "name": "PropertyType",
+          "type": "string",
+          "required": false,
+          "description": "The type of property\n#### Property Type Options\n| Options         | Description                                |\n|-----------------|--------------------------------------------|\n| Single-Family   | The property is for single-family use                   |\n| Multi-Family    | The property is for multiple family use                            |\n| Self-Storage    | The property is for self-storage use                            |\n| Student-Housing | The property houses students, and supports by-the-bed units. |\n| Commercial      | The property is used for commercial purposes                                 |\n"
+        },
+        {
+          "name": "PostedToInternet",
+          "type": "boolean",
+          "required": false,
+          "description": "Sets whether to post the Single-Family (SFR) property to third-party listings pages. Set to true to display and accept applications and false to remove the listing. Requests containing this attribute for non-SFR property types will return an error."
+        },
+        {
+          "name": "PostedToWebsite",
+          "type": "boolean",
+          "required": false,
+          "description": "Sets whether to post the Single-Family (SFR) property to the AppFolio listings page. Set to true to display and accept applications and false to remove the listing. Requests containing this attribute for non-SFR property types will return an error."
+        },
+        {
+          "name": "CustomFields",
+          "type": "object",
+          "required": false,
+          "description": "The custom fields for the associated entity",
+          "properties": [
+            {
+              "name": "CustomFieldId",
+              "type": "object",
+              "required": false,
+              "description": "The value of the `CustomField` to update. Ensure the value set for `CustomFieldId` matches the type that was set for the `CustomField` at creation.\nFor example, if `boolean` is the type set for the `CustomField` associated with this `CustomFieldId`, the value set here must be either `true` or `false`. *Note*: To clear the value of a `CustomField`, set `CustomFieldId` to `null` in the PATCH request. For array-type custom fields (select_multiple), use an empty array `[]` or empty string `\"\"` instead of `null`, as `null` will be ignored.\n"
+            }
+          ]
+        },
+        {
+          "name": "AdminFee",
+          "type": "number",
+          "required": false,
+          "description": "The admin fee associated with the property"
+        },
+        {
+          "name": "CatsAllowed",
+          "type": "string",
+          "required": false,
+          "description": "The property’s cat policy. Valid values include “Yes”, “No” or `null`. A null value indicates that the property may not have specified a policy for cats.\n| Attribute | Type   | Description                                |\n|-----------|--------|--------------------------------------------|\n| Yes       | String | Cats are permitted on the property         |\n| No        | String | Cats are not permitted on the property     |\n| null      | String | No cat policy has been set for the property |\n"
+        },
+        {
+          "name": "Class",
+          "type": "string",
+          "required": false,
+          "description": "Indicates the type and quality of the property based on factors such as age, location, amenities, and overall condition. Valid values for the `Class` attribute include “A+“, “A“, “A-“, “B+”, “B”, “B-”, “C+“, “C“, and “C-“.\n#### Property Class Options\n| Attribute | Type   | Description                                                        |\n|-----------|--------|--------------------------------------------------------------------|\n| A+        | String | Exceptional properties with top amenities and prime location       |\n| A         | String | High-quality properties with above-average amenities               |\n| A-        | String | Well-maintained properties in desirable areas                      |\n| B+        | String | Properties with good amenities and minor issues                    |\n| B         | String | Properties with average amenities and minor maintenance issues     |\n| B-        | String | Properties with below-average amenities and some maintenance needs |\n| C+        | String | Properties needing renovation, with limited amenities              |\n| C         | String | Properties in fair condition with minimal amenities                |\n| C-        | String | Properties in poor condition with minimal amenities                |\n"
+        },
+        {
+          "name": "CurrentManagementFeePolicy",
+          "type": "object",
+          "required": false,
+          "description": "Contains details about the property’s current management fee policy",
+          "properties": [
+            {
+              "name": "FeeType",
+              "type": "string",
+              "required": false,
+              "description": "The property’s fee type. This type determines how much is billed to a property per month by the management company\n#### Management Fee Type Required Attributes\n| FeeType            | Required Attributes   |\n|--------------------|-----------------------|\n| Flat               | FlatAmount            |\n| Percentage         | Percentage, Minimum   |\n"
+            },
+            {
+              "name": "FlatAmount",
+              "type": "string",
+              "required": false,
+              "description": "The dollar amount billed once a month. The attribute can only be used when FeeType is set to 'Flat'"
+            },
+            {
+              "name": "Percentage",
+              "type": "string",
+              "required": false,
+              "description": "The percentage a property is billed based on the net income generated from General Ledger accounts subject to management fees"
+            },
+            {
+              "name": "Minimum",
+              "type": "string",
+              "required": false,
+              "description": "The minimum management fee billed. The attribute can only be used when FeeType is set to 'Percent'"
+            },
+            {
+              "name": "Maximum",
+              "type": "string",
+              "required": false,
+              "description": "The maximum management fee billed. The attribute can only be used when FeeType is set to 'Percent'"
+            },
+            {
+              "name": "StartDate",
+              "type": "string",
+              "required": false,
+              "description": "The start date of the management fee policy. The date must be the first of a month"
+            },
+            {
+              "name": "WaiveWhenVacant",
+              "type": "boolean",
+              "required": false,
+              "description": "Sets whether to waive the management fee when the property is vacant"
+            }
+          ]
+        },
+        {
+          "name": "DogsAllowed",
+          "type": "string",
+          "required": false,
+          "description": "| Attribute     | Type   | Description                                    |\n|---------------|--------|------------------------------------------------|\n| Large & Small | String | Large and small dogs are permitted on property |\n| Small Only    | String | Only small dogs are permitted on the property  |\n| No            | String | No dogs are permitted on the property          |\n| null          | String | No dog policy has been set for the property    |\n"
+        },
+        {
+          "name": "InsuranceExpiration",
+          "type": "string",
+          "required": false,
+          "description": "The date the property’s insurance expires"
+        },
+        {
+          "name": "MaintenanceLimit",
+          "type": "string",
+          "required": false,
+          "description": "The dollar amount limit to not exceed for maintenance"
+        },
+        {
+          "name": "MaintenanceNotes",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the property's maintenance"
+        },
+        {
+          "name": "ManagementEndDate",
+          "type": "string",
+          "required": false,
+          "description": "The date when the current management of the property ended"
+        },
+        {
+          "name": "ManagementEndReason",
+          "type": "string",
+          "required": false,
+          "description": "The reason for the end of the current management of the property\n#### Management End Reason Options\n| Management End Reasons            | Type   | Description                                                                       |\n|-----------------------------------|--------|-----------------------------------------------------------------------------------|\n| Foreclosure                       | String | Property management ended due to foreclosure                                      |\n| Maintenance                       | String | Property management ended due to completion of maintenance tasks                  |\n| Management Company Concerns       | String | Property management ended due to concerns raised by the management company        |\n| Management Company Terminated     | String | Property management ended because the management company terminated the agreement |\n| Owner Moved In                    | String | Property management ended because the owner moved into the property               |\n| Owner Self-Managing               | String | Property management ended because the owner is managing the property themselves   |\n| Owner Terminated Management       | String | Property management ended because the owner terminated the management agreement   |\n| Property Uninhabitable/Demolition | String | Property management ended because the property uninhabitable or was demolished    |\n| Tenant Placement                  | String | Property management ended after tenant placement                                  |\n| Other                             | String | Property management ended due to a reason not listed\n"
+        },
+        {
+          "name": "ManagementStartDate",
+          "type": "string",
+          "required": false,
+          "description": "The date when the current management of the property began"
+        },
+        {
+          "name": "NsfFee",
+          "type": "number",
+          "required": false,
+          "description": "The non-sufficient funds (NSF) fee associated with the property. This fee is charged when a payment made for the property is rejected due to insufficient funds in the payer's account."
+        },
+        {
+          "name": "SiteManager",
+          "type": "object",
+          "required": false,
+          "description": "Contains the property site manager’s contact information and details",
+          "properties": [
+            {
+              "name": "Salutation",
+              "type": "string",
+              "required": false,
+              "description": "The site manager’s salutation. Valid values include null, Mr., Ms. Mrs., Mr. & Mrs. or Dr."
+            },
+            {
+              "name": "FirstName",
+              "type": "string",
+              "required": false,
+              "description": "The site manager’s first name"
+            },
+            {
+              "name": "LastName",
+              "type": "string",
+              "required": false,
+              "description": "The site manager’s last name"
+            },
+            {
+              "name": "PhoneNumber",
+              "type": "string",
+              "required": false,
+              "description": "The site manager’s phone number"
+            }
+          ]
+        },
+        {
+          "name": "UnitEntryPreAuthorized",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not entry to the unit was pre-authorized"
+        },
+        {
+          "name": "YearBuilt",
+          "type": "integer",
+          "required": false,
+          "description": "The year in which the property was constructed"
+        },
+        {
+          "name": "Address1",
+          "type": "string",
+          "required": false,
+          "description": "The primary street address of the property"
+        },
+        {
+          "name": "Address2",
+          "type": "string",
+          "required": false,
+          "description": "Additional street address information pertaining to the property"
+        },
+        {
+          "name": "City",
+          "type": "string",
+          "required": false,
+          "description": "The city where the property is located"
+        },
+        {
+          "name": "State",
+          "type": "string",
+          "required": false,
+          "description": "The state where the property is located"
+        },
+        {
+          "name": "Zip",
+          "type": "string",
+          "required": false,
+          "description": "The zip code where the property is located"
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/properties/attachments",
     "operationId": "listPropertyAttachments",
     "summary": "List All Property Attachments",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[CreatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: filters[CreatedAtFrom]=2021-12-15T16:30:46Z <br> Returns attachments created on or after the specified date. The value must adhere to the ISO 8601 format YYYY-MM-DDThh:mm:ssZ and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "filters[PropertyId]=2e67d04f-e02f-449a-9b61-694636189c04` <br> Unique identifier of the property associated with the attachment. Can only filter by one property at a time.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/properties/{PropertyId}/attachments",
     "operationId": "createPropertyAttachment",
     "summary": "Create Property Attachment",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [
+      {
+        "name": "PropertyId",
+        "required": true,
+        "description": "The property to which the file will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "multipart/form-data",
+      "required": true,
+      "properties": [
+        {
+          "name": "File",
+          "type": "string",
+          "required": false,
+          "description": "Filename.file-extension"
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/properties/notes",
     "operationId": "getPropertiesNotes",
     "summary": "List All Properties Notes",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[propertyId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the property. Filter the results based on a single value.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns property note records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/properties/{PropertyId}/notes",
     "operationId": "createpropertyNote",
     "summary": "Create Property Note",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [
+      {
+        "name": "PropertyId",
+        "required": true,
+        "description": "The property to which the note will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the property note. A property note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/properties/{PropertyId}/notes/{Id}",
     "operationId": "updatepropertyNote",
     "summary": "Update Property Note",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [
+      {
+        "name": "PropertyId",
+        "required": true,
+        "description": "The property to which the note will be attached"
+      },
+      {
+        "name": "Id",
+        "required": true,
+        "description": "Unique identifier of the note to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the property note. A property note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/properties/marketing_photos",
     "operationId": "getPropertiesMarketingPhotos",
     "summary": "List All Properties Marketing Photos",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[propertyId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the property. Filter the results based on one or more PropertyIds. Multiple values should be separated by commas.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "PATCH",
     "path": "/properties/{PropertyId}/marketing_photos/{MarketingPhotoId}",
     "operationId": "updatePropertyMarketingPhoto",
     "summary": "Update Property Marketing Photo",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [
+      {
+        "name": "PropertyId",
+        "required": true,
+        "description": "The property to which the marketing photo is attached"
+      },
+      {
+        "name": "MarketingPhotoId",
+        "required": true,
+        "description": "Unique identifier of the marketing photo to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Position",
+          "type": "string",
+          "required": false,
+          "description": "The position of the marketing photo in the property marketing photo gallery. The position must be a positive integer. The other marketing photos in the gallery will be shifted to accommodate the new position."
+        }
+      ]
+    }
   },
   {
     "method": "DELETE",
     "path": "/properties/{PropertyId}/marketing_photos/{MarketingPhotoId}",
     "operationId": "deletePropertyMarketingPhoto",
     "summary": "Delete Property Marketing Photo",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [
+      {
+        "name": "PropertyId",
+        "required": true,
+        "description": "Unique identifier of the property that contains the marketing photo to be deleted"
+      },
+      {
+        "name": "MarketingPhotoId",
+        "required": true,
+        "description": "Unique identifier of the marketing photo to be deleted from the property"
+      }
+    ],
+    "queryParams": []
   },
   {
     "method": "GET",
     "path": "/properties/photos",
     "operationId": "getPropertiesPhotos",
     "summary": "List All Properties Photos",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[propertyId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the property. Filter the results based on one or more PropertyIds. Multiple values should be separated by commas.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/properties/{PropertyId}/marketing_photos",
     "operationId": "createPropertyMarketingPhoto",
     "summary": "Create Property Marketing Photo",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [
+      {
+        "name": "PropertyId",
+        "required": true,
+        "description": "The property to which the marketing photo will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "multipart/form-data",
+      "required": true,
+      "properties": [
+        {
+          "name": "File",
+          "type": "string",
+          "required": false,
+          "description": "Filename.file-extension"
+        },
+        {
+          "name": "Position",
+          "type": "integer",
+          "required": false,
+          "description": "The position of the photo in the property marketing photo gallery. The position must be a non-negative integer. If multiple photos are associated with a property, the order of the remaining photos (positions 1 and above) will not change automatically if some photos are deleted. For example, if there are photos in positions 1, 2, 3, and 4, and photos 1 and 3 are deleted, the remaining photos will retain their original positions of 2 and 4"
+        },
+        {
+          "name": "MarketingCategory",
+          "type": "string",
+          "required": false,
+          "description": "The type of marketing photo"
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/properties/{PropertyId}/photos",
     "operationId": "createPropertyPhoto",
     "summary": "Create Property Photo",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [
+      {
+        "name": "PropertyId",
+        "required": true,
+        "description": "The property to which the photo will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "multipart/form-data",
+      "required": true,
+      "properties": [
+        {
+          "name": "File",
+          "type": "string",
+          "required": false,
+          "description": "Filename.file-extension"
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/properties/{PropertyId}/photos/{PhotoId}",
     "operationId": "updatepropertyPhoto",
     "summary": "Update Property Photo",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [
+      {
+        "name": "PropertyId",
+        "required": true,
+        "description": "The property to which the photo is attached"
+      },
+      {
+        "name": "PhotoId",
+        "required": true,
+        "description": "Unique identifier of the photo to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Position",
+          "type": "string",
+          "required": false,
+          "description": "The position of the photo in the property photo gallery. The position must be a non-negative integer. If multiple photos are associated with a property, the order of the remaining photos (positions 1 and above) will not change automatically if some photos are deleted. For example, if there are photos in positions 1, 2, 3, and 4, and photos 1 and 3 are deleted, the remaining photos will retain their original positions of 2 and 4"
+        }
+      ]
+    }
   },
   {
     "method": "DELETE",
     "path": "/properties/{PropertyId}/photos/{PhotoId}",
     "operationId": "deletePropertyPhoto",
     "summary": "Delete Property Photo",
-    "tag": "Properties"
+    "tag": "Properties",
+    "pathParams": [
+      {
+        "name": "PropertyId",
+        "required": true,
+        "description": "Unique identifier of the property that contains the photo to be deleted"
+      },
+      {
+        "name": "PhotoId",
+        "required": true,
+        "description": "Unique identifier of the photo to be deleted from the property"
+      }
+    ],
+    "queryParams": []
   },
   {
     "method": "GET",
     "path": "/property_groups",
     "operationId": "getPropertyGroups",
     "summary": "List All Property Groups",
-    "tag": "Property Groups"
+    "tag": "Property Groups",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=234abcde-c543-456e-abc9-123456789abc,cfcb95e8-d5fb-448c-b811-88d9f832e79c` <br> Unique identifier of the property group. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns property group records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "PATCH",
     "path": "/property_groups/{propertyGroupId}",
     "operationId": "updatePropertyGroup",
     "summary": "Update a Property Group",
-    "tag": "Property Groups"
+    "tag": "Property Groups",
+    "pathParams": [
+      {
+        "name": "propertyGroupId",
+        "required": true,
+        "description": "Unique identifier of the property group to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "PropertyIds",
+          "type": "array",
+          "required": false,
+          "description": "Array of `PropertyIds` to add to the property group. Any properties previously linked to the property group before this update will be substituted with the properties specified by this attribute. Passing in an empty array will clear all properties from the property group."
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/recurring_charges",
     "operationId": "getRecurringCharges",
     "summary": "List All Recurring Charges",
-    "tag": "Recurring Charges"
+    "tag": "Recurring Charges",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[OccupancyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[OccupancyId]=234abcde-c543-456e-abc9-123456789abc,1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the occupancy. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns recurring charge records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/recurring_charges",
     "operationId": "createRecurringCharges",
     "summary": "Create Recurring Charges",
-    "tag": "Recurring Charges"
+    "tag": "Recurring Charges",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Amount",
+          "type": "number",
+          "required": true,
+          "description": "The amount of the recurring charge"
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "required": false,
+          "description": "A brief summary or description of the recurring charge"
+        },
+        {
+          "name": "Frequency",
+          "type": "string",
+          "required": true,
+          "description": "The frequency that the recurring charge occurs"
+        },
+        {
+          "name": "EndDate",
+          "type": "string",
+          "required": false,
+          "description": "The end date of the recurring charge"
+        },
+        {
+          "name": "StartDate",
+          "type": "string",
+          "required": true,
+          "description": "The start date of the recurring charge"
+        },
+        {
+          "name": "ProrateFirstMonth",
+          "type": "boolean",
+          "required": false,
+          "description": "Determines if the first month's recurring charge should be prorated. When true, the charge amount will be adjusted based on the start date within the month. Proration requires all of the following conditions: The start date cannot be the first day of a month, must be after the first day of the current month, the charge frequency must be Monthly, the charge cannot be an insurance charge, the charge cannot start and end in the same month, and the first charge has not posted."
+        },
+        {
+          "name": "ProrateLastMonth",
+          "type": "boolean",
+          "required": false,
+          "description": "Determines if the final month's recurring charge should be prorated. When true, the charge amount will be adjusted based on the end date within the month. Proration requires all of the following conditions: The end date must exist and not fall on the last day of a month, must be a future date, the charge frequency must be Monthly, the charge cannot be an insurance charge, the charge cannot start and end in the same month, and final charge has not posted."
+        },
+        {
+          "name": "OccupancyId",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier of the occupancy associated with the recurring charge"
+        },
+        {
+          "name": "GlAccountId",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier of the general ledger account associated with the recurring charge"
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/recurring_charges/{recurringChargeId}",
     "operationId": "updateRecurringCharge",
     "summary": "Update Recurring Charges",
-    "tag": "Recurring Charges"
+    "tag": "Recurring Charges",
+    "pathParams": [
+      {
+        "name": "recurringChargeId",
+        "required": true,
+        "description": "Unique identifier of the recurring charge to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Id",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the recurring charge"
+        },
+        {
+          "name": "Amount",
+          "type": "number",
+          "required": false,
+          "description": "The amount of the recurring charge"
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "required": false,
+          "description": "A brief summary or description of the recurring charge"
+        },
+        {
+          "name": "Frequency",
+          "type": "string",
+          "required": false,
+          "description": "The frequency that the recurring charge occurs"
+        },
+        {
+          "name": "EndDate",
+          "type": "string",
+          "required": false,
+          "description": "The end date of the recurring charge"
+        },
+        {
+          "name": "StartDate",
+          "type": "string",
+          "required": false,
+          "description": "The start date of the recurring charge"
+        },
+        {
+          "name": "ProrateFirstMonth",
+          "type": "boolean",
+          "required": false,
+          "description": "Determines if the first month's recurring charge should be prorated. When true, the charge amount will be adjusted based on the start date within the month. Proration requires all of the following conditions: The start date cannot be the first day of a month, must be after the first day of the current month, the charge frequency must be Monthly, the charge cannot be an insurance charge, the charge cannot start and end in the same month, and the first charge has not posted."
+        },
+        {
+          "name": "ProrateLastMonth",
+          "type": "boolean",
+          "required": false,
+          "description": "Determines if the final month's recurring charge should be prorated. When true, the charge amount will be adjusted based on the end date within the month. Proration requires all of the following conditions: The end date must exist and not fall on the last day of a month, must be a future date, the charge frequency must be Monthly, the charge cannot be an insurance charge, the charge cannot start and end in the same month, and final charge has not posted."
+        },
+        {
+          "name": "GlAccountId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the general ledger account associated with the recurring charge"
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/rental_applications/{RentalApplicationId}/attachments",
     "operationId": "createRentalApplicationAttachment",
     "summary": "Create Rental Application Attachment",
-    "tag": "Rental Applications"
+    "tag": "Rental Applications",
+    "pathParams": [
+      {
+        "name": "RentalApplicationId",
+        "required": true,
+        "description": "The rental application to which the file will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "multipart/form-data",
+      "required": true,
+      "properties": [
+        {
+          "name": "File",
+          "type": "string",
+          "required": false,
+          "description": "Filename.file-extension"
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/rental_applications",
     "operationId": "getRentalApplications",
     "summary": "List All Rental Applications",
-    "tag": "Rental Applications"
+    "tag": "Rental Applications",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=1abcde23-c543-456e-abc9-123456789cee,1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the rental application. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PropertyId]=1abcde23-c543-456e-abc9-123456789cee,1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the property for which rental applications will be retrieved. Filter the results based on one or more `PropertyId`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[UnitId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[UnitId]=1abcde23-c543-456e-abc9-123456789cee,1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the unit for which rental applications will be retrieved. Filter the results based on one or more `UnitId`s. Multiple values should be separated by commas",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[GroupId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[GroupId]=1abcde23-c543-456e-abc9-123456789cee,1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the application group to filter by. Filter the results based on one or more `GroupId`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[ScreeningId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[ScreeningId]=1abcde23-c543-456e-abc9-123456789cee,1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the screening to filter by. Filter the results based on one or more `ScreeningId`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[SubmittedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[SubmittedAtFrom]=2021-15-15T16:30:46Z` <br> Returns rental application records that were created after the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC)..",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "PATCH",
     "path": "/rental_applications/{rentalApplicationId}",
     "operationId": "updateRentalApplication",
     "summary": "Update Rental Application",
-    "tag": "Rental Applications"
+    "tag": "Rental Applications",
+    "pathParams": [
+      {
+        "name": "rentalApplicationId",
+        "required": true,
+        "description": "Unique identifier of the rental application to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Status",
+          "type": "string",
+          "required": false,
+          "description": "The rental application's status\n#### Status Options\n| Options          | Description                                                         |\n|------------------|---------------------------------------------------------------------|\n| approved         | The rental application was approved by the landlord/management  \n| canceled         | The rental application was canceled by the applicant/tenant         |\n| decision_pending | The rental application's decision is pending                        |\n| denied           | The rental application was denied by the landlord/management        |\n| in_review        | The rental application is currently under evaluation                       |\n| info_needed      | The rental application requires additional information from the applicant to proceed |\n| in_screening     | The rental application is undergoing additional screening                  |\n"
+        },
+        {
+          "name": "StatusReason",
+          "type": "string",
+          "required": false,
+          "description": "The reason for the denied or canceled rental application. The `StatusReason` field is required when the `Status` of the rental application is `denied`, and optional when the status of the rental application is `canceled`.\n\nFor all other statuses, such as `approved` or `decision_pending`, providing a `StatusReason` will not be applicable, and the `StatusReason` will remain `null`. Updating a rental application from `denied` or `canceled` to another status, such as `approved`, will overwrite the previous `StatusReason` and result in a `null` value."
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/rental_applications/notes",
     "operationId": "getRentalApplicationsNotes",
     "summary": "List All Rental Applications Notes",
-    "tag": "Rental Applications"
+    "tag": "Rental Applications",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[RentalApplicationId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[RentalApplicationId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the rental application. Filter the results based on a single value.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns rental application note records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/rental_applications/{RentalApplicationId}/notes",
     "operationId": "createRentalApplicationNote",
     "summary": "Create Rental Application Note",
-    "tag": "Rental Applications"
+    "tag": "Rental Applications",
+    "pathParams": [
+      {
+        "name": "RentalApplicationId",
+        "required": true,
+        "description": "The rental application to which the note will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the rental applications note. A rental applications note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/rental_applications/{RentalApplicationId}/notes/{Id}",
     "operationId": "updateRentalApplicationNote",
     "summary": "Update Rental Application Note",
-    "tag": "Rental Applications"
+    "tag": "Rental Applications",
+    "pathParams": [
+      {
+        "name": "RentalApplicationId",
+        "required": true,
+        "description": "The rental application to which the note will be attached"
+      },
+      {
+        "name": "Id",
+        "required": true,
+        "description": "Unique identifier of the note to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the rental application note. A rental application note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/security_deposits/bulk",
     "operationId": "bulkCreateSecurityDeposits",
     "summary": "Bulk Create Security Deposits",
-    "tag": "Security Deposits"
+    "tag": "Security Deposits",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual security deposit in the bulk-creation of security deposits."
+            },
+            {
+              "name": "Amount",
+              "type": "string",
+              "required": true,
+              "description": "The amount paid for this GL Account. Must be a positive number."
+            },
+            {
+              "name": "OccupancyId",
+              "type": "string",
+              "required": true,
+              "description": "The UUID of the occupancy associated with the primary tenant"
+            },
+            {
+              "name": "Remarks",
+              "type": "string",
+              "required": false,
+              "description": "Remarks about the payment. Will only be visible internally for the clients"
+            },
+            {
+              "name": "Reference",
+              "type": "string",
+              "required": false,
+              "description": "An external value, which will only be visible on owner statements"
+            },
+            {
+              "name": "SecurityDepositDate",
+              "type": "string",
+              "required": true,
+              "description": "The move-in date for this occupancy"
+            },
+            {
+              "name": "SecurityDepositGlAccountId",
+              "type": "string",
+              "required": true,
+              "description": "UUID for the Gl Account used for this security deposit "
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/showings",
     "operationId": "getShowings",
     "summary": "List All Showings",
-    "tag": "Showings"
+    "tag": "Showings",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=7f3230dc-8b9a-11ec-9b4b-14482e0fbe8e, 6g3230dc-5c1a-56ab-5c2a-55781b1dba9h` <br> Unique identifier of the showing. Filter the results based on one or more Ids. Multiple values should be separated by commas",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns AppFolio Property Manager showing records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC)..",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/showings",
     "operationId": "createShowing",
     "summary": "Create Showings",
-    "tag": "Showings"
+    "tag": "Showings",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "AssignedUserId",
+          "type": "string",
+          "required": false,
+          "description": "The AppFolio Property Manager user responsible for the showing. Reference the **Users** endpoint for any necessary associations."
+        },
+        {
+          "name": "LeadId",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier of the lead associated with the showing. Reference the **Leads** endpoint for any necessary associations."
+        },
+        {
+          "name": "UnitId",
+          "type": "string",
+          "required": true,
+          "description": "Unique identifier of the unit that the interested party will be shown. Reference the **Units** endpoint for any necessary associations."
+        },
+        {
+          "name": "StartAt",
+          "type": "string",
+          "required": true,
+          "description": "The start time of the showing. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC)."
+        },
+        {
+          "name": "EndAt",
+          "type": "string",
+          "required": true,
+          "description": "The end time of the showing. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC)."
+        },
+        {
+          "name": "Notes",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the showing"
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/showings/{showingId}",
     "operationId": "updateShowing",
     "summary": "Update Showing",
-    "tag": "Showings"
+    "tag": "Showings",
+    "pathParams": [
+      {
+        "name": "showingId",
+        "required": true,
+        "description": "Unique identifier of the showing to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "AssignedUserId",
+          "type": "string",
+          "required": false,
+          "description": "AppFolio Property Manager user assigned to the showing. A `null` value passed to `AssignedUserId` will unassign the user previously assigned to the showing. Omitting `AssignedUserId` from the request body will not update the assigned user. Reference the **Users** endpoint for any necessary associations."
+        },
+        {
+          "name": "StartAt",
+          "type": "string",
+          "required": false,
+          "description": "The start time of the showing. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC)."
+        },
+        {
+          "name": "EndAt",
+          "type": "string",
+          "required": false,
+          "description": "The end time of the showing. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC)."
+        },
+        {
+          "name": "Notes",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the showing"
+        },
+        {
+          "name": "Status",
+          "type": "string",
+          "required": false,
+          "description": "The status of the showing\n#### Status Options\n| Options   | Description                                  |\n|-----------|----------------------------------------------|\n| scheduled | The default status once the showing is scheduled |\n| canceled  | The showing is canceled                          |\n| no-show   | The prospective resident did not show        |\n"
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/tenants",
     "operationId": "getTenants",
     "summary": "List All Tenants",
-    "tag": "Tenants"
+    "tag": "Tenants",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the tenant(s). Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[IncludeHidden]",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Example: `filters[IncludeHidden]=true` <br> Indicates whether or not to include inactive tenants from the list of tenants"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns tenant records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[MoveInOnFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[MoveInOnFrom]=2021-10-01` <br> The move-in date range from the date stipulated",
+        "format": "date"
+      },
+      {
+        "name": "filters[MoveInOnTo]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[MoveInOnTo]=2021-10-31` <br> The move-in date range to the date stipulated",
+        "format": "date"
+      },
+      {
+        "name": "filters[MoveOutOnFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[MoveOutOnFrom]=2021-10-01` <br> The move-out date range from the date stipulated",
+        "format": "date"
+      },
+      {
+        "name": "filters[MoveOutOnTo]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[MoveOutOnTo]=2021-10-31` <br> The move-out date range to the date stipulated",
+        "format": "date"
+      },
+      {
+        "name": "filters[OccupancyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[OccupancyId]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the occupancy where the tenant(s) reside. Filter the results based on one or more `OccupancyId`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PropertyId]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the property the tenant occupies. Filter the results based on one or more `PropertyId`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[Status]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Status]=Current,Past` <br> The status of the tenant. Filter the results based on one or more statuses. Multiple values should be separated by commas.\n#### Status Options\n| Options | Description                                |\n|---------|--------------------------------------------|\n| Current | The tenant is a current resident                           |\n| Past    | The tenant is a past resident                          |\n| Future  | The tenant is a future resident                          |\n| Evict   | An eviction was filed against the occupancy       |\n| Notice  | The occupant has communicated intent to vacate |\n",
+        "enum": [
+          "Current",
+          "Past",
+          "Future",
+          "Evict",
+          "Notice"
+        ]
+      },
+      {
+        "name": "filters[UnitId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[UnitId]=1abcde23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier of the unit the tenant occupies. Filter the results based on one or more `UnitId`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[IncludeUnassigned]",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Example: `filters[IncludeUnassigned]=true` <br> Indicates whether or not to include future tenants who have not yet been assigned to a unit."
+      }
+    ]
   },
   {
     "method": "PATCH",
     "path": "/tenants/{tenantId}",
     "operationId": "updateTenant",
     "summary": "Update Tenant",
-    "tag": "Tenants"
+    "tag": "Tenants",
+    "pathParams": [
+      {
+        "name": "tenantId",
+        "required": true,
+        "description": "Unique identifier of the tenant to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "OccupancyCustomFields",
+          "type": "object",
+          "required": false,
+          "description": "The custom fields for the associated entity",
+          "properties": [
+            {
+              "name": "CustomFieldId",
+              "type": "object",
+              "required": false,
+              "description": "The value of the `CustomField` to update. Ensure the value set for `CustomFieldId` matches the type that was set for the `CustomField` at creation.\nFor example, if `boolean` is the type set for the `CustomField` associated with this `CustomFieldId`, the value set here must be either `true` or `false`. *Note*: To clear the value of a `CustomField`, set `CustomFieldId` to `null` in the PATCH request. For array-type custom fields (select_multiple), use an empty array `[]` or empty string `\"\"` instead of `null`, as `null` will be ignored.\n"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/tenants/notes",
     "operationId": "getTenantsNotes",
     "summary": "List All Tenants Notes",
-    "tag": "Tenants"
+    "tag": "Tenants",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[TenantId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[TenantId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the tenant. Filter the results based on a single value.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns tenant note records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/tenants/{TenantId}/notes",
     "operationId": "createTenantNote",
     "summary": "Create Tenant Note",
-    "tag": "Tenants"
+    "tag": "Tenants",
+    "pathParams": [
+      {
+        "name": "TenantId",
+        "required": true,
+        "description": "The tenant to which the note will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the tenant note. A tenant note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/tenants/{TenantId}/notes/{Id}",
     "operationId": "updateTenantNote",
     "summary": "Update Tenant Note",
-    "tag": "Tenants"
+    "tag": "Tenants",
+    "pathParams": [
+      {
+        "name": "TenantId",
+        "required": true,
+        "description": "The tenant to which the note will be attached"
+      },
+      {
+        "name": "Id",
+        "required": true,
+        "description": "Unique identifier of the note to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the tenant note. A tenant note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/tenants/bulk",
     "operationId": "bulkCreateTenants",
     "summary": "Bulk Create Tenants",
-    "tag": "Tenants"
+    "tag": "Tenants",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual tenant in the bulk-creation of tenants."
+            },
+            {
+              "name": "FirstName",
+              "type": "string",
+              "required": true,
+              "description": "The tenant's first name"
+            },
+            {
+              "name": "LastName",
+              "type": "string",
+              "required": true,
+              "description": "The tenant's last name"
+            },
+            {
+              "name": "MiddleName",
+              "type": "string",
+              "required": false,
+              "description": "The tenant's middle name"
+            },
+            {
+              "name": "CompanyName",
+              "type": "string",
+              "required": false,
+              "description": "The display name of the tenant's company"
+            },
+            {
+              "name": "MoveInOn",
+              "type": "string",
+              "required": true,
+              "description": "The date the tenant physically started or will start occupancy. Dictates whether the \"future\" or \"current\" option is displayed in the status field."
+            },
+            {
+              "name": "MoveOutOn",
+              "type": "string",
+              "required": false,
+              "description": "The date the tenant physically ended or will end occupancy. Dictates whether the \"notice\" or \"past\" option is displayed in the status field."
+            },
+            {
+              "name": "UnitId",
+              "type": "string",
+              "required": false,
+              "description": "The unit the tenant occupies. Required when PendingMoveIn is not set. Optional when PendingMoveIn is true."
+            },
+            {
+              "name": "PendingMoveIn",
+              "type": "boolean",
+              "required": false,
+              "description": "Places a Tenant in the move-in flow for finalizing in AppFolio."
+            },
+            {
+              "name": "PendingMoveInGroupReferenceId",
+              "type": "string",
+              "required": false,
+              "description": "Reference ID for grouping Pending Move-In tenants into the same occupancy. Required when PendingMoveIn is true."
+            },
+            {
+              "name": "PrimaryTenant",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether or not the tenant is the primary leaseholder for the occupancy"
+            },
+            {
+              "name": "TenantType",
+              "type": "string",
+              "required": false,
+              "description": "The type of tenant"
+            },
+            {
+              "name": "Addresses",
+              "type": "array",
+              "required": false,
+              "description": "The tenant's address(es)"
+            },
+            {
+              "name": "PhoneNumbers",
+              "type": "array",
+              "required": false,
+              "description": "The tenant's phone number(s)"
+            },
+            {
+              "name": "Pets",
+              "type": "array",
+              "required": false,
+              "description": "Contains details about the tenant’s pet(s)"
+            },
+            {
+              "name": "Vehicles",
+              "type": "array",
+              "required": false,
+              "description": "Contains details about the tenant’s vehicle(s)"
+            },
+            {
+              "name": "Emails",
+              "type": "array",
+              "required": false,
+              "description": "The tenant's email address(es)"
+            },
+            {
+              "name": "Tags",
+              "type": "array",
+              "required": false,
+              "description": "User-defined tag(s) that categorize the tenant"
+            },
+            {
+              "name": "NextRentIncrease",
+              "type": "string",
+              "required": false,
+              "description": "The date of the tenant is eligible for a rent increase"
+            },
+            {
+              "name": "LeaseStartDate",
+              "type": "string",
+              "required": false,
+              "description": "The day the lease agreement starts"
+            },
+            {
+              "name": "LeaseEndDate",
+              "type": "string",
+              "required": false,
+              "description": "The last day of the lease agreement"
+            },
+            {
+              "name": "LastLeaseRenewal",
+              "type": "string",
+              "required": false,
+              "description": "The date the last lease renewal agreement was started"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/tenants/bulk",
     "operationId": "bulkUpdateTenants",
     "summary": "Bulk Update Tenants",
-    "tag": "Tenants"
+    "tag": "Tenants",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "Id",
+              "type": "string",
+              "required": true,
+              "description": "Unique identifier for the tenant"
+            },
+            {
+              "name": "FirstName",
+              "type": "string",
+              "required": false,
+              "description": "The tenant's first name"
+            },
+            {
+              "name": "LastName",
+              "type": "string",
+              "required": false,
+              "description": "The tenant's last name"
+            },
+            {
+              "name": "MiddleName",
+              "type": "string",
+              "required": false,
+              "description": "The tenant's middle name"
+            },
+            {
+              "name": "CompanyName",
+              "type": "string",
+              "required": false,
+              "description": "The display name of the tenant's company"
+            },
+            {
+              "name": "MoveInOn",
+              "type": "string",
+              "required": false,
+              "description": "The date the tenant physically started or will start occupancy. Dictates whether the \"future\" or \"current\" option is displayed in the status field."
+            },
+            {
+              "name": "MoveOutOn",
+              "type": "string",
+              "required": false,
+              "description": "The date the tenant physically ended or will end occupancy. Dictates whether the \"notice\" or \"past\" option is displayed in the status field."
+            },
+            {
+              "name": "PrimaryTenant",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether or not the tenant is the primary leaseholder for the occupancy"
+            },
+            {
+              "name": "TenantType",
+              "type": "string",
+              "required": false,
+              "description": "The type of tenant"
+            },
+            {
+              "name": "Addresses",
+              "type": "array",
+              "required": false,
+              "description": "The tenant's address(es). Passing any number of addresses will replace all existing addresses for the tenant. Passing an empty array `[]` will remove all existing addresses for the tenant."
+            },
+            {
+              "name": "PhoneNumbers",
+              "type": "array",
+              "required": false,
+              "description": "The tenant's phone number(s). Passing any number of phone numbers will replace all existing phone numbers for the tenant. Passing an empty array `[]` will remove all existing phone numbers for the tenant."
+            },
+            {
+              "name": "Pets",
+              "type": "array",
+              "required": false,
+              "description": "Contains details about the tenant’s pet(s). This will add new pets to the tenant and not remove any existing pets."
+            },
+            {
+              "name": "Vehicles",
+              "type": "array",
+              "required": false,
+              "description": "Contains details about the tenant’s vehicle(s). This will add new vehicles to the tenant and not remove any existing vehicles."
+            },
+            {
+              "name": "Emails",
+              "type": "array",
+              "required": false,
+              "description": "The tenant's email address(es). Passing any number of emails will replace all existing email addresses for the tenant. Passing an empty array `[]` will remove all existing email addresses for the tenant."
+            },
+            {
+              "name": "Tags",
+              "type": "array",
+              "required": false,
+              "description": "User-defined tag(s) that categorize the tenant. Providing an array of valid strings will overwrite all existing tags. Passing in an empty array `[]` or an array of empty strings `[\"\"]` or `[\"\", \"\"]` will clear all existing tags. Passing in an array of a valid string and an empty string `[\"tag_name\", \"\"]` will result in `Tags: [\"tag_name\"]`. Passing in `null` will result in no change."
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/tenant_ledgers",
     "operationId": "getTenantLedgers",
     "summary": "List All Tenant Ledgers",
-    "tag": "Tenant Ledgers"
+    "tag": "Tenant Ledgers",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[ExcludeSubsidies]",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Default: `false` <br> Example: `filters[ExcludeSubsidies]=false` <br> Indicates whether or not to exclude subsidized transactions from the results"
+      },
+      {
+        "name": "filters[DateFrom]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[DateFrom]=2021-12-15` <br> Date range from the date stipulated. `DateFrom` and `DateTo` can be at most 2 years apart.",
+        "format": "date"
+      },
+      {
+        "name": "filters[DateTo]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[DateTo]=2021-12-15` <br> Date range to the date stipulated. `DateFrom` and `DateTo` can be at most 2 years apart.",
+        "format": "date"
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[PropertyId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the property. Filter the results based on a single value.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns transaction records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[OccupancyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[OccupancyId]=1abcae23-c343-466e-adc9-923455789cba,1abcde43-c543-456e-abc9-123456789abc` <br> Unique identifier of the occupancy associated with the tenant ledger. Filter the results based on one or more OccupancyIds. Multiple values should be separated by commas.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/units",
     "operationId": "getUnits",
     "summary": "List All Units",
-    "tag": "Units"
+    "tag": "Units",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=1abcde23-c543-456e-abc9-123456789cba,cfcb95e8-d5fb-448c-b811-88d9f832e79c` <br> Unique identifier of the unit(s) sought for retrieval. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[IncludeHidden]",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Example: `filters[IncludeHidden]=true` <br> Indicates whether or not to include units that were marked as inactive from the list of units"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns unit records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[LeasingType]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LeasingType]=ConventionalUnit` <br> The type of lease for the unit. Filter the results based on a single value.\n#### Leasing Type Options\n| Options          | Description                                                                                                                                                                                                                                                                                                                                                                                                        |\n|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|\n| ConventionalUnit | A traditional residential unit                                                                                                                                                                                                                                                                                                                                                                                       |\n| BedUnit          | A student housing unit type (Name - BedName)<br>Here's an example of how this works in practice:<br>Property ABC has one unit, with two beds. The unit is number 107. The beds are 1A and 2A, respectively. <br>When you query for units, you'll see two results.<br>Name = 107 -1A, with a `UnitGroupId` of 1209840912.<br>Name = 107 - 2A, with a `UnitGroupId` of 1209840912.<br> The `LeasingType` for both units will be `BedUnit`. |\n",
+        "enum": [
+          "ConventionalUnit",
+          "BedUnit"
+        ]
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PropertyId]=1abcde23-c543-456e-abc9-123456789cba,cfcb95e8-d5fb-448c-b811-88d9f832e79c` <br> Unique identifier of the property the unit belongs to. Filter the results based on one or more PropertyIds. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[UnitGroupId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[UnitGroupId]=d4664d1d-c212-41b4-bab1-aeadf0f92c71,cfcb95e8-d5fb-448c-b811-88d9f832e79c` <br> Unique identifier of the unit group associated with the unit. Filter the results based on one or more UnitGroupIds. Multiple values should be separated by commas.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/units/bulk",
     "operationId": "bulkCreateUnits",
     "summary": "Bulk Create Units",
-    "tag": "Units"
+    "tag": "Units",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual units in the bulk-creation of units."
+            },
+            {
+              "name": "PropertyId",
+              "type": "string",
+              "required": true,
+              "description": "Unique identifier of the property associated with the unit"
+            },
+            {
+              "name": "UnitTypeId",
+              "type": "string",
+              "required": false,
+              "description": "When present, the unit type can dictate fields like bedrooms, bathrooms, sq. feet, etc. Attempting to create a Unit with values that conflict with the Unit Type will cause an error."
+            },
+            {
+              "name": "Name",
+              "type": "string",
+              "required": true,
+              "description": "The unit name as displayed in the AppFolio Property Manager"
+            },
+            {
+              "name": "Bathrooms",
+              "type": "number",
+              "required": false,
+              "description": "The number of desired bathrooms"
+            },
+            {
+              "name": "Bedrooms",
+              "type": "integer",
+              "required": false,
+              "description": "The number of desired bedrooms"
+            },
+            {
+              "name": "SquareFeet",
+              "type": "number",
+              "required": false,
+              "description": "The size of the unit in square feet"
+            },
+            {
+              "name": "Description",
+              "type": "string",
+              "required": false,
+              "description": "A brief, informative description of the unit"
+            },
+            {
+              "name": "ListedMarketRent",
+              "type": "string",
+              "required": false,
+              "description": "The rent per month as listed on the market"
+            },
+            {
+              "name": "ListedRent",
+              "type": "string",
+              "required": false,
+              "description": "The rent per month as listed on the market. This value reflects either the market rent or the advertised rent, depending on whether “Use Market Rent On Ads” is enabled in AppFolio Property Manager."
+            },
+            {
+              "name": "MarketRent",
+              "type": "string",
+              "required": false,
+              "description": "The unit's base market rent, representing its estimated fair market value based on current market conditions and comparable properties. It does not include advertised adjustments or amenity fees."
+            },
+            {
+              "name": "AdvertiseUsingListedMarketRent",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether or not to use the listed market rent as the advertised rent. Defaults to `true` if no value is provided or `null` is passed in."
+            },
+            {
+              "name": "CatsAllowed",
+              "type": "string",
+              "required": false,
+              "description": "The unit’s cat policy. Valid values include “Yes”, “No” or `null`. A null value indicates that the unit may not have specified a policy for cats.\n| Attribute | Type   | Description                                |\n|-----------|--------|--------------------------------------------|\n| Yes       | String | Cats are permitted on the unit         |\n| No        | String | Cats are not permitted on the unit     |\n| null      | String | No cat policy has been set for the unit |\n"
+            },
+            {
+              "name": "DogsAllowed",
+              "type": "string",
+              "required": false,
+              "description": "The unit’s dog policy. Valid values include “Large & Small”, “Small Only”, \"No\" or `null`. A null value indicates that the unit may not have specified a policy for dogs.\n| Attribute     | Type   | Description                                    |\n|---------------|--------|------------------------------------------------|\n| Large & Small | String | Large and small dogs are permitted on unit |\n| Small Only    | String | Only small dogs are permitted on the unit  |\n| No            | String | No dogs are permitted on the unit          |\n| null          | String | No dog policy has been set for the unit    |\n"
+            },
+            {
+              "name": "Address1",
+              "type": "string",
+              "required": true,
+              "description": "The primary street address of the unit"
+            },
+            {
+              "name": "Address2",
+              "type": "string",
+              "required": false,
+              "description": "Additional street address information pertaining to the unit"
+            },
+            {
+              "name": "City",
+              "type": "string",
+              "required": true,
+              "description": "The city where the unit is located"
+            },
+            {
+              "name": "State",
+              "type": "string",
+              "required": true,
+              "description": "The state where the unit is located"
+            },
+            {
+              "name": "Zip",
+              "type": "string",
+              "required": true,
+              "description": "The zip code where the unit is located"
+            },
+            {
+              "name": "MaintenanceNotes",
+              "type": "string",
+              "required": false,
+              "description": "A brief informative message about the unit's maintenance"
+            },
+            {
+              "name": "MarketingTitle",
+              "type": "string",
+              "required": false,
+              "description": "The title of the listing for syndication"
+            },
+            {
+              "name": "MarketingDescription",
+              "type": "string",
+              "required": false,
+              "description": "A description of the listing for syndication"
+            },
+            {
+              "name": "NonRevenue",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether or not the unit is rentable and is a model unit, office or other non revenue unit"
+            },
+            {
+              "name": "Deposit",
+              "type": "number",
+              "required": false,
+              "description": "The security deposit amount"
+            },
+            {
+              "name": "ApplicationFee",
+              "type": "number",
+              "required": false,
+              "description": "The application fee amount"
+            },
+            {
+              "name": "RentReady",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether or not the unit is ready to be occupied by a tenant"
+            },
+            {
+              "name": "Tags",
+              "type": "array",
+              "required": false,
+              "description": "User-defined tag(s) that categorize the unit"
+            },
+            {
+              "name": "LastInspectedDate",
+              "type": "string",
+              "required": false,
+              "description": "The date the unit was last inspected"
+            },
+            {
+              "name": "YouTubeURL",
+              "type": "string",
+              "required": false,
+              "description": "The URL of the YouTube video for the listing(s)"
+            },
+            {
+              "name": "AvailableOn",
+              "type": "string",
+              "required": false,
+              "description": "The date upon which the unit can be leased. The date must be within three years of today's date"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "PUT",
     "path": "/units/pricing_matrices/bulk",
     "operationId": "putBulkUnitPricingMatrix",
     "summary": "Bulk Put Unit Pricing Matrix",
-    "tag": "Units"
+    "tag": "Units",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "UnitId",
+              "type": "string",
+              "required": true,
+              "description": "Unique identifier of the unit associated with the rent pricing matrix entry. A unit should only be included once per call"
+            },
+            {
+              "name": "PricingMatrix",
+              "type": "array",
+              "required": true,
+              "description": "Array of objects that defines the rent pricing structure and lease terms for a unit"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "PUT",
     "path": "/units/pricing_matrices/bulk/async",
     "operationId": "putBulkUnitPricingMatrixAsync",
     "summary": "Bulk Put Unit Pricing Matrix (Async)",
-    "tag": "Units"
+    "tag": "Units",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "UnitId",
+              "type": "string",
+              "required": true,
+              "description": "Unique identifier of the unit associated with the rent pricing matrix entry. A unit should only be included once per call"
+            },
+            {
+              "name": "PricingMatrix",
+              "type": "array",
+              "required": true,
+              "description": "Array of objects that defines the rent pricing structure and lease terms for a unit"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/units/{unitId}",
     "operationId": "updateUnit",
     "summary": "Update Unit",
-    "tag": "Units"
+    "tag": "Units",
+    "pathParams": [
+      {
+        "name": "unitId",
+        "required": true,
+        "description": "Unique identifier of the unit to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Name",
+          "type": "string",
+          "required": false,
+          "description": "The unit name as displayed in the AppFolio Property Manager"
+        },
+        {
+          "name": "Bathrooms",
+          "type": "string",
+          "required": false,
+          "description": "The number of desired bathrooms"
+        },
+        {
+          "name": "Bedrooms",
+          "type": "integer",
+          "required": false,
+          "description": "The number of desired bedrooms"
+        },
+        {
+          "name": "SquareFeet",
+          "type": "string",
+          "required": false,
+          "description": "The size of the unit in square feet"
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "required": false,
+          "description": "A brief, informative description of the unit"
+        },
+        {
+          "name": "ListedMarketRent",
+          "type": "string",
+          "required": false,
+          "description": "The rent per month as listed on the market"
+        },
+        {
+          "name": "ListedRent",
+          "type": "string",
+          "required": false,
+          "description": "The rent per month as listed on the market. This value reflects either the market rent or the advertised rent, depending on whether “Use Market Rent On Ads” is enabled in AppFolio Property Manager."
+        },
+        {
+          "name": "MarketRent",
+          "type": "string",
+          "required": false,
+          "description": "The unit's base market rent, representing its estimated fair market value based on current market conditions and comparable properties. It does not include advertised adjustments or amenity fees. This value directly updates the unit's market rent unless overridden by a configured unit type."
+        },
+        {
+          "name": "AdvertiseUsingListedMarketRent",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not to use the listed market rent as the advertised rent. Passing in `null` will result in no change."
+        },
+        {
+          "name": "CatsAllowed",
+          "type": "string",
+          "required": false,
+          "description": "The unit’s cat policy. Valid values include “Yes”, “No” or `null`. A null value indicates that the unit may not have specified a policy for cats.\n| Attribute | Type   | Description                                |\n|-----------|--------|--------------------------------------------|\n| Yes       | String | Cats are permitted on the unit         |\n| No        | String | Cats are not permitted on the unit     |\n| null      | String | No cat policy has been set for the unit |\n"
+        },
+        {
+          "name": "DogsAllowed",
+          "type": "string",
+          "required": false,
+          "description": "The unit’s dog policy. Valid values include “Large & Small”, “Small Only”, \"No\" or `null`. A null value indicates that the unit may not have specified a policy for dogs.\n| Attribute     | Type   | Description                                    |\n|---------------|--------|------------------------------------------------|\n| Large & Small | String | Large and small dogs are permitted on unit |\n| Small Only    | String | Only small dogs are permitted on the unit  |\n| No            | String | No dogs are permitted on the unit          |\n| null          | String | No dog policy has been set for the unit    |\n"
+        },
+        {
+          "name": "CustomFields",
+          "type": "object",
+          "required": false,
+          "description": "The custom fields for the associated entity",
+          "properties": [
+            {
+              "name": "CustomFieldId",
+              "type": "object",
+              "required": false,
+              "description": "The value of the `CustomField` to update. Ensure the value set for `CustomFieldId` matches the type that was set for the `CustomField` at creation.\nFor example, if `boolean` is the type set for the `CustomField` associated with this `CustomFieldId`, the value set here must be either `true` or `false`. *Note*: To clear the value of a `CustomField`, set `CustomFieldId` to `null` in the PATCH request. For array-type custom fields (select_multiple), use an empty array `[]` or empty string `\"\"` instead of `null`, as `null` will be ignored.\n"
+            }
+          ]
+        },
+        {
+          "name": "Address1",
+          "type": "string",
+          "required": false,
+          "description": "The primary street address of the unit"
+        },
+        {
+          "name": "Address2",
+          "type": "string",
+          "required": false,
+          "description": "Additional street address information pertaining to the unit"
+        },
+        {
+          "name": "City",
+          "type": "string",
+          "required": false,
+          "description": "The city where the unit is located"
+        },
+        {
+          "name": "State",
+          "type": "string",
+          "required": false,
+          "description": "The state where the unit is located"
+        },
+        {
+          "name": "Zip",
+          "type": "string",
+          "required": false,
+          "description": "The zip code where the unit is located"
+        },
+        {
+          "name": "MaintenanceNotes",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the unit's maintenance"
+        },
+        {
+          "name": "MarketingTitle",
+          "type": "string",
+          "required": false,
+          "description": "The title of the listing for syndication"
+        },
+        {
+          "name": "MarketingDescription",
+          "type": "string",
+          "required": false,
+          "description": "A description of the listing for syndication"
+        },
+        {
+          "name": "NonRevenue",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the unit is rentable and is a model unit, office or other non revenue unit"
+        },
+        {
+          "name": "Deposit",
+          "type": "number",
+          "required": false,
+          "description": "The security deposit amount"
+        },
+        {
+          "name": "ApplicationFee",
+          "type": "number",
+          "required": false,
+          "description": "The application fee amount"
+        },
+        {
+          "name": "RentReady",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the unit is ready to be occupied by a tenant"
+        },
+        {
+          "name": "Tags",
+          "type": "array",
+          "required": false,
+          "description": "User-defined tag(s) that categorize the unit. Providing an array of valid strings will overwrite all existing tags. Passing in an empty array `[]` or an array of empty strings `[\"\"]` or `[\"\", \"\"]` will clear all existing tags. Passing in an array of a valid string and an empty string `[\"tag_name\", \"\"]` will result in `Tags: [\"tag_name\"]`. Passing in `null` will result in no change."
+        },
+        {
+          "name": "LastInspectedDate",
+          "type": "string",
+          "required": false,
+          "description": "The date the unit was last inspected"
+        },
+        {
+          "name": "YouTubeURL",
+          "type": "string",
+          "required": false,
+          "description": "The URL of the YouTube video for the listing(s)"
+        },
+        {
+          "name": "PostedToInternet",
+          "type": "boolean",
+          "required": false,
+          "description": "Sets whether to post the unit to third-party listings pages. Set to `true` to display and accept applications and `false` to remove the listing."
+        },
+        {
+          "name": "PostedToWebsite",
+          "type": "boolean",
+          "required": false,
+          "description": "Sets whether to post the unit to the AppFolio listings page. Set to `true` to display and accept applications and `false` to remove the listing."
+        },
+        {
+          "name": "AvailableOn",
+          "type": "string",
+          "required": false,
+          "description": "The date upon which the unit can be leased. The date must be within three years of today's date"
+        },
+        {
+          "name": "ReadyForShowingOn",
+          "type": "string",
+          "required": false,
+          "description": "The date upon which the unit is ready for showing"
+        },
+        {
+          "name": "UnitTypeId",
+          "type": "string",
+          "required": false,
+          "description": "When present, the unit type can dictate fields like bedrooms, bathrooms, sq. feet, etc. Attempting to update a Unit with values that conflict with the Unit Type will cause an error."
+        },
+        {
+          "name": "HvacFilters",
+          "type": "array",
+          "required": false,
+          "description": "Array containing data about a unit's HVAC filters",
+          "properties": [
+            {
+              "name": "Length",
+              "type": "number",
+              "required": false,
+              "description": "The length of the HVAC filter"
+            },
+            {
+              "name": "Width",
+              "type": "number",
+              "required": false,
+              "description": "The width of the HVAC filter"
+            },
+            {
+              "name": "Thickness",
+              "type": "number",
+              "required": false,
+              "description": "The thickness of the HVAC filter"
+            },
+            {
+              "name": "Quantity",
+              "type": "integer",
+              "required": false,
+              "description": "The quantity of the HVAC filter"
+            },
+            {
+              "name": "Model",
+              "type": "string",
+              "required": false,
+              "description": "The model of the HVAC filter"
+            },
+            {
+              "name": "Brand",
+              "type": "string",
+              "required": false,
+              "description": "The brand of the HVAC filter"
+            }
+          ]
+        },
+        {
+          "name": "HvacDetail",
+          "type": "object",
+          "required": false,
+          "description": "The HVAC details of the unit",
+          "properties": [
+            {
+              "name": "ConfirmedNoFiltersNeeded",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether or not the unit does not require HVAC filters"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "PUT",
     "path": "/units/{UnitId}/pricing_matrices",
     "operationId": "putUnitPricingMatrix",
     "summary": "Put Unit Pricing Matrix",
-    "tag": "Units"
+    "tag": "Units",
+    "pathParams": [
+      {
+        "name": "UnitId",
+        "required": true,
+        "description": "Unique identifier of the unit associated with the rent pricing matrix entry"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": false,
+      "properties": [
+        {
+          "name": "PricingMatrix",
+          "type": "array",
+          "required": true,
+          "description": "Array of objects that defines the rent pricing structure and lease terms for a unit",
+          "properties": [
+            {
+              "name": "StartDate",
+              "type": "string",
+              "required": true,
+              "description": "The date when the specific rent price becomes effective for the unit"
+            },
+            {
+              "name": "ExpirationDate",
+              "type": "string",
+              "required": false,
+              "description": "The date when the specific rent price expires for the unit"
+            },
+            {
+              "name": "Price",
+              "type": "integer",
+              "required": true,
+              "description": "The monthly rent amount for the unit"
+            },
+            {
+              "name": "LeaseTerm",
+              "type": "integer",
+              "required": false,
+              "description": "The number of months for which the specified rent price applies"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/units/{UnitId}/attachments",
     "operationId": "createUnitAttachment",
     "summary": "Create Unit Attachment",
-    "tag": "Units"
+    "tag": "Units",
+    "pathParams": [
+      {
+        "name": "UnitId",
+        "required": true,
+        "description": "The unit to which the file will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "multipart/form-data",
+      "required": true,
+      "properties": [
+        {
+          "name": "File",
+          "type": "string",
+          "required": false,
+          "description": "Filename.file-extension"
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/units/attachments",
     "operationId": "listUnitAttachments",
     "summary": "List All Unit Attachments",
-    "tag": "Units"
+    "tag": "Units",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[CreatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: filters[CreatedAtFrom]=2021-12-15T16:30:46Z <br> Returns attachments created on or after the specified date. The value must adhere to the ISO 8601 format YYYY-MM-DDThh:mm:ssZ and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[UnitId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "filters[UnitId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the unit associated with the attachment. Can only filter by one unit at a time.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/units/notes",
     "operationId": "getUnitsNotes",
     "summary": "List All Units Notes",
-    "tag": "Units"
+    "tag": "Units",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[UnitId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[UnitId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the unit. Filter the results based on a single value.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns unit note records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/units/{UnitId}/notes",
     "operationId": "createUnitNote",
     "summary": "Create Unit Note",
-    "tag": "Units"
+    "tag": "Units",
+    "pathParams": [
+      {
+        "name": "UnitId",
+        "required": true,
+        "description": "The unit to which the note will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the unit note. A unit note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/units/{UnitId}/notes/{Id}",
     "operationId": "updateUnitNote",
     "summary": "Update Unit Note",
-    "tag": "Units"
+    "tag": "Units",
+    "pathParams": [
+      {
+        "name": "UnitId",
+        "required": true,
+        "description": "The unit to which the note will be attached"
+      },
+      {
+        "name": "Id",
+        "required": true,
+        "description": "Unique identifier of the note to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the unit note. A unit note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/units/{UnitId}/photos",
     "operationId": "createUnitPhoto",
     "summary": "Create Unit Photo",
-    "tag": "Units"
+    "tag": "Units",
+    "pathParams": [
+      {
+        "name": "UnitId",
+        "required": true,
+        "description": "The unit to which the photo will be attached. If the unit belongs to a Unit Type that uses Unit Type Photos, the uploaded photo may not be visible until the unit is switched to use its own photos. The API will still return success in this scenario."
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "multipart/form-data",
+      "required": true,
+      "properties": [
+        {
+          "name": "File",
+          "type": "string",
+          "required": false,
+          "description": "Filename.file-extension"
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/units/{UnitId}/photos/{PhotoId}",
     "operationId": "updateUnitPhoto",
     "summary": "Update Unit Photo",
-    "tag": "Units"
+    "tag": "Units",
+    "pathParams": [
+      {
+        "name": "UnitId",
+        "required": true,
+        "description": "The unit to which the photo is attached"
+      },
+      {
+        "name": "PhotoId",
+        "required": true,
+        "description": "Unique identifier of the photo to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Position",
+          "type": "string",
+          "required": false,
+          "description": "The position of the photo in the unit photo gallery. The position must be a non-negative integer. If multiple photos are associated with a unit, the order of the remaining photos (positions 1 and above) will not change automatically if some photos are deleted. For example, if there are photos in positions 1, 2, 3, and 4, and photos 1 and 3 are deleted, the remaining photos will retain their original positions of 2 and 4"
+        }
+      ]
+    }
   },
   {
     "method": "DELETE",
     "path": "/units/{UnitId}/photos/{PhotoId}",
     "operationId": "deleteUnitPhoto",
     "summary": "Delete Unit Photo",
-    "tag": "Units"
+    "tag": "Units",
+    "pathParams": [
+      {
+        "name": "UnitId",
+        "required": true,
+        "description": "Unique identifier of the unit that contains the photo to be deleted"
+      },
+      {
+        "name": "PhotoId",
+        "required": true,
+        "description": "Unique identifier of the photo to be deleted"
+      }
+    ],
+    "queryParams": []
   },
   {
     "method": "GET",
     "path": "/units/photos",
     "operationId": "getUnitsPhotos",
     "summary": "List All Units Photos",
-    "tag": "Units"
+    "tag": "Units",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[UnitId]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[unitId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the unit. Filter the results based on one or more UnitIds. Multiple values should be separated by commas.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/unit_types",
     "operationId": "getUnitTypes",
     "summary": "List All Unit Types",
-    "tag": "Unit Types"
+    "tag": "Unit Types",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=bca5de23-c543-456e-abc9-123456789cba,1abcde45-c543-456e-abc9-123456789abc` <br> Unique identifier for the unit type. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2020-12-15T16:30:46Z` <br> Returns unit type records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/unit_types/bulk",
     "operationId": "bulkCreateUnitTypes",
     "summary": "Bulk Create Unit Types",
-    "tag": "Unit Types"
+    "tag": "Unit Types",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual unit types in the bulk-creation of unit types."
+            },
+            {
+              "name": "ApplicationFee",
+              "type": "number",
+              "required": false,
+              "description": "The fee charged when applying for a unit of this type. If the property associated with the unit type is payments enabled (if the property's bank account is payment enabled), then the `ApplicationFee` must be $0.00 or between $6.00 and $200.00"
+            },
+            {
+              "name": "Amenities",
+              "type": "array",
+              "required": false,
+              "description": "The amenities associated with the unit type"
+            },
+            {
+              "name": "Bathrooms",
+              "type": "number",
+              "required": false,
+              "description": "The number of bathrooms for this unit type"
+            },
+            {
+              "name": "Bedrooms",
+              "type": "integer",
+              "required": false,
+              "description": "The number of bedrooms for this unit type"
+            },
+            {
+              "name": "CatsAllowed",
+              "type": "string",
+              "required": false,
+              "description": "The unit type’s cat policy. Valid values include “Yes”, “No” or `null`. A null value indicates that the unit type may not have specified a policy for cats.\n| Attribute | Type   | Description                                |\n|-----------|--------|--------------------------------------------|\n| Yes       | String | Cats are permitted on the unit type         |\n| No        | String | Cats are not permitted on the unit type      |\n| null      | String | No cat policy has been set for the unit type  |\n"
+            },
+            {
+              "name": "Deposit",
+              "type": "number",
+              "required": false,
+              "description": "The security deposit amount"
+            },
+            {
+              "name": "DogsAllowed",
+              "type": "string",
+              "required": false,
+              "description": "| Attribute     | Type   | Description                                    |\n|---------------|--------|------------------------------------------------|\n| Large & Small | String | Large and small dogs are permitted on unit type  |\n| Small Only    | String | Only small dogs are permitted on the unit type   |\n| No            | String | No dogs are permitted on the unit type           |\n| null          | String | No dog policy has been set for the unit type     |\n"
+            },
+            {
+              "name": "FutureMarketRent",
+              "type": "number",
+              "required": false,
+              "description": "The projected future market rent for the unit type. This attribute must be provided together with `FutureMarketRentEffectiveOn` date. Both attributes must either be present or absent together."
+            },
+            {
+              "name": "FutureMarketRentEffectiveOn",
+              "type": "string",
+              "required": false,
+              "description": "The date when the `FutureMarketRent` will take effect. This attribute must be provided together with `FutureMarketRent`. Both attributes must either be present or absent together"
+            },
+            {
+              "name": "MarketRent",
+              "type": "number",
+              "required": false,
+              "description": "The current market rent for the unit type"
+            },
+            {
+              "name": "MarketingTitle",
+              "type": "string",
+              "required": false,
+              "description": "The title of the listing for syndication"
+            },
+            {
+              "name": "MarketingDescription",
+              "type": "string",
+              "required": false,
+              "description": "A description of the listing for syndication"
+            },
+            {
+              "name": "Name",
+              "type": "string",
+              "required": true,
+              "description": "The name of the unit type. This value must be unique per `PropertyId`, meaning different unit types can use the same `Name` only when their `PropertyId`s are different."
+            },
+            {
+              "name": "SquareFeet",
+              "type": "number",
+              "required": false,
+              "description": "The size of the unit type in square feet"
+            },
+            {
+              "name": "YouTubeURL",
+              "type": "string",
+              "required": false,
+              "description": "The URL of the YouTube video for the listing(s)"
+            },
+            {
+              "name": "PropertyId",
+              "type": "string",
+              "required": true,
+              "description": "Unique identifier of the property associated with the unit type"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/unit_types/{unitTypeId}",
     "operationId": "updateUnitType",
     "summary": "Update Unit Type",
-    "tag": "Unit Types"
+    "tag": "Unit Types",
+    "pathParams": [
+      {
+        "name": "unitTypeId",
+        "required": true,
+        "description": "Unique identifier of the unit type to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "ApplicationFee",
+          "type": "number",
+          "required": false,
+          "description": "The fee charged when applying for a unit of this type. If the property associated with the unit type is payments enabled (if the property's bank account is payment enabled), then the `ApplicationFee` must be $0.00 or between $6 and $200."
+        },
+        {
+          "name": "Amenities",
+          "type": "array",
+          "required": false,
+          "description": "The amenities associated with the unit type. Providing an array of valid strings will overwrite all existing amenities. Passing in an empty array `[]` or an array of empty strings `[\"\"]` or `[\"\", \"\"]` will clear all existing amenities. Passing in an array of a valid string and an empty string `[\"amenity_name\", \"\"]` will result in `Amenities: [\"amenity_name\"]`. Passing in `null` will result in no change."
+        },
+        {
+          "name": "Bathrooms",
+          "type": "number",
+          "required": false,
+          "description": "The number of bathrooms for this unit type"
+        },
+        {
+          "name": "Bedrooms",
+          "type": "integer",
+          "required": false,
+          "description": "The number of bedrooms for this unit type"
+        },
+        {
+          "name": "CatsAllowed",
+          "type": "string",
+          "required": false,
+          "description": "The unit type’s cat policy. Valid values include “Yes”, “No” or `null`. A null value indicates that the unit type may not have specified a policy for cats.\n| Attribute | Type   | Description                                |\n|-----------|--------|--------------------------------------------|\n| Yes       | String | Cats are permitted on the unit type         |\n| No        | String | Cats are not permitted on the unit type      |\n| null      | String | No cat policy has been set for the unit type  |\n"
+        },
+        {
+          "name": "Deposit",
+          "type": "number",
+          "required": false,
+          "description": "The security deposit amount"
+        },
+        {
+          "name": "DogsAllowed",
+          "type": "string",
+          "required": false,
+          "description": "| Attribute     | Type   | Description                                    |\n|---------------|--------|------------------------------------------------|\n| Large & Small | String | Large and small dogs are permitted on unit type  |\n| Small Only    | String | Only small dogs are permitted on the unit type   |\n| No            | String | No dogs are permitted on the unit type           |\n| null          | String | No dog policy has been set for the unit type     |\n"
+        },
+        {
+          "name": "FutureMarketRent",
+          "type": "number",
+          "required": false,
+          "description": "The projected future market rent for the unit type. This attribute must be provided together with `FutureMarketRentEffectiveOn` date. Both attributes must either be present or absent together"
+        },
+        {
+          "name": "FutureMarketRentEffectiveOn",
+          "type": "string",
+          "required": false,
+          "description": "The date when the `FutureMarketRent` will take effect. This attribute must be provided together with `FutureMarketRent`. Both attributes must either be present or absent together"
+        },
+        {
+          "name": "MarketRent",
+          "type": "number",
+          "required": false,
+          "description": "The current market rent for the unit type"
+        },
+        {
+          "name": "MarketingTitle",
+          "type": "string",
+          "required": false,
+          "description": "The title of the listing for syndication"
+        },
+        {
+          "name": "MarketingDescription",
+          "type": "string",
+          "required": false,
+          "description": "A description of the listing for syndication"
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "required": false,
+          "description": "The name of the unit type. This value must be unique per `PropertyId`, meaning different unit types can use the same `Name` only when their `PropertyId`s are different."
+        },
+        {
+          "name": "SquareFeet",
+          "type": "number",
+          "required": false,
+          "description": "The size of the unit type in square feet"
+        },
+        {
+          "name": "YouTubeURL",
+          "type": "string",
+          "required": false,
+          "description": "The URL of the YouTube video for the listing(s)"
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/users",
     "operationId": "getUsers",
     "summary": "List All Users",
-    "tag": "Users"
+    "tag": "Users",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns AppFolio Property Manager user records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PropertyId]=bfcb95e8-d5fb-448c-b811-88d9f832e79c,cfcb95e8-d5fb-448c-b811-88d9f832e79c` <br> Unique identifier of the property associated with the user. Filter the results based on one or more PropertyIds. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[Email]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Email]=example1@test.com` <br> Email address of the user. Filter the results based on one or more email addresses. Multiple values should be separated by commas. Any `+` characters in the email must be URL-encoded to `%2B`."
+      }
+    ]
   },
   {
     "method": "GET",
     "path": "/vendors",
     "operationId": "getVendors",
     "summary": "List All Vendors",
-    "tag": "Vendors"
+    "tag": "Vendors",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=1abcde23-c543-456e-abc9-123456789cba,cfcb95e8-d5fb-448c-b811-88d9f832e79c` <br> Unique identifier of the vendor(s) that are sought for retrieval. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[IncludeHidden]",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Example: `filters[IncludeHidden]=true` <br> Indicates whether or not to include vendors marked inactive by an AppFolio Property Manager user"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns vendor records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/vendors",
     "operationId": "createVendor",
     "summary": "Create Vendor",
-    "tag": "Vendors"
+    "tag": "Vendors",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "TaxpayerName",
+          "type": "string",
+          "required": false,
+          "description": "The taxpayer name of the vendor <br />\nIf `UseCompanyNameAsTaxpayerName` is true, then `TaxpayerName` will be` CompanyName`.<br />\nIf `IsCompany` is true, and `TaxpayerName` is not provided, then `TaxpayerName` will be set to `CompanyName`.<br />\nIf `IsCompany `is false, and `TaxpayerName` is not provided, then `TaxpayerName` will be set to the concatenation of `FirstName` and `LastName`.<br />\nIf `TaxpayerName` is provided, and `UseCompanyNameAsTaxpayerName` is false, then `TaxpayerName` will be set as provided value.\n"
+        },
+        {
+          "name": "TaxpayerId",
+          "type": "string",
+          "required": false,
+          "description": "The tax identification number of the vendor. This field accepts either a Employer Identification Number (EIN), a Social Security Number (SSN), or an Individual Taxpayer Identification Number (ITIN)."
+        },
+        {
+          "name": "CompanyName",
+          "type": "string",
+          "required": false,
+          "description": "Optional display name of vendor's company. If `IsCompany` is true, this field is required."
+        },
+        {
+          "name": "Send1099",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the vendor needs a 1099 tax form from the management company"
+        },
+        {
+          "name": "FirstName",
+          "type": "string",
+          "required": false,
+          "description": "The vendor's first name. If `IsCompany` is false, this field is required."
+        },
+        {
+          "name": "LastName",
+          "type": "string",
+          "required": false,
+          "description": "The vendor's last name. If `IsCompany` is false, this field is required."
+        },
+        {
+          "name": "Address1",
+          "type": "string",
+          "required": false,
+          "description": "The primary street address of the vendor. If provided, `City`, `State`, and `Zip` must also be provided."
+        },
+        {
+          "name": "Address2",
+          "type": "string",
+          "required": false,
+          "description": "Additional street information pertaining to the vendor"
+        },
+        {
+          "name": "City",
+          "type": "string",
+          "required": false,
+          "description": "The city where the vendor is located. If provided, `Address1`, `State`, and `Zip` must also be provided."
+        },
+        {
+          "name": "State",
+          "type": "string",
+          "required": false,
+          "description": "The state where the vendor is located (e.g. \"CA\" for California). If provided, `Address1`, `City`, and `Zip` must also be provided."
+        },
+        {
+          "name": "Zip",
+          "type": "string",
+          "required": false,
+          "description": "The zip code where the vendor is located. Must be a string in 5-digit ZIP code format (e.g., 93013) or ZIP+4 format (e.g., 93013-0429). If provided, `Address1`, `City`, and `State` must also be provided."
+        },
+        {
+          "name": "CountryCode",
+          "type": "string",
+          "required": false,
+          "description": "The country code of the vendor (e.g. \"JP\" for Japan)"
+        },
+        {
+          "name": "PhoneNumber",
+          "type": "string",
+          "required": false,
+          "description": "The vendor's primary phone number"
+        },
+        {
+          "name": "PhoneNumbers",
+          "type": "array",
+          "required": false,
+          "description": "The vendor's phone number(s). PhoneNumber and PhoneNumbers cannot be provided together.",
+          "properties": [
+            {
+              "name": "AdditionalDetails",
+              "type": "string",
+              "required": false,
+              "description": "Additional detailed information pertaining to the phone number associated with the vendor"
+            },
+            {
+              "name": "IsPrimary",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the phone number provided is the vendor’s main contact number"
+            },
+            {
+              "name": "Label",
+              "type": "string",
+              "required": false,
+              "description": "The label of the phone number, e.g. 'Home'"
+            },
+            {
+              "name": "Number",
+              "type": "string",
+              "required": true,
+              "description": "The vendor's phone number"
+            }
+          ]
+        },
+        {
+          "name": "Email",
+          "type": "string",
+          "required": false,
+          "description": "The vendor's primary email address"
+        },
+        {
+          "name": "Emails",
+          "type": "array",
+          "required": false,
+          "description": "The vendor's email address(es). Email and Emails cannot be provided together.",
+          "properties": [
+            {
+              "name": "EmailAddress",
+              "type": "string",
+              "required": true,
+              "description": "The vendor's email address"
+            },
+            {
+              "name": "IsPrimary",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the email address provided is the vendor’s primary email address"
+            }
+          ]
+        },
+        {
+          "name": "CompanyURL",
+          "type": "string",
+          "required": false,
+          "description": "The internet address of the vendor's website"
+        },
+        {
+          "name": "LiabilityInsuranceExpiration",
+          "type": "string",
+          "required": false,
+          "description": "The expiration date of the vendor's liability insurance"
+        },
+        {
+          "name": "AutoInsuranceExpiration",
+          "type": "string",
+          "required": false,
+          "description": "The expiration date of the vendor's automobile insurance"
+        },
+        {
+          "name": "WorkersCompExpiration",
+          "type": "string",
+          "required": false,
+          "description": "The expiration date of the vendor's worker's compensation insurance"
+        },
+        {
+          "name": "ContractExpiration",
+          "type": "string",
+          "required": false,
+          "description": "The expiration date of the contract"
+        },
+        {
+          "name": "UmbrellaInsuranceExpiration",
+          "type": "string",
+          "required": false,
+          "description": "The expiration date of the vendor's umbrella insurance"
+        },
+        {
+          "name": "CompliantStatus",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the vendor meets compliance"
+        },
+        {
+          "name": "NetVendorId",
+          "type": "string",
+          "required": false,
+          "description": "The vendor's NetVendor ID"
+        },
+        {
+          "name": "IsCompany",
+          "type": "boolean",
+          "required": true,
+          "description": "Indicates whether or not the vendor identifies as a company"
+        },
+        {
+          "name": "UseCompanyNameAsTaxpayerName",
+          "type": "boolean",
+          "required": true,
+          "description": "Indicates whether or not to use the company name for tax paying purposes"
+        },
+        {
+          "name": "PaymentTerms",
+          "type": "integer",
+          "required": false,
+          "description": "Represents the number of days the payment is due after the invoice date. A null value indicates that no payment terms were defined. A value of 0 indicates the payment is due on receipt.  A value greater than 0, for example, 15, indicates the payment is due 15 days after the invoice date. Required value of 1-31 if UsingEomTerms is true."
+        },
+        {
+          "name": "UsingEomTerms",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the payment terms include an end-of-month (EOM) stipulation. For example, if PaymentTerms is 15, and EOM is true, the payment is due within 15 days of the end of the month."
+        },
+        {
+          "name": "DefaultAutoAcceptWorkOrders",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether the vendor is ineligible for auto-accept work order assignments. When set to true, this vendor will auto-accept all work orders assigned to them."
+        },
+        {
+          "name": "Tags",
+          "type": "array",
+          "required": false,
+          "description": "User-defined tag(s) that categorize the vendor"
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/vendors/{vendorId}",
     "operationId": "updateVendor",
     "summary": "Update Vendor",
-    "tag": "Vendors"
+    "tag": "Vendors",
+    "pathParams": [
+      {
+        "name": "vendorId",
+        "required": true,
+        "description": "Unique identifier of the vendor to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "TaxpayerName",
+          "type": "string",
+          "required": false,
+          "description": "The taxpayer name of the vendor <br />\nIf `UseCompanyNameAsTaxpayerName` is true, then `TaxpayerName` will be `CompanyName`.<br />\nIf `IsCompany` is true, and `TaxpayerName` is not provided, then `TaxpayerName` will be set to `CompanyName`.<br />\nIf `IsCompany` is false, and `TaxpayerName` is not provided, then `TaxpayerName` will be set to the concatenation of `FirstName` and `LastName`.<br />\nIf `TaxpayerName` is provided, and `UseCompanyNameAsTaxpayerName` is false, then `TaxpayerName` will be set as provided value.\n"
+        },
+        {
+          "name": "TaxpayerId",
+          "type": "string",
+          "required": false,
+          "description": "The tax identification number of the vendor. This field accepts either a Employer Identification Number (EIN), a Social Security Number (SSN), or an Individual Taxpayer Identification Number (ITIN)."
+        },
+        {
+          "name": "CompanyName",
+          "type": "string",
+          "required": false,
+          "description": "The display name of the vendor's company"
+        },
+        {
+          "name": "Send1099",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the vendor needs a 1099 tax form from the management company"
+        },
+        {
+          "name": "FirstName",
+          "type": "string",
+          "required": false,
+          "description": "The vendor's first name"
+        },
+        {
+          "name": "LastName",
+          "type": "string",
+          "required": false,
+          "description": "The vendor's last name"
+        },
+        {
+          "name": "Address1",
+          "type": "string",
+          "required": false,
+          "description": "The primary street address of the vendor. If provided, `City`, `State`, and `Zip` must also be provided."
+        },
+        {
+          "name": "Address2",
+          "type": "string",
+          "required": false,
+          "description": "Additional street address information pertaining to the vendor"
+        },
+        {
+          "name": "City",
+          "type": "string",
+          "required": false,
+          "description": "The city where the vendor is located. If provided, `Address1`, `State`, and `Zip` must also be provided."
+        },
+        {
+          "name": "State",
+          "type": "string",
+          "required": false,
+          "description": "The state where the vendor is located (e.g. \"CA\" for California). If provided, `Address1`, `City`, and `Zip` must also be provided. This value must not be an unincorporated US territory (AS, FM, MH, MP, or VI) for primary address when the vendor is using online payables with ACH."
+        },
+        {
+          "name": "Zip",
+          "type": "string",
+          "required": false,
+          "description": "The zip code where the vendor is located. Must be a string in 5-digit ZIP code format (e.g., 93013) or ZIP+4 format (e.g., 93013-0429). If provided, `Address1`, `City`, and `State` must also be provided."
+        },
+        {
+          "name": "CountryCode",
+          "type": "string",
+          "required": false,
+          "description": "The country code of the vendor (e.g. \"JP\" for Japan). This value must be US for primary address when the vendor is using online payables with ACH."
+        },
+        {
+          "name": "PhoneNumber",
+          "type": "string",
+          "required": false,
+          "description": "The vendor's primary phone number"
+        },
+        {
+          "name": "PhoneNumbers",
+          "type": "array",
+          "required": false,
+          "description": "The vendor's phone number(s). PhoneNumber and PhoneNumbers cannot be provided together. Passing any number of phone numbers will replace all existing phone numbers for the vendor.",
+          "properties": [
+            {
+              "name": "AdditionalDetails",
+              "type": "string",
+              "required": false,
+              "description": "Additional detailed information pertaining to the phone number associated with the vendor"
+            },
+            {
+              "name": "IsPrimary",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the phone number provided is the vendor’s main contact number"
+            },
+            {
+              "name": "Label",
+              "type": "string",
+              "required": false,
+              "description": "The label of the phone number, e.g. 'Home'"
+            },
+            {
+              "name": "Number",
+              "type": "string",
+              "required": true,
+              "description": "The vendor's phone number"
+            }
+          ]
+        },
+        {
+          "name": "Email",
+          "type": "string",
+          "required": false,
+          "description": "The vendor's primary email address"
+        },
+        {
+          "name": "Emails",
+          "type": "array",
+          "required": false,
+          "description": "The vendor's email address(es). Email and Emails cannot be provided together. Passing any number of emails will replace all existing email addresses for the vendor.",
+          "properties": [
+            {
+              "name": "EmailAddress",
+              "type": "string",
+              "required": true,
+              "description": "The vendor's email address"
+            },
+            {
+              "name": "IsPrimary",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the email address provided is the vendor’s primary email address"
+            }
+          ]
+        },
+        {
+          "name": "CompanyURL",
+          "type": "string",
+          "required": false,
+          "description": "The internet address of vendor's website"
+        },
+        {
+          "name": "LiabilityInsuranceExpiration",
+          "type": "string",
+          "required": false,
+          "description": "The expiration date of the vendor's liability insurance"
+        },
+        {
+          "name": "AutoInsuranceExpiration",
+          "type": "string",
+          "required": false,
+          "description": "The expiration date of the vendor's automobile insurance"
+        },
+        {
+          "name": "WorkersCompExpiration",
+          "type": "string",
+          "required": false,
+          "description": "The expiration date of the vendor's worker's compensation insurance"
+        },
+        {
+          "name": "ContractExpiration",
+          "type": "string",
+          "required": false,
+          "description": "The expiration date of the contract"
+        },
+        {
+          "name": "UmbrellaInsuranceExpiration",
+          "type": "string",
+          "required": false,
+          "description": "The expiration date of the vendor's umbrella insurance"
+        },
+        {
+          "name": "CompliantStatus",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the vendor meets compliance"
+        },
+        {
+          "name": "NetVendorId",
+          "type": "string",
+          "required": false,
+          "description": "The vendor's NetVendor ID"
+        },
+        {
+          "name": "IsCompany",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the vendor identifies as a company"
+        },
+        {
+          "name": "UseCompanyNameAsTaxpayerName",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not to use the company name for tax paying purposes"
+        },
+        {
+          "name": "DefaultAutoAcceptWorkOrders",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether the vendor is ineligible for auto-accept work order assignments. When set to true, this vendor will auto-accept all work orders assigned to them."
+        },
+        {
+          "name": "PaymentTerms",
+          "type": "integer",
+          "required": false,
+          "description": "Represents the number of days the payment is due after the invoice date. A null value indicates that no payment terms were defined. A value of 0 indicates the payment is due on receipt.  A value greater than 0, for example, 15, indicates the payment is due 15 days after the invoice date. Required if UsingEomTerms is true."
+        },
+        {
+          "name": "UsingEomTerms",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the payment terms include an end-of-month (EOM) stipulation. For example, if PaymentTerms is 15, and EOM is true, the payment is due within 15 days of the end of the month."
+        },
+        {
+          "name": "Tags",
+          "type": "array",
+          "required": false,
+          "description": "User-defined tag(s) that categorize the vendor. Providing an array of valid strings will overwrite all existing tags. Passing in an empty array `[]` or an array of empty strings `[\"\"]` or `[\"\", \"\"]` will clear all existing tags. Passing in an array of a valid string and an empty string `[\"tag_name\", \"\"]` will result in `Tags: [\"tag_name\"]`. Passing in `null` will result in no change."
+        },
+        {
+          "name": "CustomFields",
+          "type": "object",
+          "required": false,
+          "description": "The custom fields for the associated entity",
+          "properties": [
+            {
+              "name": "CustomFieldId",
+              "type": "object",
+              "required": false,
+              "description": "The value of the `CustomField` to update. Ensure the value set for `CustomFieldId` matches the type that was set for the `CustomField` at creation.\nFor example, if `boolean` is the type set for the `CustomField` associated with this `CustomFieldId`, the value set here must be either `true` or `false`. *Note*: To clear the value of a `CustomField`, set `CustomFieldId` to `null` in the PATCH request. For array-type custom fields (select_multiple), use an empty array `[]` or empty string `\"\"` instead of `null`, as `null` will be ignored.\n"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/vendors/bulk",
     "operationId": "bulkCreateVendors",
     "summary": "Bulk Create Vendors",
-    "tag": "Vendors"
+    "tag": "Vendors",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "data",
+          "type": "array",
+          "required": false,
+          "description": "",
+          "properties": [
+            {
+              "name": "ReferenceId",
+              "type": "string",
+              "required": true,
+              "description": "Transient unique ID assigned by the developer. Used to reference individual vendors in the bulk-creation of vendors."
+            },
+            {
+              "name": "TaxpayerName",
+              "type": "string",
+              "required": false,
+              "description": "The taxpayer name of the vendor <br />\nIf `UseCompanyNameAsTaxpayerName` is true, then `TaxpayerName` will be `CompanyName`.<br />\nIf `IsCompany` is true, and `TaxpayerName` is not provided, then `TaxpayerName` will be set to `CompanyName`.<br />\nIf `IsCompany `is false, and `TaxpayerName` is not provided, then `TaxpayerName` will be set to the concatenation of `FirstName` and `LastName`.<br />\nIf `TaxpayerName` is provided, and `UseCompanyNameAsTaxpayerName` is false, then `TaxpayerName` will be set as provided value.\n"
+            },
+            {
+              "name": "TaxpayerId",
+              "type": "string",
+              "required": false,
+              "description": "The tax identification number of the vendor. This field accepts either a Employer Identification Number (EIN), a Social Security Number (SSN), or an Individual Taxpayer Identification Number (ITIN)."
+            },
+            {
+              "name": "CompanyName",
+              "type": "string",
+              "required": false,
+              "description": "The display name of a vendor's company. If `IsCompany` is true, this field is required."
+            },
+            {
+              "name": "Send1099",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether or not the vendor needs a 1099 tax form from the management company"
+            },
+            {
+              "name": "FirstName",
+              "type": "string",
+              "required": false,
+              "description": "The vendor's first name. If `IsCompany` is false, this field is required."
+            },
+            {
+              "name": "LastName",
+              "type": "string",
+              "required": false,
+              "description": "The vendor's last name. If `IsCompany` is false, this field is required."
+            },
+            {
+              "name": "Address1",
+              "type": "string",
+              "required": false,
+              "description": "The primary street address of the vendor"
+            },
+            {
+              "name": "Address2",
+              "type": "string",
+              "required": false,
+              "description": "Additional street information pertaining to the vendor"
+            },
+            {
+              "name": "City",
+              "type": "string",
+              "required": false,
+              "description": "The city where the vendor is located"
+            },
+            {
+              "name": "State",
+              "type": "string",
+              "required": false,
+              "description": "The state where the vendor is located (e.g. \"CA\" for California)"
+            },
+            {
+              "name": "Zip",
+              "type": "string",
+              "required": false,
+              "description": "The zip code where the vendor is located. Must be a valid 5-digit ZIP code (e.g., 93013) or ZIP+4 format (e.g., 93013-0429)"
+            },
+            {
+              "name": "CountryCode",
+              "type": "string",
+              "required": false,
+              "description": "The country code of the vendor (e.g. \"JP\" for Japan)"
+            },
+            {
+              "name": "PhoneNumbers",
+              "type": "array",
+              "required": false,
+              "description": "The vendor's phone number(s)"
+            },
+            {
+              "name": "Emails",
+              "type": "array",
+              "required": false,
+              "description": "The vendor's email address(es)"
+            },
+            {
+              "name": "CompanyURL",
+              "type": "string",
+              "required": false,
+              "description": "The internet address of the vendor's website"
+            },
+            {
+              "name": "LiabilityInsuranceExpiration",
+              "type": "string",
+              "required": false,
+              "description": "The expiration date of the vendor's liability insurance"
+            },
+            {
+              "name": "AutoInsuranceExpiration",
+              "type": "string",
+              "required": false,
+              "description": "The expiration date of the vendor's automobile insurance"
+            },
+            {
+              "name": "WorkersCompExpiration",
+              "type": "string",
+              "required": false,
+              "description": "The expiration date of the vendor's worker's compensation insurance"
+            },
+            {
+              "name": "ContractExpiration",
+              "type": "string",
+              "required": false,
+              "description": "The expiration date of the contract"
+            },
+            {
+              "name": "UmbrellaInsuranceExpiration",
+              "type": "string",
+              "required": false,
+              "description": "The expiration date of the vendor's umbrella insurance"
+            },
+            {
+              "name": "CompliantStatus",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether or not the vendor meets compliance"
+            },
+            {
+              "name": "NetVendorId",
+              "type": "string",
+              "required": false,
+              "description": "The vendor's NetVendor ID"
+            },
+            {
+              "name": "IsCompany",
+              "type": "boolean",
+              "required": true,
+              "description": "Indicates whether or not the vendor identifies as a company"
+            },
+            {
+              "name": "UseCompanyNameAsTaxpayerName",
+              "type": "boolean",
+              "required": true,
+              "description": "Indicates whether or not to use the company name for tax paying purposes"
+            },
+            {
+              "name": "PaymentTerms",
+              "type": "integer",
+              "required": false,
+              "description": "Represents the number of days the payment is due after the invoice date. A null value indicates that no payment terms were defined. A value of 0 indicates the payment is due on receipt.  A value greater than 0, for example, 15, indicates the payment is due 15 days after the invoice date. Required value of 1-31 if UsingEomTerms is true."
+            },
+            {
+              "name": "UsingEomTerms",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether or not the payment terms include an end-of-month (EOM) stipulation. For example, if PaymentTerms is 15, and EOM is true, the payment is due within 15 days of the end of the month. If a `null` value passed to `UsingEomTerms` or no value is provided, `UsingEomTerms` will default to false"
+            },
+            {
+              "name": "DefaultAutoAcceptWorkOrders",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether the vendor is ineligible for auto-accept work order assignments. When set to true, this vendor will auto-accept all work orders assigned to them."
+            },
+            {
+              "name": "Tags",
+              "type": "array",
+              "required": false,
+              "description": "User-defined tag(s) that categorize the vendor"
+            }
+          ]
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/vendors/notes",
     "operationId": "getVendorsNotes",
     "summary": "List All Vendors Notes",
-    "tag": "Vendors"
+    "tag": "Vendors",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[VendorId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[VendorId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the vendor. Filter the results based on a single value.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns vendor note records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ`, and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/vendors/{VendorId}/notes",
     "operationId": "createVendorNote",
     "summary": "Create Vendor Note",
-    "tag": "Vendors"
+    "tag": "Vendors",
+    "pathParams": [
+      {
+        "name": "VendorId",
+        "required": true,
+        "description": "The vendor to which the note will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message related to the vendor. A vendor note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/vendors/{VendorId}/notes/{Id}",
     "operationId": "updateVendorNote",
     "summary": "Update Vendor Note",
-    "tag": "Vendors"
+    "tag": "Vendors",
+    "pathParams": [
+      {
+        "name": "VendorId",
+        "required": true,
+        "description": "The vendor to which the note will be attached"
+      },
+      {
+        "name": "Id",
+        "required": true,
+        "description": "Unique identifier of the note to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the vendor note. A vendor note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/work_orders",
     "operationId": "getWorkOrders",
     "summary": "List All Work Orders",
-    "tag": "Work Orders"
+    "tag": "Work Orders",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[CreatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[CreatedAtFrom]=2021-12-14T16:30:46Z` <br> Filter to return results created at the specified date. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[CreatedAtTo]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[CreatedAtTo]=2021-12-14T16:30:46Z` <br> Filter to return results created until the specified date. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[Id]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Id]=1abcde23-c543-456e-abc9-123456789cba,cfcb95e8-d5fb-448c-b811-88d9f832e79c` <br> Unique identifier of the work order(s) sought for retrieval. Filter the results based on one or more `Id`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[LastUpdatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[LastUpdatedAtFrom]=2021-12-15T16:30:46Z` <br> Returns AppFolio Property Manager work order records that have been updated since the date provided. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[ManagementCompanyAsVendor]",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Example: `filters[ManagementCompanyAsVendor]=true` <br> Indicates whether or not to include work orders where the management company is the vendor"
+      },
+      {
+        "name": "filters[PropertyId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[PropertyId]=1abcde23-c543-456e-abc9-123456789cba,cfcb95e8-d5fb-448c-b811-88d9f832e79c` <br> Unique Identifier of the property or association related to the the work order. Filter the results based on one or more PropertyIds. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[Status]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[Status]=Assigned,Canceled` <br> The status of the work order. Filter the results based on one or more statuses. Multiple values should be separated by commas.\n#### Status Options\n| Options            | Description                      |\n|--------------------|----------------------------------|\n| Assigned           | The work order has been assigned to an AppFolio Property Manager user |\n| Canceled           | The work order has been canceled |\n| Completed          | The maintenance request was closed out |\n| Estimate Requested | An estimate was requested from the vendor |\n| Estimated          | An estimate was received |\n| New                | A new maintenance request |\n| Scheduled          | Work is scheduled |\n| Waiting            | The work order is pending |\n| Work Completed     | The work order is completed |\n",
+        "enum": [
+          "Assigned",
+          "Canceled",
+          "Completed",
+          "Estimate Requested",
+          "Estimated",
+          "New",
+          "Scheduled",
+          "Waiting",
+          "Work Completed"
+        ]
+      },
+      {
+        "name": "filters[UnitId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[UnitId]=1abcde23-c543-456e-abc9-123456789cba,cfcb95e8-d5fb-448c-b811-88d9f832e79c` <br> Unique identifier of the unit associated with the work order. Filter the results based on one or more `UnitId`s. Multiple values should be separated by commas.",
+        "format": "uuid"
+      },
+      {
+        "name": "filters[VendorId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: `filters[VendorId]=1abcde23-c543-456e-abc9-123456789cba,cfcb95e8-d5fb-448c-b811-88d9f832e79c` <br> Unique identifier of the vendor associated with the work order. Filter the results based on one or more VendorIds. Multiple values should be separated by commas.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "POST",
     "path": "/work_orders",
     "operationId": "createWorkOrder",
     "summary": "Create Work Orders",
-    "tag": "Work Orders"
+    "tag": "Work Orders",
+    "pathParams": [],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "JobDescription",
+          "type": "string",
+          "required": true,
+          "description": "A brief description of the work order to be performed"
+        },
+        {
+          "name": "AssignedUsers",
+          "type": "array",
+          "required": false,
+          "description": "Array of `AssignedUsers` to create the work order with"
+        },
+        {
+          "name": "BillableItems",
+          "type": "array",
+          "required": false,
+          "description": "Array of billable line item attributes present on a work order\n#### Billable Item Attributes\n| Attributes | Type   | Description                                                                                   |\n|------------|--------|-----------------------------------------------------------------------------------------------|\n| Description| String | A brief informative message about the billable line item                                      |\n| GlAccountId| String | Unique identifier of the General Ledger account associated with the billable line item        |\n| Quantity   | String | The number of services or goods utilized. Must be a positive number                           |\n| Rate       | String | The rate, or cost, of the goods or services provided | Valid format is \"DD.CC\", e.g. \"23.33\"  |\n",
+          "properties": [
+            {
+              "name": "Description",
+              "type": "string",
+              "required": false,
+              "description": "A brief informative message about the billable line item"
+            },
+            {
+              "name": "GlAccountId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the General Ledger account associated with the billable line item"
+            },
+            {
+              "name": "Quantity",
+              "type": "string",
+              "required": false,
+              "description": "The number of services or goods utilized. `Quantity` must be a positive number."
+            },
+            {
+              "name": "Rate",
+              "type": "string",
+              "required": false,
+              "description": "The rate (cost) of the goods or services provided. Valid format is \"DD.CC\", e.g. \"23.33\""
+            }
+          ]
+        },
+        {
+          "name": "CanceledOn",
+          "type": "string",
+          "required": false,
+          "description": "The date the work order status changed to \"canceled\""
+        },
+        {
+          "name": "CompletedOn",
+          "type": "string",
+          "required": false,
+          "description": "The date the work order status changed to \"completed\""
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "required": false,
+          "description": "The top-level description for a grouping of work orders in AppFolio"
+        },
+        {
+          "name": "Estimates",
+          "type": "array",
+          "required": false,
+          "description": "Use estimates to track anticipated costs for Work Orders. Estimates created via API are not automatically sent to Vendors or Owners, but are visible to assigned Vendors in the Vendor Portal.\n",
+          "properties": [
+            {
+              "name": "VendorId",
+              "type": "string",
+              "required": false,
+              "description": "The unique identifier of the vendor who submitted this estimate. If provided, `ManagementCompanyAsVendor` must be `false` or omitted."
+            },
+            {
+              "name": "ManagementCompanyAsVendor",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether or not the management company is acting as the vendor for the estimate. If `true`, `VendorId` must be `null` or omitted."
+            },
+            {
+              "name": "Amount",
+              "type": "number",
+              "required": false,
+              "description": "The total estimated cost in dollars for completing the work order as quoted by the vendor."
+            },
+            {
+              "name": "Status",
+              "type": "string",
+              "required": false,
+              "description": "The current approval status of the estimate. Only one estimate can have `Approved` status at a time per work order\n#### Status Options\n| Options      | Description                                          |\n|--------------|------------------------------------------------------|\n| Pending      | The estimate is awaiting review and approval         |\n| Approved     | The estimate has been approved and work may proceed  |\n| Not Approved | The estimate has been rejected                       |\n"
+            },
+            {
+              "name": "InternalNotes",
+              "type": "string",
+              "required": false,
+              "description": "Internal notes or comments attached to the estimate. These notes are for internal use only and not visible to vendors or owners."
+            },
+            {
+              "name": "EstimateRequestedDate",
+              "type": "string",
+              "required": false,
+              "description": "The date the estimate was requested from the Vendor."
+            },
+            {
+              "name": "EstimateReceivedDate",
+              "type": "string",
+              "required": false,
+              "description": "The date the estimate was received from the Vendor. If `Amount` is provided but `EstimateReceivedDate` is not specified, it will automatically default to today's date. This ensures that all estimates with amounts have a received date for tracking purposes."
+            }
+          ]
+        },
+        {
+          "name": "LaborItems",
+          "type": "array",
+          "required": false,
+          "description": "Array of labor line item attributes present on a work order\n#### Labor Item Attributes\n| Attributes   | Type   | Description                                                                                               |\n|--------------|--------|-----------------------------------------------------------------------------------------------------------|\n| Date         | String | The date the labor was completed                                                                          |\n| Description  | String | A brief informative message about the labor performed                                                     |\n| HoursWorked  | String | The number of hours worked by the maintenance tech                                                        |\n| HoursBillable| String | The number of hours worked by the maintenance tech that are billable, used to create the work order bill  |\n| UserId       | String | Unique identifier of the maintenance tech assigned to the work order                                      |\n",
+          "properties": [
+            {
+              "name": "Date",
+              "type": "string",
+              "required": false,
+              "description": "The date the labor was completed. Valid format is \"YYYY-MM-DD\"  e.g. \"2020-12-01\"."
+            },
+            {
+              "name": "Description",
+              "type": "string",
+              "required": false,
+              "description": "A brief informative message about the labor performed"
+            },
+            {
+              "name": "HoursWorked",
+              "type": "string",
+              "required": false,
+              "description": "The number of hours worked by the maintenance tech"
+            },
+            {
+              "name": "HoursBillable",
+              "type": "string",
+              "required": false,
+              "description": "The number of hours worked by the maintenance tech that are billable, used to create the work order bill"
+            },
+            {
+              "name": "UserId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the maintenance tech assigned to the work order"
+            }
+          ]
+        },
+        {
+          "name": "ManagementCompanyAsVendor",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the management company is the vendor for the work order. If true, `VendorId` must be null or omitted."
+        },
+        {
+          "name": "PermissionToEnter",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the occupancy has given permission to enter the unit"
+        },
+        {
+          "name": "Priority",
+          "type": "string",
+          "required": false,
+          "description": "The priority of the work order\n#### Priority Options\n| Options | Description      |\n|---------|------------------|\n| Urgent  | Highest priority |\n| Normal  | Normal priority  |\n| Low     | Lowest priority  |\n"
+        },
+        {
+          "name": "ScheduledEnd",
+          "type": "string",
+          "required": false,
+          "description": "When the work order is scheduled to be completed. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC)."
+        },
+        {
+          "name": "ScheduledStart",
+          "type": "string",
+          "required": false,
+          "description": "When the work order is scheduled to start. The value must adhere to the ISO 8601 format: `YYYY-MM-DDThh:mm:ssZ`."
+        },
+        {
+          "name": "Status",
+          "type": "string",
+          "required": false,
+          "description": "The status of the work order. The `Status` is automatically updated to `Estimate Requested` or `Estimated` based on the `Estimates` associated with it.\nWhen one or more estimates exist on a work order, the work order status becomes `Estimate Requested`.\nOnce any estimate has an `Amount` provided, the work order status transitions to `Estimated`.\n#### Status Options\n| Options            | Description                      |\n|--------------------|----------------------------------|\n| Assigned           | The work order has been assigned to an AppFolio Property Manager user |\n| Canceled           | The work order has been canceled                |\n| Completed          | The maintenance request was closed out   |\n| New                | A new maintenance request          |\n| Scheduled          | The work order to be performed is scheduled                |\n| Waiting            | The work order is pending                         |\n| Work Completed     | The work order is completed                   |\n"
+        },
+        {
+          "name": "VendorId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the vendor associated with the work order. If the management company is the vendor, this should be null or omitted."
+        },
+        {
+          "name": "VendorTrade",
+          "type": "string",
+          "required": false,
+          "description": "The type of service offered by the vendor\n<details>\n<summary>\n<b>Vendor Trades</b>\n</summary>\n\n| Options    |\n|------------|\n| Alarm/Security |\n| Appliances |\n| Capital Improvements |\n| Carpet/Flooring |\n| Cleaning |\n| Deck Repair |\n| Doors/Windows |\n| Drywall Repair |\n| Electrical |\n| Elevator Services |\n| Fences/Gates |\n| Fire/Water Damage  |\n| Fireplace/Chimney |\n| Garage Doors |\n| General Contractor |\n| Gutter Cleaning |\n| Handyperson |\n| HVAC |\n| Inspections |\n| Keys/Locks |\n| Landscaping |\n| Other |\n| Painting |\n| Parking Lots/Driveways |\n| Pest Control |\n| Plumbing |\n| Pool/Spa |\n| Preventative Maintenance |\n| Redevelopment |\n| Repairs and Maintenance: Exterior |\n| Repairs and Maintenance: Interior |\n| Roofing |\n| Septic System |\n| Smoke/Carbon Monoxide Detectors |\n| Snow Removal |\n| Trash/Recycling |\n| Turnover |\n| Utilities |\n</details>\n"
+        },
+        {
+          "name": "WorkCompletedOn",
+          "type": "string",
+          "required": false,
+          "description": "The date the work order was completed"
+        },
+        {
+          "name": "UnitTurnCategory",
+          "type": "string",
+          "required": false,
+          "description": "The category of the unit turn work order. This field requires a valid `UnitId` or `OccupancyId` if provided."
+        },
+        {
+          "name": "PropertyId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the property associated with the work order"
+        },
+        {
+          "name": "UnitId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the unit associated with the work order"
+        },
+        {
+          "name": "OccupancyId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the occupancy associated with the work order"
+        },
+        {
+          "name": "InspectionId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the inspection associated with the work order"
+        },
+        {
+          "name": "ServiceRequestId",
+          "type": "string",
+          "required": false,
+          "description": "The `ServiceRequestId` can be provided to create and group a new work order under an existing service request (grouping of work orders). When a `ServiceRequestId` is provided, the following attributes must be excluded from the POST request (these attributes are inherited from the service request): `Description`, `InspectionId`, `OccupancyId`, `PermissionToEnter`, `Priority`, `PropertyId`, `UnitId`, and `UnitTurnCategory`."
+        }
+      ]
+    }
   },
   {
     "method": "GET",
     "path": "/work_orders/attachments",
     "operationId": "listWorkOrderAttachments",
     "summary": "List All Work Order Attachments",
-    "tag": "Work Orders"
+    "tag": "Work Orders",
+    "pathParams": [],
+    "queryParams": [
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "object",
+        "description": "Optional pagination parameters. The default parameters are recommended but can be modified if a different sized response is desired."
+      },
+      {
+        "name": "filters[CreatedAtFrom]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Example: filters[CreatedAtFrom]=2021-12-15T16:30:46Z <br> Returns attachments created on or after the specified date. The value must adhere to the ISO 8601 format YYYY-MM-DDThh:mm:ssZ and the default time zone is Coordinated Universal Time (UTC).",
+        "format": "date-time"
+      },
+      {
+        "name": "filters[WorkOrderId]",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "filters[WorkOrderId]=1abcde23-c543-456e-abc9-123456789cba` <br> Unique identifier of the work order associated with the attachment. Can only filter by one work order at a time.",
+        "format": "uuid"
+      }
+    ]
   },
   {
     "method": "PATCH",
     "path": "/work_orders/{workOrderId}",
     "operationId": "updateWorkOrder",
     "summary": "Update Work Order",
-    "tag": "Work Orders"
+    "tag": "Work Orders",
+    "pathParams": [
+      {
+        "name": "workOrderId",
+        "required": true,
+        "description": "Unique identifier of the work order to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "AssignedUsers",
+          "type": "array",
+          "required": false,
+          "description": "Array of `AssignedUsers` IDs to be updated. Please pass in all the assigned users you want to keep.<br />\n&nbsp;&nbsp;When this is empty, it will drop all assigned users.<br />\n&nbsp;&nbsp;When this is `null` or not passed in, it will not change the assigned users.\n"
+        },
+        {
+          "name": "BillableItems",
+          "type": "array",
+          "required": false,
+          "description": "Array of billable line item attributes present on a work order\n#### Billable Item Attributes\n| Attributes | Type   | Description                                                                                   |\n|------------|--------|-----------------------------------------------------------------------------------------------|\n| Description| String | A brief informative message about the billable line item                                      |\n| GlAccountId| String | Unique identifier of the General Ledger account associated with the billable line item        |\n| Quantity   | String | The number of services or goods utilized. Must be a positive number                           |\n| Rate       | String | The rate, or cost, of the goods or services provided | Valid format is \"DD.CC\", e.g. \"23.33\"  |\n",
+          "properties": [
+            {
+              "name": "Description",
+              "type": "string",
+              "required": false,
+              "description": "A brief informative message about the billable line item"
+            },
+            {
+              "name": "GlAccountId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the General Ledger account associated with the billable line item"
+            },
+            {
+              "name": "Quantity",
+              "type": "string",
+              "required": false,
+              "description": "The number of services or goods utilized. `Quantity` must be a positive number."
+            },
+            {
+              "name": "Rate",
+              "type": "string",
+              "required": false,
+              "description": "The rate (cost) of the goods or services provided. Valid format is \"DD.CC\", e.g. \"23.33\""
+            }
+          ]
+        },
+        {
+          "name": "CanceledOn",
+          "type": "string",
+          "required": false,
+          "description": "The date the work order status changed to `canceled`"
+        },
+        {
+          "name": "CompletedOn",
+          "type": "string",
+          "required": false,
+          "description": "The date the work order status changed to `Completed`"
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "required": false,
+          "description": "The top-level description for a grouping of work orders in AppFolio"
+        },
+        {
+          "name": "Estimates",
+          "type": "array",
+          "required": false,
+          "description": "Use estimates to track anticipated costs for Work Orders. Estimates created via API are not automatically sent to Vendors or Owners, but are visible to assigned Vendors in the Vendor Portal.\n**DO NOT INCLUDE Estimates unless one or more estimates have changed**.\nPassing any number of estimates will replace all existing estimates for the work order. Passing an empty array `[]` will remove all existing estimates for the work order.\n",
+          "properties": [
+            {
+              "name": "VendorId",
+              "type": "string",
+              "required": false,
+              "description": "The unique identifier of the vendor who submitted this estimate. If provided, `ManagementCompanyAsVendor` must be `false` or omitted."
+            },
+            {
+              "name": "ManagementCompanyAsVendor",
+              "type": "boolean",
+              "required": false,
+              "description": "Indicates whether or not the management company is acting as the vendor for the estimate. If `true`, `VendorId` must be `null` or omitted."
+            },
+            {
+              "name": "Amount",
+              "type": "number",
+              "required": false,
+              "description": "The total estimated cost in dollars for completing the work order as quoted by the vendor."
+            },
+            {
+              "name": "Status",
+              "type": "string",
+              "required": false,
+              "description": "The current approval status of the estimate. Only one estimate can have `Approved` status at a time per work order\n#### Status Options\n| Options      | Description                                          |\n|--------------|------------------------------------------------------|\n| Pending      | The estimate is awaiting review and approval         |\n| Approved     | The estimate has been approved and work may proceed  |\n| Not Approved | The estimate has been rejected                       |\n"
+            },
+            {
+              "name": "InternalNotes",
+              "type": "string",
+              "required": false,
+              "description": "Internal notes or comments attached to the estimate. These notes are for internal use only and not visible to vendors or owners."
+            },
+            {
+              "name": "EstimateRequestedDate",
+              "type": "string",
+              "required": false,
+              "description": "The date the estimate was requested from the Vendor."
+            },
+            {
+              "name": "EstimateReceivedDate",
+              "type": "string",
+              "required": false,
+              "description": "The date the estimate was received from the Vendor. If `Amount` is provided but `EstimateReceivedDate` is not specified, it will automatically default to today's date. This ensures that all estimates with amounts have a received date for tracking purposes."
+            }
+          ]
+        },
+        {
+          "name": "JobDescription",
+          "type": "string",
+          "required": false,
+          "description": "A brief description of the work order to be performed"
+        },
+        {
+          "name": "LaborItems",
+          "type": "array",
+          "required": false,
+          "description": "Array of labor line item attributes present on a work order\n#### Labor Item Attributes\n| Attributes   | Type   | Description                                                                                               |\n|--------------|--------|-----------------------------------------------------------------------------------------------------------|\n| Date         | String | The date the labor was completed                                                                          |\n| Description  | String | A brief informative message about the labor performed                                                     |\n| HoursWorked  | String | The number of hours worked by the maintenance tech                                                        |\n| HoursBillable| String | The number of hours worked by the maintenance tech that are billable, used to create the work order bill  |\n| UserId       | String | Unique identifier of the maintenance tech assigned to the work order                                      |\n",
+          "properties": [
+            {
+              "name": "Date",
+              "type": "string",
+              "required": false,
+              "description": "The date the labor was completed. Valid format is \"YYYY-MM-DD\"  e.g. \"2020-12-01\"."
+            },
+            {
+              "name": "Description",
+              "type": "string",
+              "required": false,
+              "description": "A brief informative message about the labor performed"
+            },
+            {
+              "name": "HoursWorked",
+              "type": "string",
+              "required": false,
+              "description": "The number of hours worked by the maintenance tech"
+            },
+            {
+              "name": "HoursBillable",
+              "type": "string",
+              "required": false,
+              "description": "The number of hours worked by the maintenance tech that are billable, used to create the work order bill"
+            },
+            {
+              "name": "UserId",
+              "type": "string",
+              "required": false,
+              "description": "Unique identifier of the maintenance tech assigned to the work order"
+            }
+          ]
+        },
+        {
+          "name": "ManagementCompanyAsVendor",
+          "type": "boolean",
+          "required": false,
+          "description": "Indicates whether or not the management company is the vendor for the work order. If false, the assigned vendor company will be dropped."
+        },
+        {
+          "name": "PermissionToEnter",
+          "type": "boolean",
+          "required": false,
+          "description": "Occupancy has given permission to enter unit"
+        },
+        {
+          "name": "Priority",
+          "type": "string",
+          "required": false,
+          "description": "The priority of the work order\n#### Priority Options\n| Options | Description      |\n|---------|------------------|\n| Urgent  | Highest priority |\n| Normal  | Normal priority  |\n| Low     | Lowest priority  |\n"
+        },
+        {
+          "name": "ScheduledEnd",
+          "type": "string",
+          "required": false,
+          "description": "When the work order is scheduled to be completed. If `ScheduledEnd` is null, it will be considered scheduled for 'all day'. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC)."
+        },
+        {
+          "name": "ScheduledStart",
+          "type": "string",
+          "required": false,
+          "description": "When the work order is scheduled to start. Set this value together with `ScheduledEnd`. The time difference between `ScheduledStart` and `ScheduledEnd` should not exceed 12 hours unless it is an scheduled for 'all day'. The value must adhere to the ISO 8601 format `YYYY-MM-DDThh:mm:ssZ` and the default time zone is Coordinated Universal Time (UTC)."
+        },
+        {
+          "name": "Status",
+          "type": "string",
+          "required": false,
+          "description": "The status of the work order. The `Status` is automatically updated to `Estimate Requested` or `Estimated` based on the `Estimates` associated with it.\nWhen one or more estimates exist on a work order, the work order status becomes `Estimate Requested`.\nOnce any estimate has an `Amount` provided, the work order status transitions to `Estimated`.\n#### Status Options\n| Options            | Description                      |\n|--------------------|----------------------------------|\n| Assigned           | The work order has been assigned to an AppFolio Property Manager user |\n| Canceled           | The work order has been canceled                |\n| Completed          | The maintenance request was closed out   |\n| New                | A new maintenance request          |\n| Scheduled          | The work order to be performed is scheduled                |\n| Waiting            | The work order is pending                         |\n| Work Completed     | The work order is completed                   |\n"
+        },
+        {
+          "name": "VendorId",
+          "type": "string",
+          "required": false,
+          "description": "Unique identifier of the vendor associated with the work order. When the value of this attribute is null, it will drop the assigned vendor. When present, `ManagementCompanyAsVendor` cannot be true."
+        },
+        {
+          "name": "VendorTrade",
+          "type": "string",
+          "required": false,
+          "description": "The type of service offered by the vendor. Pass \"\" to remove the vendor trade.\n<details>\n<summary>\n<b>Vendor Trades</b>\n</summary>\n\n| Options    |\n|------------|\n| Alarm/Security |\n| Capital Improvements |\n| Carpet/Flooring |\n| Cleaning |\n| Deck Repair |\n| Doors/Windows |\n| Drywall Repair |\n| Electrical |\n| Elevator Services |\n| Fences/Gates |\n| Fire/Water Damage  |\n| Fireplace/Chimney |\n| Garage Doors |\n| General Contractor |\n| Gutter Cleaning |\n| Handyperson |\n| HVAC |\n| Inspections |\n| Keys/Locks |\n| Landscaping |\n| Other |\n| Painting |\n| Parking Lots/Driveways |\n| Pest Control |\n| Plumbing |\n| Pool/Spa |\n| Preventative Maintenance |\n| Redevelopment |\n| Repairs and Maintenance: Exterior |\n| Repairs and Maintenance: Interior |\n| Roofing |\n| Septic System |\n| Smoke/Carbon Monoxide Detectors |\n| Snow Removal |\n| Trash/Recycling |\n| Turnover |\n| Utilities |\n</details>\n"
+        },
+        {
+          "name": "WorkCompletedOn",
+          "type": "string",
+          "required": false,
+          "description": "The date the work order was completed"
+        }
+      ]
+    }
   },
   {
     "method": "POST",
     "path": "/work_orders/{WorkOrderId}/attachments",
     "operationId": "createWorkOrderAttachment",
     "summary": "Create Work Order Attachment",
-    "tag": "Work Orders"
+    "tag": "Work Orders",
+    "pathParams": [
+      {
+        "name": "WorkOrderId",
+        "required": true,
+        "description": "The work order to which the file will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "multipart/form-data",
+      "required": true,
+      "properties": [
+        {
+          "name": "File",
+          "type": "string",
+          "required": false,
+          "description": "Filename.file-extension"
+        }
+      ]
+    }
   },
   {
     "method": "DELETE",
     "path": "/work_orders/{WorkOrderId}/attachments/{AttachmentId}",
     "operationId": "deleteWorkOrderAttachment",
     "summary": "Delete Work Order Attachment",
-    "tag": "Work Orders"
+    "tag": "Work Orders",
+    "pathParams": [
+      {
+        "name": "WorkOrderId",
+        "required": true,
+        "description": "Unique identifier of the work order that contains the attachment to be deleted"
+      },
+      {
+        "name": "AttachmentId",
+        "required": true,
+        "description": "Unique identifier of the attachment to be deleted from the work order"
+      }
+    ],
+    "queryParams": []
   },
   {
     "method": "POST",
     "path": "/work_orders/{WorkOrderId}/notes",
     "operationId": "createWorkOrderNote",
     "summary": "Create Work Order Note",
-    "tag": "Work Orders"
+    "tag": "Work Orders",
+    "pathParams": [
+      {
+        "name": "WorkOrderId",
+        "required": true,
+        "description": "The work order to which the note will be attached"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the work order. A work order note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   },
   {
     "method": "PATCH",
     "path": "/work_orders/{WorkOrderId}/notes/{Id}",
     "operationId": "updateWorkOrderNote",
     "summary": "Update Work Order Note",
-    "tag": "Work Orders"
+    "tag": "Work Orders",
+    "pathParams": [
+      {
+        "name": "WorkOrderId",
+        "required": true,
+        "description": "The work order to which the note will be attached"
+      },
+      {
+        "name": "Id",
+        "required": true,
+        "description": "Unique identifier of the note to update"
+      }
+    ],
+    "queryParams": [],
+    "requestBody": {
+      "contentType": "application/json",
+      "required": true,
+      "properties": [
+        {
+          "name": "Body",
+          "type": "string",
+          "required": false,
+          "description": "A brief informative message about the work order. A work order note cannot exceed `65,535` characters."
+        }
+      ]
+    }
   }
 ];

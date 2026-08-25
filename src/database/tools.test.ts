@@ -17,17 +17,72 @@ import { scopeOperations } from "./roleScope";
 import type { RawOperation } from "./catalogGen";
 
 const RAW_OPS: RawOperation[] = [
-  { method: "GET", path: "/tenants", operationId: "getTenants", summary: "List tenants", tag: "Tenants" },
-  { method: "PATCH", path: "/bills/{id}", operationId: "updateBill", summary: "Update a bill", tag: "Bills" },
-  { method: "DELETE", path: "/inspections/{id}", operationId: "deleteInspection", summary: "Delete inspection", tag: "Inspections" },
+  {
+    method: "GET",
+    path: "/tenants",
+    operationId: "getTenants",
+    summary: "List tenants",
+    tag: "Tenants",
+    pathParams: [],
+    queryParams: [
+      { name: "page", in: "query", required: false, type: "object", description: "Pagination parameters." },
+      { name: "filters[Id]", in: "query", required: false, type: "string", format: "uuid", description: "Tenant ids, comma separated." },
+      {
+        name: "filters[LastUpdatedAtFrom]",
+        in: "query",
+        required: false,
+        type: "string",
+        format: "date-time",
+        description: "Updated since the date provided.",
+      },
+    ],
+  },
+  {
+    method: "PATCH",
+    path: "/bills/{id}",
+    operationId: "updateBill",
+    summary: "Update a bill",
+    tag: "Bills",
+    pathParams: [{ name: "id", required: true, description: "The bill to update" }],
+    queryParams: [],
+    requestBody: {
+      contentType: "application/json",
+      required: true,
+      properties: [{ name: "Amount", type: "string", required: true, description: "The amount due" }],
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/inspections/{id}",
+    operationId: "deleteInspection",
+    summary: "Delete inspection",
+    tag: "Inspections",
+    pathParams: [{ name: "id", required: true, description: "The inspection to delete" }],
+    queryParams: [],
+  },
   {
     method: "POST",
     path: "/work_orders/{id}/notes",
     operationId: "createWorkOrderNote",
     summary: "Create work order note",
     tag: "Work Orders",
+    pathParams: [{ name: "id", required: true, description: "The work order to note" }],
+    queryParams: [],
+    requestBody: {
+      contentType: "application/json",
+      required: true,
+      properties: [{ name: "Body", type: "string", required: false, description: "The note text" }],
+    },
   },
-  { method: "PATCH", path: "/vendors/{vendorId}", operationId: "updateVendor", summary: "Update a vendor", tag: "Vendors" },
+  {
+    method: "PATCH",
+    path: "/vendors/{vendorId}",
+    operationId: "updateVendor",
+    summary: "Update a vendor",
+    tag: "Vendors",
+    pathParams: [{ name: "vendorId", required: true, description: "The vendor to update" }],
+    queryParams: [],
+  },
 ];
 const OPS = scopeOperations(RAW_OPS);
 
@@ -63,6 +118,11 @@ describe("listEndpoints", () => {
     const result = listEndpoints(OPS, { role: "admin" }, { search: "bill" });
     expect(result.map((r) => r.operationId)).toEqual(["updateBill"]);
   });
+
+  it("stays lightweight: no parameter or body detail in the listing", () => {
+    const listing = listEndpoints(OPS, { role: "admin" }, { search: "tenants" })[0];
+    expect(Object.keys(listing).sort()).toEqual(["callable", "method", "operationId", "path", "reason", "summary", "tag"]);
+  });
 });
 
 describe("describeEndpoint", () => {
@@ -73,6 +133,40 @@ describe("describeEndpoint", () => {
 
   it("throws NotFoundError for a destructive operation hidden from owner", () => {
     expect(() => describeEndpoint(OPS, { role: "owner" }, "deleteInspection")).toThrow(NotFoundError);
+  });
+
+  it("returns the bracketed query param keys a GET list caller has to send", () => {
+    const result = describeEndpoint(OPS, { role: "owner" }, "getTenants");
+    expect(result.queryParams.map((p) => p.name)).toEqual(["page", "filters[Id]", "filters[LastUpdatedAtFrom]"]);
+    expect(result.queryParams.find((p) => p.name === "filters[LastUpdatedAtFrom]")).toMatchObject({
+      required: false,
+      type: "string",
+      format: "date-time",
+    });
+  });
+
+  it("warns a GET list caller about the filter AppFolio requires but does not declare", () => {
+    const result = describeEndpoint(OPS, { role: "owner" }, "getTenants");
+    expect(result.notes).toHaveLength(1);
+    expect(result.notes[0]).toContain("filters[LastUpdatedAtFrom]");
+    expect(result.notes[0]).toContain("400");
+  });
+
+  it("returns the request body properties of a write operation", () => {
+    const result = describeEndpoint(OPS, { role: "owner" }, "createWorkOrderNote");
+    expect(result.requestBody).toEqual({
+      contentType: "application/json",
+      required: true,
+      properties: [{ name: "Body", type: "string", required: false, description: "The note text" }],
+    });
+    expect(result.pathParams).toEqual([{ name: "id", required: true, description: "The work order to note" }]);
+  });
+
+  it("leaves notes empty and omits requestBody for an operation that has neither", () => {
+    const result = describeEndpoint(OPS, { role: "owner" }, "updateVendor");
+    expect(result.notes).toEqual([]);
+    expect(result.queryParams).toEqual([]);
+    expect(result.requestBody).toBeUndefined();
   });
 });
 

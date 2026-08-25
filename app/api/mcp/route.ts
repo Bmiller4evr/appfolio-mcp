@@ -58,7 +58,7 @@ const handler = createMcpHandler((server) => {
   if (dbHttp && callEndpointDeps) {
     server.registerTool(
       "list_endpoints",
-      { title: "List Database API endpoints", description: "List AppFolio Database API operations visible to you.", inputSchema: z.object({ search: z.string().optional(), tag: z.string().optional(), method: z.string().optional() }) },
+      { title: "List Database API endpoints", description: "List AppFolio Database API operations visible to you. Returns method, path, operationId, summary, and tag only; describe_endpoint carries the parameter detail.", inputSchema: z.object({ search: z.string().optional(), tag: z.string().optional(), method: z.string().optional() }) },
       async ({ search, tag, method }, ctx) => {
         const role = roleFor(ctx);
         return { content: [{ type: "text", text: JSON.stringify(listEndpoints(scopedOps, { role }, { search, tag, method })) }] };
@@ -67,7 +67,12 @@ const handler = createMcpHandler((server) => {
 
     server.registerTool(
       "describe_endpoint",
-      { title: "Describe a Database API endpoint", description: "Full detail for one operation.", inputSchema: z.object({ operationId: z.string() }) },
+      {
+        title: "Describe a Database API endpoint",
+        description:
+          "Everything needed to call one operation: path params, query params under the exact bracketed keys AppFolio expects (e.g. filters[LastUpdatedAtFrom]), request body properties, and notes about constraints AppFolio enforces but does not document. Call this before call_endpoint.",
+        inputSchema: z.object({ operationId: z.string() }),
+      },
       async ({ operationId }, ctx) => {
         const role = roleFor(ctx);
         return { content: [{ type: "text", text: JSON.stringify(describeEndpoint(scopedOps, { role }, operationId)) }] };
