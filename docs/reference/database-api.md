@@ -10,6 +10,18 @@ Tags: 48
 
 The Class column is a simple lightweight classification for readability only: READ for GET, DESTRUCTIVE for DELETE or any operation whose id/path matches "bulk", WRITE for everything else. It is not the role-scoping used elsewhere in this project.
 
+## GET list filters (confirmed against the real spec and live traffic)
+
+Every GET list endpoint (`getWorkOrders`, `getVendors`, `getProperties`, etc.) refuses an unfiltered request with `400: This GET request must include a filter for [Id] or [LastUpdatedAtFrom]`. The filter is not a flat query param: AppFolio uses OpenAPI's `deepObject` style, so the actual query string key is bracketed, e.g. `filters[LastUpdatedAtFrom]=2026-08-01T00:00:00Z` or `filters[Id]=<uuid>,<uuid>`. A flat `LastUpdatedAtFrom=...` or `filter[LastUpdatedAtFrom]=...` (missing the trailing `s`) is silently treated as no filter at all and gets the same generic 400. `call_endpoint`'s `query` param is a flat string map, so pass the bracketed key itself as the map key, e.g. `{ "filters[LastUpdatedAtFrom]": "2026-08-01T00:00:00Z" }`.
+
+Response bodies from these endpoints are `{ "data": [...] }`, not a bare array, and every field is PascalCase (`VendorId`, `PropertyId`, `WorkOrderNumber`), unlike the Reports API v2's snake_case (`vendor_id`, `property_id`). Code bridging the two (like `vendor_compliance`, the only composite that touches the Database API's read side) must unwrap `.data` and read PascalCase keys.
+
+## Database API v0 identifiers are UUIDs, not the Reports API's numeric ids
+
+Every path param on a write operation (`WorkOrderId`, `PropertyId`, `VendorId`, `TenantId`, `UnitId`, etc.) is a UUID. The Reports API v2 (used by `run_report` and every composite) exposes a different, numeric id scheme for the same entities (e.g. a work order's `work_order_id: 4910` in a report row has no relation to the UUID its Database API record uses). There is no field in any Reports API report that carries the Database API UUID.
+
+To write to a specific record known only by its Reports API id: `call_endpoint` the matching GET list operation with a `filters[LastUpdatedAtFrom]` filter wide enough to include it, then match the human-identifiable field both APIs share (e.g. a work order's `WorkOrderNumber` / `work_order_number`, "4865-1") to find the real UUID. This is a two-step read-then-write a caller has to know to do; nothing currently surfaces it proactively, since `list_endpoints`/`describe_endpoint` only carry `method`/`path`/`operationId`/`summary`/`tag` (see `RawOperation` in `catalogGen.ts`), not parameter schemas. AppFolio's own 400 message names the missing filter, so a capable caller can self-correct from the error alone, but the bracketed `filters[...]` syntax specifically is not guessable from that message.
+
 ## Bank Accounts
 
 | Method | Path | Operation ID | Summary | Class |

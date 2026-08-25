@@ -40,13 +40,25 @@ export async function vendorCompliance(
     filters: { liability_expiration_to: cutoff },
   });
 
-  const workOrdersResult = await deps.callEndpoint(deps.callEndpointDeps, caller, "getWorkOrders", {});
-  const workOrders = workOrdersResult.executed ? (workOrdersResult.result as { vendor_id: string; PropertyId: string }[]) : [];
+  // The Database API refuses a GET list request carrying no filter at all ("must include a filter
+  // for [Id] or [LastUpdatedAtFrom]"), and reads the filter under OpenAPI's deepObject style, so
+  // the query key is bracketed rather than flat. A vendor's compliance standing depends on every
+  // property it has ever worked at, so the window reaches back ten years to take in the whole
+  // history rather than a recent slice of it.
+  const workOrdersUpdatedFrom = `${addDays(opts.asOf, -3650)}T00:00:00Z`;
+  const workOrdersResult = await deps.callEndpoint(deps.callEndpointDeps, caller, "getWorkOrders", {
+    query: { "filters[LastUpdatedAtFrom]": workOrdersUpdatedFrom },
+  });
+  // Database API records come wrapped in a { data: [...] } envelope, with PascalCase fields (the
+  // Reports API's snake_case is a separate convention and does not apply here).
+  const workOrders = workOrdersResult.executed
+    ? (workOrdersResult.result as { data: { VendorId: string; PropertyId: string }[] }).data
+    : [];
 
   const propertiesByVendor = new Map<string, Set<string>>();
   for (const wo of workOrders) {
-    if (!propertiesByVendor.has(wo.vendor_id)) propertiesByVendor.set(wo.vendor_id, new Set());
-    propertiesByVendor.get(wo.vendor_id)!.add(wo.PropertyId);
+    if (!propertiesByVendor.has(wo.VendorId)) propertiesByVendor.set(wo.VendorId, new Set());
+    propertiesByVendor.get(wo.VendorId)!.add(wo.PropertyId);
   }
 
   // Re-check the expiration window client-side: the server-side filter above is a performance
