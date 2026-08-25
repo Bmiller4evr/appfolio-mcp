@@ -91,6 +91,14 @@ describe("verifyToken against a real OAuth-shaped token", () => {
     expect(result).toBeUndefined();
   });
 
+  it("accepts a token whose aud carries a trailing slash the resource does not", async () => {
+    const token = await signAccessToken({ aud: `${RESOURCE}/` });
+
+    const result = await verifyToken(mcpRequest(), token, CONFIG);
+
+    expect(result?.extra.userId).toBe("user_123");
+  });
+
   it("accepts a token whose aud matches the forwarded host this server is reached at", async () => {
     const token = await signAccessToken({ aud: "https://public.example.com" });
 

@@ -1,6 +1,7 @@
 // ABOUTME: Verifies WorkOS AuthKit bearer tokens for the remote MCP connector and maps
 // ABOUTME: WorkOS org role to our owner/admin role, since WorkOS knows identity, not our roles.
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import { getPublicOrigin } from "mcp-handler";
 import type { Role } from "../config";
 
 export interface WorkOSConfig {
@@ -49,31 +50,6 @@ function isSameIssuer(tokenIssuer: string, configuredDomain: string): boolean {
   return strip(tokenIssuer) === strip(configuredDomain);
 }
 
-// The RFC 8707 resource indicator this server is reached at, which clients send as `resource`
-// on the authorization request and the authorization server stamps into the token's aud.
-// Derived from the request exactly as mcp-handler's protectedResourceHandler derives the
-// `resource` it advertises (public origin behind any proxy), so the value we advertise and the
-// value we demand can never disagree.
-function resourceIdentifier(req: Request): string {
-  const forwardedHost = req.headers.get("x-forwarded-host");
-  if (forwardedHost) {
-    const host = forwardedHost.split(",")[0].trim();
-    const proto = req.headers.get("x-forwarded-proto")?.split(",")[0].trim() || "https";
-    return `${proto}://${host}`;
-  }
-  const forwarded = req.headers.get("forwarded");
-  if (forwarded) {
-    const directives = new Map<string, string>();
-    for (const pair of forwarded.split(",")[0].split(";")) {
-      const [key, value] = pair.split("=").map((part) => part.trim().toLowerCase());
-      if (key && value) directives.set(key, value.replace(/^"|"$/g, ""));
-    }
-    const host = directives.get("host");
-    if (host) return `${directives.get("proto") || "https"}://${host}`;
-  }
-  return new URL(req.url).origin;
-}
-
 // Takes (req, bearerToken, config) rather than mcp-handler's withMcpAuth's expected
 // (req, bearerToken) => AuthInfo | undefined shape, since config has no default value. Task 16
 // must wrap this in a closure before passing it to withMcpAuth, not pass it directly, e.g.:
@@ -87,9 +63,18 @@ export async function verifyToken(
 
   const jwks = getJwks(config.authkitDomain);
   try {
-    // jose does the aud comparison itself, which also covers an array-valued aud claim. A token
-    // issued for some other resource server, or carrying no aud at all, fails here.
-    const { payload } = await jwtVerify(bearerToken, jwks, { audience: resourceIdentifier(req) });
+    // The RFC 8707 resource indicator this server is reached at, which clients send as
+    // `resource` on the authorization request and the authorization server stamps into the
+    // token's aud. Derived from the request with mcp-handler's own getPublicOrigin (public
+    // origin behind any proxy), the same helper protectedResourceHandler uses to derive the
+    // `resource` it advertises, so the value we advertise and the value we demand can never
+    // disagree. jose does the aud comparison itself, which also covers an array-valued aud
+    // claim on the token side. A token issued for some other resource server, or carrying no
+    // aud at all, fails here. Accepting the origin both with and without a trailing slash
+    // tolerates an authorization server that canonicalizes the resource indicator with one,
+    // the same tolerance already given to the issuer comparison below.
+    const origin = getPublicOrigin(req);
+    const { payload } = await jwtVerify(bearerToken, jwks, { audience: [origin, `${origin}/`] });
 
     // Checked here rather than through jose's `issuer` option, which demands an exact string
     // match and would reject a token differing only by a trailing slash.
@@ -98,9 +83,11 @@ export async function verifyToken(
 
     // The `client_id` claim names the OAuth client the token was issued to. Requiring our own
     // application's client id is what stops a token issued to some other client, for a user of
-    // our organization, from being replayed here. This is stricter than the aud check above:
-    // a client registered dynamically through the authorization server's registration endpoint
-    // gets its own client id and is refused, so the connector must use our configured client.
+    // our organization, from being replayed here. This is stricter than the aud check above.
+    // Whether this holds up against a real MCP connector that registers dynamically through the
+    // authorization server's registration endpoint is unverified: it's not yet observed whether
+    // such a connector presents our configured client id or its own. If real connector tokens
+    // start getting refused here, revisit this check.
     if ((payload as { client_id?: string }).client_id !== config.clientId) return undefined;
 
     const userId = payload.sub;

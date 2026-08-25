@@ -164,14 +164,14 @@ describe("verifyToken", () => {
     expect(result).toBeUndefined();
   });
 
-  it("asks jose to validate the aud claim against the resource this server is reached at", async () => {
+  it("asks jose to validate the aud claim against the resource this server is reached at, tolerating a trailing slash", async () => {
     vi.mocked(jwtVerify).mockResolvedValue(payloadWith());
 
     await verifyToken(new Request("https://mcp.example.com/api/mcp"), "valid.jwt.token", CONFIG);
 
     expect(jwtVerify).toHaveBeenCalled();
     const options = vi.mocked(jwtVerify).mock.calls.at(-1)?.[2] ?? {};
-    expect(options).toHaveProperty("audience", RESOURCE);
+    expect(options).toHaveProperty("audience", [RESOURCE, `${RESOURCE}/`]);
   });
 
   it("takes the expected audience from the forwarded host a proxy puts the server behind", async () => {
@@ -186,7 +186,7 @@ describe("verifyToken", () => {
     );
 
     const options = vi.mocked(jwtVerify).mock.calls.at(-1)?.[2] ?? {};
-    expect(options).toHaveProperty("audience", "https://public.example.com");
+    expect(options).toHaveProperty("audience", ["https://public.example.com", "https://public.example.com/"]);
   });
 
   it("takes the expected audience from an RFC 7239 Forwarded header when that is all a proxy sends", async () => {
@@ -201,7 +201,7 @@ describe("verifyToken", () => {
     );
 
     const options = vi.mocked(jwtVerify).mock.calls.at(-1)?.[2] ?? {};
-    expect(options).toHaveProperty("audience", "https://public.example.com");
+    expect(options).toHaveProperty("audience", ["https://public.example.com", "https://public.example.com/"]);
   });
 
   it("builds a JWKS URL with no double slash when authkitDomain has a trailing slash", async () => {
