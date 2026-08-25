@@ -14,6 +14,17 @@ vi.mock("jose", async (importOriginal) => {
   return { ...actual, createRemoteJWKSet: vi.fn(() => signing.key) };
 });
 
+// The role lives in WorkOS's organization membership record, not in the token, so verifying a
+// token makes a WorkOS API call. The SDK is replaced at the module boundary so the suite tests
+// our own handling of what that call returns without reaching the real WorkOS API.
+const workos = vi.hoisted(() => ({ listOrganizationMemberships: vi.fn() }));
+
+vi.mock("@workos-inc/node", () => ({
+  WorkOS: vi.fn(() => ({
+    userManagement: { listOrganizationMemberships: workos.listOrganizationMemberships },
+  })),
+}));
+
 import { SignJWT } from "jose";
 import { verifyToken } from "./workos";
 
@@ -36,8 +47,16 @@ function mcpRequest(): Request {
 // output pristine and gives the audience test below the exact arguments that path passed.
 let consoleError: MockInstance;
 
+// One active membership holding the admin role, which is what every test that is not about the
+// membership lookup itself needs the lookup to return.
+function membershipPage(slug: string) {
+  return { data: [{ role: { slug } }] };
+}
+
 beforeEach(() => {
   consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+  workos.listOrganizationMemberships.mockReset();
+  workos.listOrganizationMemberships.mockResolvedValue(membershipPage("admin"));
 });
 
 afterEach(() => {
@@ -46,7 +65,8 @@ afterEach(() => {
 
 // Mirrors the claim set a real AuthKit access token carries, as decoded from one issued to a
 // live CIMD-registered connector: an iss, a client_id, and an aud holding the resource
-// application's own WorkOS client id.
+// application's own WorkOS client id. There is no role claim, matching the claim set WorkOS
+// documents for MCP access tokens.
 async function signAccessToken(
   claims: Record<string, unknown> = {},
   key: Uint8Array = signing.key
@@ -56,7 +76,6 @@ async function signAccessToken(
     aud: CONFIG.clientId,
     client_id: CONFIG.clientId,
     org_id: CONFIG.organizationId,
-    role: "admin",
     ...claims,
   })
     .setProtectedHeader({ alg: "HS256" })
@@ -166,7 +185,6 @@ describe("verifyToken against a real OAuth-shaped token", () => {
       aud: CONFIG.clientId,
       client_id: CONFIG.clientId,
       org_id: CONFIG.organizationId,
-      role: "admin",
     })
       .setProtectedHeader({ alg: "HS256" })
       .setSubject("user_123")
@@ -177,5 +195,100 @@ describe("verifyToken against a real OAuth-shaped token", () => {
     const result = await verifyToken(mcpRequest(), token, CONFIG);
 
     expect(result).toBeUndefined();
+  });
+});
+
+// WorkOS's documented claim set for an MCP access token is iss, aud, sub, org_id, scope, jti,
+// iat and exp, with no role anywhere in it, so the role a caller holds comes from the
+// organization membership WorkOS keeps for them.
+describe("the organization role behind a verified token", () => {
+  it("looks the role up for the token's own subject in our own organization", async () => {
+    const token = await signAccessToken();
+
+    await verifyToken(mcpRequest(), token, CONFIG);
+
+    expect(workos.listOrganizationMemberships).toHaveBeenCalledTimes(1);
+    expect(workos.listOrganizationMemberships.mock.calls[0][0]).toMatchObject({
+      userId: "user_123",
+      organizationId: CONFIG.organizationId,
+    });
+  });
+
+  it("accepts a token whose subject holds the admin role in our organization", async () => {
+    workos.listOrganizationMemberships.mockResolvedValue(membershipPage("admin"));
+    const token = await signAccessToken();
+
+    const result = await verifyToken(mcpRequest(), token, CONFIG);
+
+    expect(result).toEqual({
+      token,
+      clientId: "client_123",
+      scopes: [],
+      extra: { userId: "user_123", role: "admin" },
+    });
+  });
+
+  it("gives a member of our organization the owner role", async () => {
+    workos.listOrganizationMemberships.mockResolvedValue(membershipPage("member"));
+    const token = await signAccessToken();
+
+    const result = await verifyToken(mcpRequest(), token, CONFIG);
+
+    expect(result).toEqual({
+      token,
+      clientId: "client_123",
+      scopes: [],
+      extra: { userId: "user_123", role: "owner" },
+    });
+  });
+
+  it("rejects a subject with no active membership in our organization", async () => {
+    workos.listOrganizationMemberships.mockResolvedValue({ data: [] });
+    const token = await signAccessToken();
+    consoleError.mockClear();
+
+    const result = await verifyToken(mcpRequest(), token, CONFIG);
+
+    expect(result).toBeUndefined();
+    expect(consoleError.mock.calls).toEqual([
+      ["verifyToken: rejected, no active organization membership"],
+    ]);
+  });
+
+  it("rejects a membership carrying no usable role slug", async () => {
+    workos.listOrganizationMemberships.mockResolvedValue({ data: [{ role: { slug: "" } }] });
+    const token = await signAccessToken();
+    consoleError.mockClear();
+
+    const result = await verifyToken(mcpRequest(), token, CONFIG);
+
+    expect(result).toBeUndefined();
+    expect(consoleError.mock.calls).toEqual([
+      ["verifyToken: rejected, missing or invalid membership role"],
+    ]);
+  });
+
+  // A WorkOS outage and a token that fails verification are different problems with different
+  // fixes, so the log has to tell them apart rather than blaming jose for both.
+  it("names the membership lookup, not jose, when the WorkOS call fails", async () => {
+    workos.listOrganizationMemberships.mockRejectedValue(new Error("503 from WorkOS"));
+    const token = await signAccessToken();
+    consoleError.mockClear();
+
+    const result = await verifyToken(mcpRequest(), token, CONFIG);
+
+    expect(result).toBeUndefined();
+    expect(consoleError.mock.calls).toEqual([
+      ["verifyToken: rejected, organization membership lookup failed"],
+    ]);
+  });
+
+  it("does not look up a membership for a token it has already refused", async () => {
+    const token = await signAccessToken({ org_id: "org_someone_else" });
+
+    const result = await verifyToken(mcpRequest(), token, CONFIG);
+
+    expect(result).toBeUndefined();
+    expect(workos.listOrganizationMemberships).not.toHaveBeenCalled();
   });
 });

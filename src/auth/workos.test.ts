@@ -7,6 +7,16 @@ vi.mock("jose", () => ({
   jwtVerify: vi.fn(),
 }));
 
+// The role comes from the caller's WorkOS organization membership, so verifying a token calls
+// the WorkOS API. The SDK is replaced at the module boundary rather than reached over the wire.
+const workos = vi.hoisted(() => ({ listOrganizationMemberships: vi.fn() }));
+
+vi.mock("@workos-inc/node", () => ({
+  WorkOS: vi.fn(() => ({
+    userManagement: { listOrganizationMemberships: workos.listOrganizationMemberships },
+  })),
+}));
+
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { verifyToken, resolveRole } from "./workos";
 
@@ -27,8 +37,16 @@ function mcpRequest(): Request {
 // output pristine and gives the logging tests below the exact arguments each path passed.
 let consoleError: MockInstance;
 
+// The page the WorkOS API returns for a caller who holds one active membership in our
+// organization. Tests that are about a different check leave this at the admin role.
+function membershipPage(slug: string) {
+  return { data: [{ role: { slug } }] };
+}
+
 beforeEach(() => {
   consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+  workos.listOrganizationMemberships.mockReset();
+  workos.listOrganizationMemberships.mockResolvedValue(membershipPage("admin"));
 });
 
 afterEach(() => {
@@ -55,7 +73,6 @@ function payloadWith(overrides: Record<string, unknown> = {}) {
       client_id: CONFIG.clientId,
       sub: "user_123",
       org_id: "org_123",
-      role: "admin",
       ...overrides,
     },
   } as any;
@@ -86,8 +103,9 @@ describe("verifyToken", () => {
     expect(result).toBeUndefined();
   });
 
-  it("maps a non-admin role claim to owner", async () => {
-    vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ role: "member" }));
+  it("maps a non-admin membership role to owner", async () => {
+    vi.mocked(jwtVerify).mockResolvedValue(payloadWith());
+    workos.listOrganizationMemberships.mockResolvedValue(membershipPage("member"));
 
     const result = await verifyToken(mcpRequest(), "valid.jwt.token", CONFIG);
 
@@ -99,8 +117,18 @@ describe("verifyToken", () => {
     });
   });
 
-  it("returns undefined when the token has no role claim at all", async () => {
-    vi.mocked(jwtVerify).mockResolvedValue(payloadWith({ role: undefined }));
+  it("returns undefined when the caller holds no active membership in our organization", async () => {
+    vi.mocked(jwtVerify).mockResolvedValue(payloadWith());
+    workos.listOrganizationMemberships.mockResolvedValue({ data: [] });
+
+    const result = await verifyToken(mcpRequest(), "valid.jwt.token", CONFIG);
+
+    expect(result).toBeUndefined();
+  });
+
+  it("returns undefined when the WorkOS membership lookup fails", async () => {
+    vi.mocked(jwtVerify).mockResolvedValue(payloadWith());
+    workos.listOrganizationMemberships.mockRejectedValue(new Error("503 from WorkOS"));
 
     const result = await verifyToken(mcpRequest(), "valid.jwt.token", CONFIG);
 
@@ -301,11 +329,13 @@ describe("verifyToken rejection logging", () => {
     "verifyToken: rejected, issuer mismatch",
     "verifyToken: rejected, missing or invalid sub claim",
     "verifyToken: rejected, org_id mismatch",
-    "verifyToken: rejected, missing or invalid role claim",
+    "verifyToken: rejected, organization membership lookup failed",
+    "verifyToken: rejected, no active organization membership",
+    "verifyToken: rejected, missing or invalid membership role",
   ];
 
-  // Values that must never reach a log: the token itself and every claim value the scenarios
-  // below feed in.
+  // Values that must never reach a log: the token itself, the WorkOS API key, and every claim
+  // value the scenarios below feed in.
   const TOKEN = "secret.header.secret-payload.secret-signature";
   const CLAIM_VALUES = [
     "user_123",
@@ -313,6 +343,7 @@ describe("verifyToken rejection logging", () => {
     "https://auth.attacker.example.com",
     "client_someone_else",
     "admin",
+    CONFIG.apiKey,
   ];
 
   async function logsFor(payload: Record<string, unknown>): Promise<unknown[][]> {
@@ -355,9 +386,27 @@ describe("verifyToken rejection logging", () => {
     ]);
   });
 
-  it("names the role check", async () => {
-    expect(await logsFor({ role: undefined })).toEqual([
-      ["verifyToken: rejected, missing or invalid role claim"],
+  it("names the membership lookup when the WorkOS call fails", async () => {
+    vi.mocked(jwtVerify).mockResolvedValue(payloadWith());
+    workos.listOrganizationMemberships.mockRejectedValue(new Error("503 from WorkOS"));
+    consoleError.mockClear();
+
+    await verifyToken(mcpRequest(), TOKEN, CONFIG);
+
+    expect(consoleError.mock.calls).toEqual([
+      ["verifyToken: rejected, organization membership lookup failed"],
+    ]);
+  });
+
+  it("names the membership check when the caller belongs to no active membership", async () => {
+    vi.mocked(jwtVerify).mockResolvedValue(payloadWith());
+    workos.listOrganizationMemberships.mockResolvedValue({ data: [] });
+    consoleError.mockClear();
+
+    await verifyToken(mcpRequest(), TOKEN, CONFIG);
+
+    expect(consoleError.mock.calls).toEqual([
+      ["verifyToken: rejected, no active organization membership"],
     ]);
   });
 
@@ -376,11 +425,14 @@ describe("verifyToken rejection logging", () => {
       { iss: "https://auth.attacker.example.com" },
       { sub: undefined },
       { org_id: "org_someone_else" },
-      { role: undefined },
       { client_id: "client_someone_else", org_id: "org_someone_else" },
     ]) {
       logged.push(...(await logsFor(payload)).flat());
     }
+    workos.listOrganizationMemberships.mockRejectedValue(new Error(`lookup for ${TOKEN} failed`));
+    logged.push(...(await logsFor({})).flat());
+    workos.listOrganizationMemberships.mockResolvedValue({ data: [] });
+    logged.push(...(await logsFor({})).flat());
     vi.mocked(jwtVerify).mockRejectedValue(new Error(`invalid signature on ${TOKEN}`));
     consoleError.mockClear();
     await verifyToken(mcpRequest(), TOKEN, CONFIG);

@@ -16,6 +16,16 @@ vi.mock("../../../src/database/operations.generated", () => ({
 }));
 vi.mock("jose", () => ({ createRemoteJWKSet: vi.fn(), jwtVerify: vi.fn().mockRejectedValue(new Error("no token")) }));
 
+// The caller's role comes from their WorkOS organization membership, so an authenticated
+// request reaches the WorkOS API. Replaced here so these tests stay offline.
+const workos = vi.hoisted(() => ({ listOrganizationMemberships: vi.fn() }));
+
+vi.mock("@workos-inc/node", () => ({
+  WorkOS: vi.fn(() => ({
+    userManagement: { listOrganizationMemberships: workos.listOrganizationMemberships },
+  })),
+}));
+
 // loadConfig() runs at module scope in route.ts, so the required env vars must exist before
 // that import evaluates. vi.hoisted runs before imports (same hoisting vitest gives vi.mock),
 // unlike a plain top-of-file statement or beforeAll, which would run too late.
@@ -46,6 +56,7 @@ function mcpRequest(body: unknown, bearerToken?: string): Request {
 // Mirrors the claims a real access token carries, including the iss verifyToken checks and the
 // aud holding our own WorkOS application's client id. jose is mocked here, so the aud claim is
 // not what admits this token: src/auth/workos.signedToken.test.ts checks that against real jose.
+// The role is not among those claims: it comes from the organization membership WorkOS holds.
 function authenticateAs(role: string): void {
   vi.mocked(jwtVerify).mockResolvedValue({
     payload: {
@@ -54,9 +65,9 @@ function authenticateAs(role: string): void {
       client_id: process.env.WORKOS_CLIENT_ID,
       sub: "user_123",
       org_id: "org_123",
-      role,
     },
   } as never);
+  workos.listOrganizationMemberships.mockResolvedValue({ data: [{ role: { slug: role } }] });
 }
 
 async function listEndpointsAs(role: string): Promise<string> {

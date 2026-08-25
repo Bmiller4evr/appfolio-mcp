@@ -1,5 +1,6 @@
 // ABOUTME: Verifies WorkOS AuthKit bearer tokens for the remote MCP connector and maps
 // ABOUTME: WorkOS org role to our owner/admin role, since WorkOS knows identity, not our roles.
+import { WorkOS } from "@workos-inc/node";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import type { Role } from "../config";
 
@@ -65,17 +66,13 @@ function isAudienceFailure(err: unknown): boolean {
   return code === "ERR_JWT_CLAIM_VALIDATION_FAILED" && claim === "aud";
 }
 
-// Takes (req, bearerToken, config) rather than mcp-handler's withMcpAuth's expected
-// (req, bearerToken) => AuthInfo | undefined shape, since config has no default value. Task 16
-// must wrap this in a closure before passing it to withMcpAuth, not pass it directly, e.g.:
-//   withMcpAuth(handler, (req, token) => verifyToken(req, token, config), opts)
-export async function verifyToken(
-  req: Request,
-  bearerToken: string | undefined,
+// Returns the subject of a token that passes every check the token itself can answer, or
+// undefined once the check that refused it has been named. Kept apart from the organization
+// role lookup below so a failure of the WorkOS API is never reported as a jose failure.
+async function verifiedUserId(
+  bearerToken: string,
   config: WorkOSConfig
-): Promise<AuthInfo | undefined> {
-  if (!bearerToken) return reject("no bearer token");
-
+): Promise<string | undefined> {
   const jwks = getJwks(config.authkitDomain);
   try {
     // Confirmed by decoding a real access token from a live CIMD-registered connector: WorkOS
@@ -102,20 +99,66 @@ export async function verifyToken(
       return reject("org_id mismatch");
     }
 
-    // AuthKit access tokens carry the organization role as `role`, not `org_role`. A token
-    // with no role claim at all is refused rather than mapped to owner: a caller whose role
-    // we cannot read is a caller we cannot scope.
-    const orgRole = (payload as { role?: string }).role;
-    if (typeof orgRole !== "string" || !orgRole) return reject("missing or invalid role claim");
-
-    return {
-      token: bearerToken,
-      clientId: config.clientId,
-      scopes: [],
-      extra: { userId, role: resolveRole(orgRole) },
-    };
+    return userId;
   } catch (err) {
     if (isAudienceFailure(err)) return reject("audience mismatch");
     return reject("jose verification threw");
   }
+}
+
+// WorkOS documents the claim set of an MCP access token as iss, aud, sub, org_id, scope, jti,
+// iat and exp, and a token decoded from a live connector carried nothing else: there is no role
+// claim to read. The role a caller holds lives in the organization membership WorkOS keeps for
+// them, which is what the API key is for. A caller whose role we cannot read is a caller we
+// cannot scope, so every failure here refuses the token rather than falling back to owner.
+async function organizationRole(
+  userId: string,
+  config: WorkOSConfig
+): Promise<string | undefined> {
+  let memberships;
+  try {
+    const workos = new WorkOS(config.apiKey);
+    const page = await workos.userManagement.listOrganizationMemberships({
+      userId,
+      organizationId: config.organizationId,
+      statuses: ["active"],
+    });
+    memberships = page.data;
+  } catch {
+    return reject("organization membership lookup failed");
+  }
+
+  // A user holds at most one membership per organization, so the first entry of the first page
+  // is the whole answer and there is nothing to paginate through.
+  const membership = memberships[0];
+  if (!membership) return reject("no active organization membership");
+
+  const slug = membership.role?.slug;
+  if (typeof slug !== "string" || !slug) return reject("missing or invalid membership role");
+  return slug;
+}
+
+// Takes (req, bearerToken, config) rather than mcp-handler's withMcpAuth's expected
+// (req, bearerToken) => AuthInfo | undefined shape, since config has no default value. Task 16
+// must wrap this in a closure before passing it to withMcpAuth, not pass it directly, e.g.:
+//   withMcpAuth(handler, (req, token) => verifyToken(req, token, config), opts)
+export async function verifyToken(
+  req: Request,
+  bearerToken: string | undefined,
+  config: WorkOSConfig
+): Promise<AuthInfo | undefined> {
+  if (!bearerToken) return reject("no bearer token");
+
+  const userId = await verifiedUserId(bearerToken, config);
+  if (!userId) return undefined;
+
+  const orgRole = await organizationRole(userId, config);
+  if (!orgRole) return undefined;
+
+  return {
+    token: bearerToken,
+    clientId: config.clientId,
+    scopes: [],
+    extra: { userId, role: resolveRole(orgRole) },
+  };
 }
