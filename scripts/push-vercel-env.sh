@@ -27,6 +27,12 @@ while IFS='=' read -r key value; do
   case "$key" in
     ''|'#'*) continue ;;
   esac
+  # IFS='=' disables read's usual whitespace trimming, so a stray space after '=' (e.g.
+  # "KEY= value") would otherwise get pushed to Vercel as part of the value verbatim,
+  # silently corrupting a credential in a way that's invisible in normal editors. Trim it
+  # explicitly rather than relying on the file never containing one.
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
   if ! grep -qx "$key" <<< "$KNOWN_KEYS"; then
     echo "skip $key (not a known app config var)"
     skipped=$((skipped + 1))
