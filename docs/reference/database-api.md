@@ -16,6 +16,8 @@ Every GET list endpoint (`getWorkOrders`, `getVendors`, `getProperties`, etc.) r
 
 Response bodies from these endpoints are `{ "data": [...] }`, not a bare array, and every field is PascalCase (`VendorId`, `PropertyId`, `WorkOrderNumber`), unlike the Reports API v2's snake_case (`vendor_id`, `property_id`). Code bridging the two (like `vendor_compliance`, the only composite that touches the Database API's read side) must unwrap `.data` and read PascalCase keys.
 
+The same envelope carries pagination: alongside `data` sits `next_page_path`, either the full path of the follow-up request (`/api/v0/work_orders?page[number]=2`, using the same `deepObject` style as `filters`) or `null` on the last page. Reading only the first response silently truncates the results. `call_endpoint` cannot follow it, since it resolves the request path from the operation's own fixed path template; a caller that needs every page has to issue the follow-ups itself. Note that `next_page_path` is absolute against the host and repeats the `/api/v0` prefix already present in the base URL, so the prefix has to come off before it is handed to a client configured with that base.
+
 ## Database API v0 identifiers are UUIDs, not the Reports API's numeric ids
 
 Every path param on a write operation (`WorkOrderId`, `PropertyId`, `VendorId`, `TenantId`, `UnitId`, etc.) is a UUID. The Reports API v2 (used by `run_report` and every composite) exposes a different, numeric id scheme for the same entities (e.g. a work order's `work_order_id: 4910` in a report row has no relation to the UUID its Database API record uses). There is no field in any Reports API report that carries the Database API UUID.

@@ -13,7 +13,8 @@ function makeDeps() {
         ],
       }),
     },
-    // The Database API v0 shape, as returned live: a { data: [...] } envelope, PascalCase fields.
+    // The Database API v0 shape, as returned live: a { data: [...] } envelope, PascalCase fields,
+    // and a next_page_path that is null once the results fit on a single page.
     callEndpoint: vi.fn().mockResolvedValue({
       executed: true,
       result: {
@@ -21,11 +22,13 @@ function makeDeps() {
           { VendorId: "v1", PropertyId: "p100" },
           { VendorId: "v1", PropertyId: "p200" },
         ],
+        next_page_path: null,
       },
     }),
-    // Opaque to this unit test: vendorCompliance just forwards it to callEndpoint, which is
-    // itself mocked above. Route assembly (Task 16) provides the real CallEndpointDeps.
-    callEndpointDeps: {} as any,
+    // Only `http` is real to this unit test: vendorCompliance forwards the whole object to
+    // callEndpoint (itself mocked above) and reaches into `http` for follow-up pages. Route
+    // assembly (Task 16) provides the real CallEndpointDeps.
+    callEndpointDeps: { http: { request: vi.fn() } } as any,
   };
 }
 
@@ -36,6 +39,49 @@ describe("vendorCompliance", () => {
 
     expect(result.vendors).toHaveLength(1);
     expect(result.vendors[0]).toMatchObject({ id: "v1", vendorType: "Plumbing", properties: ["p100", "p200"] });
+    // next_page_path absent on the only page, so there is nothing to follow.
+    expect(deps.callEndpointDeps.http.request).not.toHaveBeenCalled();
+  });
+
+  // A real portfolio's ten-year work order history runs past one page. AppFolio hands back the
+  // rest through next_page_path, and callEndpoint cannot follow it (it builds the request path
+  // from the operation's own fixed path template), so anything past page 1 reaches the composite
+  // only if it follows that path through the HTTP client itself.
+  it("aggregates work orders across every page of the results, not just the first", async () => {
+    const deps = makeDeps();
+    deps.reportsHttp.request.mockResolvedValue({
+      results: [
+        { id: "v1", vendor_type: "Plumbing", liability_ins_expires: "2026-09-01", workers_comp_expires: "2027-01-01" },
+        { id: "v3", vendor_type: "Roofing", liability_ins_expires: "2026-08-20", workers_comp_expires: "2027-01-01" },
+      ],
+    });
+    deps.callEndpoint.mockResolvedValue({
+      executed: true,
+      result: {
+        data: [{ VendorId: "v1", PropertyId: "p100" }],
+        next_page_path: "/api/v0/work_orders?page[number]=2",
+      },
+    });
+    deps.callEndpointDeps.http.request.mockResolvedValue({
+      data: [
+        { VendorId: "v1", PropertyId: "p200" },
+        { VendorId: "v3", PropertyId: "p300" },
+      ],
+      next_page_path: null,
+    });
+
+    const result = await vendorCompliance(deps, { role: "owner" }, { withinDays: 30, asOf: "2026-08-13" });
+
+    // v3's only work order lives on page 2: a single-page fetch attributes it to no property at all.
+    const v3 = result.vendors.find((v) => v.id === "v3");
+    expect(v3?.properties).toEqual(["p300"]);
+    // v1's properties span the page boundary, so neither page alone produces this set.
+    const v1 = result.vendors.find((v) => v.id === "v1");
+    expect(v1?.properties).toEqual(["p100", "p200"]);
+
+    // next_page_path repeats the /api/v0 prefix the HTTP client's base URL already carries.
+    expect(deps.callEndpointDeps.http.request).toHaveBeenCalledTimes(1);
+    expect(deps.callEndpointDeps.http.request).toHaveBeenCalledWith("GET", "/work_orders?page[number]=2", {});
   });
 
   it("calls the report with the expiration filter pushed server-side", async () => {

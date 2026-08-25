@@ -23,6 +23,31 @@ export interface VendorComplianceEntry {
   properties: string[];
 }
 
+interface WorkOrder {
+  VendorId: string;
+  PropertyId: string;
+}
+
+// Database API records come wrapped in a { data: [...] } envelope, with PascalCase fields (the
+// Reports API's snake_case is a separate convention and does not apply here). next_page_path
+// carries the whole follow-up request, page number included, and is null on the last page.
+interface WorkOrderPage {
+  data: WorkOrder[];
+  next_page_path?: string | null;
+}
+
+// A ten-year work order history is large but finite, so this ceiling exists only to keep a
+// response that never stops advertising a next page from spinning forever. Reaching it is
+// reported rather than swallowed, since stopping early is the truncation this pagination fixes.
+const MAX_WORK_ORDER_PAGES = 100;
+
+// next_page_path is absolute against the host ("/api/v0/work_orders?page[number]=2"), while the
+// HTTP client's base URL already ends in the version prefix, so the prefix comes off before the
+// two are concatenated.
+function relativeToVersionedBase(path: string): string {
+  return path.replace(/^\/api\/v\d+/, "");
+}
+
 function addDays(isoDate: string, days: number): string {
   const d = new Date(isoDate);
   d.setUTCDate(d.getUTCDate() + days);
@@ -49,11 +74,30 @@ export async function vendorCompliance(
   const workOrdersResult = await deps.callEndpoint(deps.callEndpointDeps, caller, "getWorkOrders", {
     query: { "filters[LastUpdatedAtFrom]": workOrdersUpdatedFrom },
   });
-  // Database API records come wrapped in a { data: [...] } envelope, with PascalCase fields (the
-  // Reports API's snake_case is a separate convention and does not apply here).
-  const workOrders = workOrdersResult.executed
-    ? (workOrdersResult.result as { data: { VendorId: string; PropertyId: string }[] }).data
-    : [];
+  // Only the first page can go through callEndpoint: it resolves the request path from the
+  // operation's own fixed path template, so it has nowhere to put the follow-up path AppFolio
+  // hands back. Later pages take the same HTTP client directly, having already cleared the
+  // role and discoverability checks callEndpoint ran on the first one.
+  const workOrders: WorkOrder[] = [];
+  let page = workOrdersResult.executed ? (workOrdersResult.result as WorkOrderPage) : undefined;
+  let pagesRead = 0;
+  while (page) {
+    workOrders.push(...(page.data ?? []));
+    pagesRead++;
+    const nextPagePath = page.next_page_path;
+    if (!nextPagePath) break;
+    if (pagesRead >= MAX_WORK_ORDER_PAGES) {
+      console.warn(
+        `vendorCompliance: stopped following work order pages at ${pagesRead}; property attribution may be incomplete`
+      );
+      break;
+    }
+    page = (await deps.callEndpointDeps.http.request(
+      "GET",
+      relativeToVersionedBase(nextPagePath),
+      {}
+    )) as WorkOrderPage;
+  }
 
   const propertiesByVendor = new Map<string, Set<string>>();
   for (const wo of workOrders) {
