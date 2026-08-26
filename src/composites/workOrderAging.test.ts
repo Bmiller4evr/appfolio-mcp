@@ -6,7 +6,9 @@ import { runReport } from "../reports/tools";
 
 const BASE_ROW = {
   property_id: "p1",
+  property_name: "1729 Mariposa Dr",
   vendor_id: "v1",
+  vendor: "Tucker, Matt",
   priority: "High",
   status: "Open",
   created_at: "2026-07-01",
@@ -34,6 +36,15 @@ describe("workOrderAging", () => {
   it("flags an estimate requested with no estimate received as stalled", async () => {
     const result = await workOrderAging(makeHttp([BASE_ROW]), { asOf: "2026-08-13" });
     expect(result.workOrders[0].stalled).toContain("estimate_overdue");
+  });
+
+  it("returns property and vendor names alongside their ids, since the report row already carries both", async () => {
+    // A caller who only has propertyId/vendorId from this tool's output otherwise has to run a
+    // separate lookup to find out which property or vendor a number refers to, even though the
+    // underlying work_order report already returns property_name and vendor as columns.
+    const result = await workOrderAging(makeHttp([BASE_ROW]), { asOf: "2026-08-13" });
+    expect(result.workOrders[0].propertyName).toBe("1729 Mariposa Dr");
+    expect(result.workOrders[0].vendorName).toBe("Tucker, Matt");
   });
 
   it("groups by property, vendor, and priority", async () => {

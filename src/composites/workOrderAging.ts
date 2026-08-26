@@ -5,7 +5,9 @@ import { runReport } from "../reports/tools";
 
 const COLUMNS = {
   propertyId: "property_id",
+  propertyName: "property_name",
   vendorId: "vendor_id",
+  vendorName: "vendor",
   priority: "priority",
   status: "status",
   createdAt: "created_at",
@@ -21,7 +23,9 @@ function daysBetween(from: string, to: string): number {
 
 export interface AgedWorkOrder {
   propertyId: string;
+  propertyName: string;
   vendorId: string;
+  vendorName: string;
   priority: string;
   ageDays: number;
   stalled: string[];
@@ -70,7 +74,9 @@ export async function workOrderAging(
 
     const entry: AgedWorkOrder = {
       propertyId,
+      propertyName: String(row[COLUMNS.propertyName]),
       vendorId: String(row[COLUMNS.vendorId]),
+      vendorName: String(row[COLUMNS.vendorName]),
       priority: String(row[COLUMNS.priority]),
       ageDays: daysBetween(row[COLUMNS.createdAt] as string, opts.asOf),
       stalled,
