@@ -14,6 +14,10 @@ export interface ReportDescriptor {
   source?: string;
   columns: ReportColumn[];
   filters: ReportColumn[];
+  // Filters AppFolio accepts with HTTP 200 but does not apply, or whose value vocabulary is not
+  // what its name suggests. describe_report returns this so a caller sees it before trusting a
+  // filtered result. Only set where the behaviour was reproduced live against a real account.
+  filterCaveats?: string;
 }
 
 // Attribution: every entry below carrying source "cryptocultcurt-v2 (ISC, attributed)" reuses its
@@ -181,6 +185,13 @@ export const REPORTS: ReportDescriptor[] = [
       { name: "status_date_range_from", type: "date" },
       { name: "status_date_range_to", type: "date" },
     ],
+    filterCaveats:
+      "work_order_statuses takes numeric status ids, not status names. Verified live: 0 New, " +
+      "1 Estimate Requested, 2 Estimated, 3 Scheduled, 4 Completed, 5 Canceled, 6 Waiting, " +
+      "7 Completed No Need To Bill, 8 Work Done, 9 Assigned. A name string is not rejected, it " +
+      "coerces to 0, so passing ['Completed'] silently returns the New work orders. Passing an " +
+      "empty array returns every status (675 rows on the verifying account), while omitting the " +
+      "filter returns only the open ones (41).",
   },
   {
     id: "account_totals",
@@ -1014,6 +1025,13 @@ export const REPORTS: ReportDescriptor[] = [
       { name: "exclude_occupancies_with_move_out", type: "string" },
       { name: "exclude_month_to_month", type: "string" },
     ],
+    filterCaveats:
+      "from_date, to_date and exclude_month_to_month are accepted with 200 and never applied. " +
+      "Verified live: scoped to one property the report returns the same 3 rows with and without " +
+      "an impossible 1990 range, and date_from/date_to, lease_expiration_from/to, " +
+      "occurred_on_from/to, expiration_from/to and plain from/to were all tried and none filter " +
+      "either. The properties.* filters do work, so scope by property and narrow by the " +
+      "lease_expires column client-side.",
   },
   {
     id: "leasing_funnel_performance",
@@ -1054,6 +1072,11 @@ export const REPORTS: ReportDescriptor[] = [
       { name: "assigned_user_visibility", type: "string" },
       { name: "assigned_user", type: "string" },
     ],
+    filterCaveats:
+      "date_from and date_to are accepted with 200 and never applied, so every funnel metric is " +
+      "lifetime-to-date no matter what range is asked for. Verified live: unfiltered, a 1990 " +
+      "range, an August 2026 range and a full 2026 range all returned the same 24 rows and the " +
+      "same 187 total inquiries. The properties.* filters do work.",
   },
   {
     id: "leasing_summary",
@@ -1973,9 +1996,14 @@ export const REPORTS: ReportDescriptor[] = [
       { name: "properties.owners_ids", type: "array" },
       { name: "received_on_from", type: "date" },
       { name: "received_on_to", type: "date" },
-      { name: "statuses", type: "array" },
+      { name: "rental_application_statuses", type: "array" },
       { name: "sources", type: "array" },
     ],
+    filterCaveats:
+      "The status filter is named rental_application_statuses. A filter named statuses is " +
+      "accepted with 200 and never applied. Verified live: statuses ['Converted'] returned all " +
+      "43 applications, rental_application_statuses ['Converted'] returned 9. Valid values are " +
+      "the status column's own words: Converted, Canceled, Denied, Approved, Decision Pending.",
   },
   {
     id: "security_deposit_funds_detail",

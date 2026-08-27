@@ -130,7 +130,7 @@ describe("rentRollSummary", () => {
     const http = makeHttp();
     await rentRollSummary(http, { asOf: "2026-08-13", properties: ["1"] });
     expect(http.request).toHaveBeenCalledWith("POST", "/reports/rent_roll", {
-      body: { filters: { as_of_to: "2026-08-13", properties: { properties_ids: ["1"] } } },
+      body: { as_of_to: "2026-08-13", properties: { properties_ids: ["1"] } },
     });
   });
 

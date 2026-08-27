@@ -64,7 +64,7 @@ describe("delinquencyAging", () => {
     const result = await delinquencyAging(http, { minBalance: 0, properties: ["1"] });
     expect(result.tenants.every((t) => t.propertyId === "1")).toBe(true);
     expect(http.request).toHaveBeenCalledWith("POST", "/reports/delinquency", {
-      body: { filters: { properties: { properties_ids: ["1"] } } },
+      body: { properties: { properties_ids: ["1"] } },
     });
   });
 

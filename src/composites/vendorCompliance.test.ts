@@ -179,7 +179,7 @@ describe("vendorCompliance", () => {
     const deps = makeDeps();
     await vendorCompliance(deps, { role: "owner" }, { withinDays: 30, asOf: "2026-08-13" });
     expect(deps.reportsHttp.request).toHaveBeenCalledWith("POST", "/reports/vendor_directory", {
-      body: { filters: { liability_expiration_to: "2026-09-12" } },
+      body: { liability_expiration_to: "2026-09-12" },
     });
   });
 

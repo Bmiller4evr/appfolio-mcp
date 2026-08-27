@@ -56,6 +56,23 @@ describe("describeReport", () => {
     expect(report.columns.map((c) => c.name)).toContain("tenant_portal_activated");
   });
 
+  it("warns about filters AppFolio accepts but never applies", () => {
+    expect(describeReport("leasing_funnel_performance").filterCaveats).toMatch(/date_from and date_to/);
+    expect(describeReport("lease_expiration_detail").filterCaveats).toMatch(/never applied/);
+    expect(describeReport("work_order").filterCaveats).toMatch(/numeric status ids/);
+  });
+
+  it("names the rental application status filter the one AppFolio actually reads", () => {
+    const report = describeReport("rental_applications");
+    expect(report.filters.map((f) => f.name)).toContain("rental_application_statuses");
+    expect(report.filters.map((f) => f.name)).not.toContain("statuses");
+  });
+
+  it("leaves filterCaveats unset on reports whose filters were confirmed working", () => {
+    expect(describeReport("rent_roll").filterCaveats).toBeUndefined();
+    expect(describeReport("vendor_directory").filterCaveats).toBeUndefined();
+  });
+
   it("throws NotFoundError for an unknown report", () => {
     expect(() => describeReport("nope")).toThrow(NotFoundError);
   });
@@ -71,7 +88,62 @@ describe("runReport", () => {
     const result = await runReport(http, "vendor_directory", { filters: { liability_expiration_to: "2026-09-13" } });
     expect(result).toEqual({ rows: [{ vendor_type: "Plumbing" }], count: 1, truncated: false, nextPageUrl: undefined });
     expect(http.request).toHaveBeenCalledWith("POST", "/reports/vendor_directory", {
-      body: { filters: { liability_expiration_to: "2026-09-13" } },
+      body: { liability_expiration_to: "2026-09-13" },
+    });
+  });
+
+  // Confirmed live against a real account: AppFolio's V2 report endpoints read each filter as a
+  // top-level key of the POST body. A `filters` envelope is answered with 200 and ignored, so a
+  // wrapped filter reaches the report as no filter at all. rent_roll scoped to one property
+  // returned 1 row sent top-level and all 230 rows sent wrapped, byte-identical to no filter.
+  it("sends each filter as a top-level body key, since AppFolio ignores a filters envelope", async () => {
+    const http = { request: vi.fn().mockResolvedValue({ results: [] }) };
+    await runReport(http, "rent_roll", { filters: { as_of_to: "2020-01-01" } });
+    expect(http.request).toHaveBeenCalledWith("POST", "/reports/rent_roll", {
+      body: { as_of_to: "2020-01-01" },
+    });
+  });
+
+  it("omits the filters key entirely when no filters were given", async () => {
+    const http = { request: vi.fn().mockResolvedValue({ results: [] }) };
+    await runReport(http, "rent_roll", {});
+    expect(http.request).toHaveBeenCalledWith("POST", "/reports/rent_roll", { body: {} });
+  });
+
+  // The catalog spells nested filters as dotted paths (properties.properties_ids), which is the
+  // name describe_report hands a caller. AppFolio only honours the expanded object: sent as the
+  // literal dotted key, rent_roll returned all 230 rows; expanded, it returned 1.
+  it("expands the catalog's dotted filter names into the nested objects AppFolio expects", async () => {
+    const http = { request: vi.fn().mockResolvedValue({ results: [] }) };
+    await runReport(http, "rent_roll", { filters: { "properties.properties_ids": ["269"] } });
+    expect(http.request).toHaveBeenCalledWith("POST", "/reports/rent_roll", {
+      body: { properties: { properties_ids: ["269"] } },
+    });
+  });
+
+  it("merges sibling dotted filters that share a prefix into one object", async () => {
+    const http = { request: vi.fn().mockResolvedValue({ results: [] }) };
+    await runReport(http, "rent_roll", {
+      filters: { "properties.properties_ids": ["269"], "properties.owners_ids": ["4"], as_of_to: "2026-08-25" },
+    });
+    expect(http.request).toHaveBeenCalledWith("POST", "/reports/rent_roll", {
+      body: { properties: { properties_ids: ["269"], owners_ids: ["4"] }, as_of_to: "2026-08-25" },
+    });
+  });
+
+  it("passes an already-nested filter object through unchanged", async () => {
+    const http = { request: vi.fn().mockResolvedValue({ results: [] }) };
+    await runReport(http, "rent_roll", { filters: { properties: { properties_ids: ["269"] } } });
+    expect(http.request).toHaveBeenCalledWith("POST", "/reports/rent_roll", {
+      body: { properties: { properties_ids: ["269"] } },
+    });
+  });
+
+  it("sends columns alongside the top-level filters", async () => {
+    const http = { request: vi.fn().mockResolvedValue({ results: [] }) };
+    await runReport(http, "rent_roll", { filters: { as_of_to: "2026-08-25" }, columns: ["unit", "rent"] });
+    expect(http.request).toHaveBeenCalledWith("POST", "/reports/rent_roll", {
+      body: { as_of_to: "2026-08-25", columns: ["unit", "rent"] },
     });
   });
 

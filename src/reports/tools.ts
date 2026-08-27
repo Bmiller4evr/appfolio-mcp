@@ -17,6 +17,32 @@ export function describeReport(reportId: string): ReportDescriptor {
   return report;
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// AppFolio's V2 report endpoints read every filter as a top-level key of the POST body, and read
+// nested filters as real nested objects. The catalog names those nested filters with dotted paths
+// ("properties.properties_ids"), which is the name describe_report hands a caller, so the dotted
+// form is expanded back into the object AppFolio wants. Callers that already pass the nested
+// object are left alone.
+function buildRequestBody(filters: Record<string, unknown>): Record<string, unknown> {
+  const body: Record<string, unknown> = {};
+  for (const [name, value] of Object.entries(filters)) {
+    const path = name.split(".");
+    const leaf = path.pop() as string;
+    let target = body;
+    for (const segment of path) {
+      const existing = target[segment];
+      const child = isPlainObject(existing) ? existing : {};
+      target[segment] = child;
+      target = child;
+    }
+    target[leaf] = value;
+  }
+  return body;
+}
+
 export interface RunReportResult {
   rows: Record<string, unknown>[];
   count: number;
@@ -38,7 +64,7 @@ export async function runReport(
   }
 
   const maxRows = opts.maxRows ?? 500;
-  const body: Record<string, unknown> = { filters: opts.filters ?? {} };
+  const body = buildRequestBody(opts.filters ?? {});
   if (opts.columns) body.columns = opts.columns;
 
   const response = await http.request("POST", `/reports/${reportId}`, { body });
