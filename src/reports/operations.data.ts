@@ -22,22 +22,56 @@ export interface ReportDescriptor {
 // against AppFolio's live V2 Reports API at design time. That covers vendor_directory plus the
 // financial, vendor, leasing, property, tenant, and workflow reports added alongside it.
 export const REPORTS: ReportDescriptor[] = [
+  // vendor_directory's columns below are the full 32 the report actually returns, read off a live
+  // POST /reports/vendor_directory against the Perpetual Realty account on 2026-08-27. The prior
+  // list carried 8 of them, taken from third-party attribution rather than a live response, and
+  // named no identity column at all, which is how a consumer came to read a "row.id" that has
+  // never existed. epa_cert_expires, state_lic_expires, contract_expires, discount_adjustment and
+  // markup_adjustment were null in all 301 live rows, so the three dates take their siblings'
+  // type and the two adjustments are left unknown rather than guessed at. The filters below are
+  // still the attributed ones, and liability_expiration_to at least does not narrow anything:
+  // three different cutoffs each returned the whole 301-row directory, so a caller wanting an
+  // expiration window has to apply it to the rows itself.
   {
     id: "vendor_directory",
     title: "Vendor Directory",
     summary: "All vendors with license/insurance expirations and compliance flags.",
     tags: ["vendors", "compliance"],
     verified: true,
-    source: "cryptocultcurt-v2 (ISC, attributed)",
+    source: "live verification; filters from cryptocultcurt-v2 (ISC, attributed)",
     columns: [
-      { name: "vendor_type", type: "string" },
-      { name: "portal_activated", type: "boolean" },
-      { name: "created_by", type: "string" },
+      { name: "company_name", type: "string" },
+      { name: "name", type: "string" },
+      { name: "address", type: "string" },
+      { name: "street", type: "string" },
+      { name: "street2", type: "string" },
+      { name: "city", type: "string" },
+      { name: "state", type: "string" },
+      { name: "zip", type: "string" },
+      { name: "phone_numbers", type: "string" },
+      { name: "email", type: "string" },
+      { name: "default_gl_account", type: "string" },
+      { name: "payment_type", type: "string" },
+      { name: "send1099", type: "string" },
       { name: "workers_comp_expires", type: "date" },
       { name: "liability_ins_expires", type: "date" },
       { name: "epa_cert_expires", type: "date" },
+      { name: "auto_ins_expires", type: "date" },
       { name: "state_lic_expires", type: "date" },
-      { name: "do_not_use_for_work_order", type: "boolean" },
+      { name: "contract_expires", type: "date" },
+      { name: "tags", type: "string" },
+      { name: "vendor_id", type: "integer" },
+      { name: "vendor_trades", type: "string" },
+      { name: "do_not_use_for_work_order", type: "string" },
+      { name: "terms", type: "string" },
+      { name: "first_name", type: "string" },
+      { name: "last_name", type: "string" },
+      { name: "vendor_integration_id", type: "string" },
+      { name: "created_by", type: "string" },
+      { name: "vendor_type", type: "string" },
+      { name: "portal_activated", type: "string" },
+      { name: "discount_adjustment", type: "unknown" },
+      { name: "markup_adjustment", type: "unknown" },
     ],
     filters: [
       { name: "liability_expiration_to", type: "date" },
