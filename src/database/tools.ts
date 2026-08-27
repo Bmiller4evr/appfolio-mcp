@@ -75,6 +75,14 @@ const GET_LIST_FILTER_NOTE =
   "filters[LastUpdatedAtFrom]=2026-08-01T00:00:00Z; a flat LastUpdatedAtFrom is ignored and earns " +
   "the same 400.";
 
+// The result shape of a list read is not the raw AppFolio envelope, so a caller reading the
+// response is told what it actually gets and what the one flag on it means.
+const GET_LIST_PAGINATION_NOTE =
+  "AppFolio answers a list request one page at a time (1000 records) and points at the rest with " +
+  "next_page_path. call_endpoint follows those pages for you and returns { data, count, truncated } " +
+  "with every page's records already joined into data. truncated is true only when the read stopped " +
+  "at the 100-page ceiling, in which case data holds the first 100 pages and the rest was not read.";
+
 function hasFiltersParam(op: ScopedOperation): boolean {
   return op.queryParams.some((param) => param.name === "filters" || param.name.startsWith("filters["));
 }
@@ -87,7 +95,8 @@ export function describeEndpoint(ops: ScopedOperation[], caller: CallerContext, 
   );
   if (!op) throw new NotFoundError(`Unknown operation: ${operationId}`);
   const found = visible.find((o) => o.operationId === operationId)!;
-  const notes = found.method === "GET" && hasFiltersParam(found) ? [GET_LIST_FILTER_NOTE] : [];
+  const notes =
+    found.method === "GET" && hasFiltersParam(found) ? [GET_LIST_FILTER_NOTE, GET_LIST_PAGINATION_NOTE] : [];
   return { ...found, notes };
 }
 
@@ -120,6 +129,43 @@ export interface CallEndpointDeps {
 export type CallEndpointResult =
   | { executed: true; result: unknown }
   | { executed: false; preview: PendingWrite; confirmToken: string };
+
+// Every GET list response is a { data: [...] } envelope carrying next_page_path, the full path of
+// the follow-up request, null on the last page. A response without a data array (a single-record
+// GET) has no pages to follow and is handed back exactly as it arrived.
+interface ListPage {
+  data: unknown[];
+  next_page_path?: string | null;
+}
+
+// What a caller gets back for a paginated list: every page's rows already joined, so a read is
+// complete without the caller knowing pagination exists. truncated is the one thing it still has
+// to look at, and it is only ever true when the page cap below cut the read short.
+export interface ListResult {
+  data: unknown[];
+  count: number;
+  truncated: boolean;
+}
+
+// AppFolio's default page size is 1000, so a real account's bills or work orders run to several
+// pages. Following them all is the caller's own intent (nobody asks for "the first arbitrary
+// 1000"), so callEndpoint follows them here rather than leaving every caller to rediscover
+// next_page_path. The ceiling exists only so a response that never stops advertising a next page
+// cannot spin forever; reaching it is reported as truncated rather than passed off as complete.
+const MAX_LIST_PAGES = 100;
+
+// next_page_path is absolute against the host ("/api/v0/bills?page[number]=2"), while the HTTP
+// client's base URL already ends in the version prefix, so the prefix comes off before the two
+// are concatenated.
+function relativeToVersionedBase(path: string): string {
+  return path.replace(/^\/api\/v\d+/, "");
+}
+
+function asListPage(value: unknown): ListPage | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
+  const page = value as ListPage;
+  return Array.isArray(page.data) ? page : undefined;
+}
 
 // A path param is substituted into the operation's URL path template, and the WHATWG URL
 // constructor in AppFolioHttpClient resolves ".." segments, so an unchecked value can walk out
@@ -181,8 +227,26 @@ export async function callEndpoint(
   const url = resolvePath(op.path, params.pathParams);
 
   if (op.class === "READ") {
-    const result = await deps.http.request(op.method, url, { query: params.query });
-    return { executed: true, result };
+    const response = await deps.http.request(op.method, url, { query: params.query });
+    const firstPage = asListPage(response);
+    if (!firstPage) return { executed: true, result: response };
+
+    const data = [...firstPage.data];
+    let nextPagePath = firstPage.next_page_path;
+    let pagesRead = 1;
+    while (nextPagePath) {
+      if (pagesRead >= MAX_LIST_PAGES) {
+        return { executed: true, result: { data, count: data.length, truncated: true } satisfies ListResult };
+      }
+      // next_page_path already spells out the filters and the page number, so the original query
+      // is not sent again alongside it.
+      const page = asListPage(await deps.http.request("GET", relativeToVersionedBase(nextPagePath), {}));
+      if (!page) break;
+      data.push(...page.data);
+      pagesRead++;
+      nextPagePath = page.next_page_path;
+    }
+    return { executed: true, result: { data, count: data.length, truncated: false } satisfies ListResult };
   }
 
   // A write refused here is the most interesting event in the audit channel, so it is logged

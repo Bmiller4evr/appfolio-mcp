@@ -147,9 +147,15 @@ describe("describeEndpoint", () => {
 
   it("warns a GET list caller about the filter AppFolio requires but does not declare", () => {
     const result = describeEndpoint(OPS, { role: "owner" }, "getTenants");
-    expect(result.notes).toHaveLength(1);
     expect(result.notes[0]).toContain("filters[LastUpdatedAtFrom]");
     expect(result.notes[0]).toContain("400");
+  });
+
+  it("tells a GET list caller what a paginated read returns", () => {
+    const result = describeEndpoint(OPS, { role: "owner" }, "getTenants");
+    const note = result.notes.find((n) => n.includes("next_page_path"));
+    expect(note).toContain("truncated");
+    expect(note).toContain("data");
   });
 
   it("returns the request body properties of a write operation", () => {
@@ -190,6 +196,74 @@ describe("callEndpoint: reads", () => {
     const result = await callEndpoint(deps, { role: "owner" }, "getTenants", {});
     expect(result).toEqual({ executed: true, result: { ok: true } });
     expect(deps.http.request).toHaveBeenCalledWith("GET", "/tenants", { query: undefined });
+  });
+
+  it("returns a response that carries no data array untouched", async () => {
+    const deps = makeDeps({ http: { request: vi.fn().mockResolvedValue({ Id: "t1", Name: "Ada" }) } as any });
+    const result = await callEndpoint(deps, { role: "owner" }, "getTenants", {});
+    expect(result).toEqual({ executed: true, result: { Id: "t1", Name: "Ada" } });
+    expect(deps.http.request).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports a single-page list as complete, without a follow-up request", async () => {
+    const deps = makeDeps({
+      http: { request: vi.fn().mockResolvedValue({ data: [{ Id: "t1" }, { Id: "t2" }], next_page_path: null }) } as any,
+    });
+    const result = await callEndpoint(deps, { role: "owner" }, "getTenants", {});
+    expect(result).toEqual({ executed: true, result: { data: [{ Id: "t1" }, { Id: "t2" }], count: 2, truncated: false } });
+    expect(deps.http.request).toHaveBeenCalledTimes(1);
+  });
+
+  // A real getBills call against Perpetual Realty answers with 1000 rows and a next_page_path to
+  // page 2, then page 3, and so on: reading only the first response drops most of the account's
+  // bills without ever saying so.
+  it("follows next_page_path and returns every page's rows as one list", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: [{ Id: "b1" }],
+        next_page_path: "/api/v0/tenants?filters%5BLastUpdatedAtFrom%5D=2020-01-01T00%3A00%3A00Z&page%5Bnumber%5D=2",
+      })
+      .mockResolvedValueOnce({ data: [{ Id: "b2" }], next_page_path: "/api/v0/tenants?page%5Bnumber%5D=3" })
+      .mockResolvedValueOnce({ data: [{ Id: "b3" }], next_page_path: null });
+    const deps = makeDeps({ http: { request } as any });
+
+    const result = await callEndpoint(deps, { role: "owner" }, "getTenants", {
+      query: { "filters[LastUpdatedAtFrom]": "2020-01-01T00:00:00Z" },
+    });
+
+    expect(result).toEqual({
+      executed: true,
+      result: { data: [{ Id: "b1" }, { Id: "b2" }, { Id: "b3" }], count: 3, truncated: false },
+    });
+    expect(request).toHaveBeenCalledTimes(3);
+    // next_page_path repeats the /api/v0 prefix the HTTP client's base URL already carries, and
+    // already spells out the filters, so it is sent stripped and without the original query.
+    expect(request).toHaveBeenNthCalledWith(
+      2,
+      "GET",
+      "/tenants?filters%5BLastUpdatedAtFrom%5D=2020-01-01T00%3A00%3A00Z&page%5Bnumber%5D=2",
+      {}
+    );
+    expect(request).toHaveBeenNthCalledWith(3, "GET", "/tenants?page%5Bnumber%5D=3", {});
+  });
+
+  it("stops at the page cap and flags the result truncated rather than following forever", async () => {
+    // Every page advertises another one, so only the cap ends this.
+    const request = vi.fn().mockImplementation(async () => ({
+      data: [{ Id: "b" }],
+      next_page_path: "/api/v0/tenants?page%5Bnumber%5D=99",
+    }));
+    const deps = makeDeps({ http: { request } as any });
+
+    const result = await callEndpoint(deps, { role: "owner" }, "getTenants", {});
+
+    if (!result.executed) throw new Error("unreachable");
+    const page = result.result as { data: unknown[]; count: number; truncated: boolean };
+    expect(page.truncated).toBe(true);
+    expect(page.count).toBe(100);
+    expect(page.data).toHaveLength(100);
+    expect(request).toHaveBeenCalledTimes(100);
   });
 });
 
