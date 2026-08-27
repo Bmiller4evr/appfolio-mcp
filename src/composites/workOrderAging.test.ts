@@ -47,6 +47,68 @@ describe("workOrderAging", () => {
     expect(result.workOrders[0].vendorName).toBe("Tucker, Matt");
   });
 
+  it("falls back to the property address when the row carries no property name", async () => {
+    // Live against Perpetual Realty, 12 of 41 work order rows come back with property_name: null
+    // while property_address and property on the SAME row hold the address.
+    const row = {
+      ...BASE_ROW,
+      property_name: null,
+      property_address: "2720 ANSLEY Court Euless, TX 76039",
+      property: "2720 ANSLEY Court Euless, TX 76039",
+    };
+    const result = await workOrderAging(makeHttp([row]), { asOf: "2026-08-13" });
+    expect(result.workOrders[0].propertyName).toBe("2720 ANSLEY Court Euless, TX 76039");
+  });
+
+  it("falls back to the combined property label when name and address are both empty", async () => {
+    const row = {
+      ...BASE_ROW,
+      property_name: null,
+      property_address: null,
+      property: "1714 Magnolia Lane - 1714 Magnolia Lane Euless, TX 76039",
+    };
+    const result = await workOrderAging(makeHttp([row]), { asOf: "2026-08-13" });
+    expect(result.workOrders[0].propertyName).toBe("1714 Magnolia Lane - 1714 Magnolia Lane Euless, TX 76039");
+  });
+
+  it("reports a property with no label at all as null, never as the string 'null'", async () => {
+    const row = { ...BASE_ROW, property_name: null, property_address: null, property: null };
+    const result = await workOrderAging(makeHttp([row]), { asOf: "2026-08-13" });
+    expect(result.workOrders[0].propertyName).toBeNull();
+  });
+
+  it("reports a work order with no vendor assigned as null, never as the string 'null'", async () => {
+    const row = { ...BASE_ROW, vendor_id: null, vendor: null };
+    const result = await workOrderAging(makeHttp([row]), { asOf: "2026-08-13" });
+    expect(result.workOrders[0].vendorId).toBeNull();
+    expect(result.workOrders[0].vendorName).toBeNull();
+  });
+
+  it("keeps work orders with no vendor out of byVendor so they cannot outrank a real vendor", async () => {
+    // Live, the unassigned pile was the single biggest byVendor bucket, so "which vendor has the
+    // biggest backlog" answered with a vendor named "null" holding 9 tickets.
+    const rows = [
+      BASE_ROW,
+      ...Array.from({ length: 5 }, () => ({ ...BASE_ROW, vendor_id: null, vendor: null })),
+    ];
+    const result = await workOrderAging(makeHttp(rows), { asOf: "2026-08-13" });
+
+    expect(Object.keys(result.byVendor)).toEqual(["v1"]);
+    expect(result.unassigned).toHaveLength(5);
+  });
+
+  it("groups a vendor that has a name but no id under its name, not with the unassigned pile", async () => {
+    // Live, Perpetual Property Management comes back with vendor: set and vendor_id: null.
+    const rows = [
+      { ...BASE_ROW, vendor_id: null, vendor: "Perpetual Property Management" },
+      { ...BASE_ROW, vendor_id: null, vendor: null },
+    ];
+    const result = await workOrderAging(makeHttp(rows), { asOf: "2026-08-13" });
+
+    expect(result.byVendor["Perpetual Property Management"]).toHaveLength(1);
+    expect(result.unassigned).toHaveLength(1);
+  });
+
   it("groups by property, vendor, and priority", async () => {
     const result = await workOrderAging(makeHttp([BASE_ROW]), { asOf: "2026-08-13" });
     expect(result.byProperty.p1).toHaveLength(1);

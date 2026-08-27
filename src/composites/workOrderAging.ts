@@ -6,6 +6,8 @@ import { runReport } from "../reports/tools";
 const COLUMNS = {
   propertyId: "property_id",
   propertyName: "property_name",
+  propertyAddress: "property_address",
+  property: "property",
   vendorId: "vendor_id",
   vendorName: "vendor",
   priority: "priority",
@@ -21,11 +23,20 @@ function daysBetween(from: string, to: string): number {
   return Math.floor((new Date(to).getTime() - new Date(from).getTime()) / (1000 * 60 * 60 * 24));
 }
 
+// An absent column has to stay absent all the way out to the caller. Stringifying it turns a
+// missing property or vendor into the four-character name "null", which reads like real data.
+function firstPopulated(...values: unknown[]): string | null {
+  for (const value of values) {
+    if (value !== null && value !== undefined && value !== "") return String(value);
+  }
+  return null;
+}
+
 export interface AgedWorkOrder {
   propertyId: string;
-  propertyName: string;
-  vendorId: string;
-  vendorName: string;
+  propertyName: string | null;
+  vendorId: string | null;
+  vendorName: string | null;
   priority: string;
   ageDays: number;
   stalled: string[];
@@ -36,6 +47,12 @@ export interface WorkOrderAgingResult {
   byProperty: Record<string, AgedWorkOrder[]>;
   byVendor: Record<string, AgedWorkOrder[]>;
   byPriority: Record<string, AgedWorkOrder[]>;
+  // Work orders nobody has been assigned to yet. They are kept out of byVendor because that
+  // grouping answers "which vendor has the biggest backlog", and a bucket of unassigned tickets
+  // is not a vendor's backlog: live it was the largest bucket of all, so it topped the ranking
+  // under a made-up vendor name. They still need somewhere to live, since an unassigned pile is
+  // its own signal and dropping it would leave byVendor silently short of workOrders.
+  unassigned: AgedWorkOrder[];
   // True when the underlying report hit its row cap, so these groupings cover only part of
   // the open work orders and any count drawn from them is a floor, not a total.
   truncated: boolean;
@@ -51,6 +68,7 @@ export async function workOrderAging(
   const byProperty: Record<string, AgedWorkOrder[]> = {};
   const byVendor: Record<string, AgedWorkOrder[]> = {};
   const byPriority: Record<string, AgedWorkOrder[]> = {};
+  const unassigned: AgedWorkOrder[] = [];
 
   for (const row of report.rows as Record<string, unknown>[]) {
     const propertyId = String(row[COLUMNS.propertyId]);
@@ -74,9 +92,14 @@ export async function workOrderAging(
 
     const entry: AgedWorkOrder = {
       propertyId,
-      propertyName: String(row[COLUMNS.propertyName]),
-      vendorId: String(row[COLUMNS.vendorId]),
-      vendorName: String(row[COLUMNS.vendorName]),
+      // A property with no name of its own still names itself by its address on the same row.
+      propertyName: firstPopulated(
+        row[COLUMNS.propertyName],
+        row[COLUMNS.propertyAddress],
+        row[COLUMNS.property]
+      ),
+      vendorId: firstPopulated(row[COLUMNS.vendorId]),
+      vendorName: firstPopulated(row[COLUMNS.vendorName]),
       priority: String(row[COLUMNS.priority]),
       ageDays: daysBetween(row[COLUMNS.createdAt] as string, opts.asOf),
       stalled,
@@ -84,9 +107,14 @@ export async function workOrderAging(
 
     workOrders.push(entry);
     (byProperty[entry.propertyId] ??= []).push(entry);
-    (byVendor[entry.vendorId] ??= []).push(entry);
     (byPriority[entry.priority] ??= []).push(entry);
+
+    // A named vendor with no id of its own is still a vendor, so key it by name rather than
+    // letting every id-less row collapse into one bucket.
+    const vendorKey = entry.vendorId ?? entry.vendorName;
+    if (vendorKey === null) unassigned.push(entry);
+    else (byVendor[vendorKey] ??= []).push(entry);
   }
 
-  return { workOrders, byProperty, byVendor, byPriority, truncated: report.truncated };
+  return { workOrders, byProperty, byVendor, byPriority, unassigned, truncated: report.truncated };
 }
