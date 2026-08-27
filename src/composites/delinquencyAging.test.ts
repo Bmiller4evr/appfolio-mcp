@@ -5,10 +5,25 @@ import { delinquencyAging } from "./delinquencyAging";
 import { runReport } from "../reports/tools";
 
 const FIXTURE_ROWS = [
-  { property_id: 1, occupancy_id: 501, name: "Alice Tenant", "00_to30": "100.00", "30_to60": "0.00", "60_to90": "0.00", "90_plus": "0.00", in_collections: "No", late: 1 },
-  { property_id: 1, occupancy_id: 502, name: "Bob Tenant", "00_to30": "0.00", "30_to60": "0.00", "60_to90": "0.00", "90_plus": "600.00", in_collections: "Yes", late: 5 },
-  { property_id: 2, occupancy_id: 503, name: "Zero Balance Tenant", "00_to30": "0.00", "30_to60": "0.00", "60_to90": "0.00", "90_plus": "0.00", in_collections: "No", late: 0 },
+  { property_id: 1, property_name: "1228 Harrison Lane", property_address: "1228 Harrison Lane Hurst, TX 76053", occupancy_id: 501, name: "Alice Tenant", "00_to30": "100.00", "30_to60": "0.00", "60_to90": "0.00", "90_plus": "0.00", in_collections: "No", late: 1 },
+  { property_id: 1, property_name: "1228 Harrison Lane", property_address: "1228 Harrison Lane Hurst, TX 76053", occupancy_id: 502, name: "Bob Tenant", "00_to30": "0.00", "30_to60": "0.00", "60_to90": "0.00", "90_plus": "600.00", in_collections: "Yes", late: 5 },
+  { property_id: 2, property_name: "8430 Birchcroft", property_address: "8430 Birchcroft Drive Dallas, TX 75243", occupancy_id: 503, name: "Zero Balance Tenant", "00_to30": "0.00", "30_to60": "0.00", "60_to90": "0.00", "90_plus": "0.00", in_collections: "No", late: 0 },
 ];
+
+// Shapes taken from real Perpetual Realty delinquency rows. Stowes Electric's buckets really do
+// carry credits in the older buckets while the newer ones hold the balance, and property 321
+// really does come back with a null property_name, only an address.
+const CREDIT_ROW = {
+  property_id: 253, property_name: "5755 Rufe Snow Drive", property_address: "5755 Rufe Snow Drive North Richland Hills, TX 76180",
+  occupancy_id: 430, name: "Stowes Electric",
+  "00_to30": "1650.00", "30_to60": "450.00", "60_to90": "0.00", "90_plus": "-1500.00", in_collections: "No", late: 7,
+};
+
+const UNNAMED_PROPERTY_ROW = {
+  property_id: 321, property_name: null, property_address: "9602 Bill Browne Lane Dallas, TX 75243",
+  occupancy_id: 541, name: "Beck, Janicia",
+  "00_to30": "4078.50", "30_to60": "0.00", "60_to90": "0.00", "90_plus": "0.00", in_collections: "No", late: 2,
+};
 
 function makeHttp(rows: Record<string, unknown>[] = FIXTURE_ROWS) {
   return { request: vi.fn().mockResolvedValue({ results: rows }) };
@@ -64,6 +79,48 @@ describe("delinquencyAging", () => {
 
     expect(result.truncated).toBe(true);
     expect(result.totals.days0To30).toBeCloseTo(500 * 100, 5);
+  });
+
+  it("names the property instead of leaving the caller with a bare id", async () => {
+    const result = await delinquencyAging(makeHttp(), { minBalance: 0 });
+    const alice = result.tenants.find((t) => t.occupancyId === "501");
+    expect(alice).toMatchObject({
+      propertyId: "1",
+      propertyName: "1228 Harrison Lane",
+      propertyAddress: "1228 Harrison Lane Hurst, TX 76053",
+    });
+  });
+
+  it("still identifies a property AppFolio has no name for, by address", async () => {
+    const result = await delinquencyAging(makeHttp([UNNAMED_PROPERTY_ROW]), { minBalance: 0 });
+    expect(result.tenants[0]).toMatchObject({
+      propertyId: "321",
+      propertyName: "",
+      propertyAddress: "9602 Bill Browne Lane Dallas, TX 75243",
+    });
+  });
+
+  it("keeps credits in the totals so the buckets net to what is actually owed", async () => {
+    const result = await delinquencyAging(makeHttp([CREDIT_ROW]), { minBalance: 0 });
+    expect(result.totals.days0To30).toBeCloseTo(1650, 5);
+    expect(result.totals.days30To60).toBeCloseTo(450, 5);
+    expect(result.totals.days90Plus).toBeCloseTo(-1500, 5);
+
+    const net = result.totals.days0To30 + result.totals.days30To60 + result.totals.days60To90 + result.totals.days90Plus;
+    expect(net).toBeCloseTo(600, 5);
+  });
+
+  it("explains a negative bucket total rather than leaving it looking broken", async () => {
+    const result = await delinquencyAging(makeHttp([CREDIT_ROW]), { minBalance: 0 });
+    expect(result.notes).toHaveLength(1);
+    expect(result.notes[0]).toContain("days90Plus");
+    expect(result.notes[0]).toContain("oldest");
+    expect(result.notes[0]).toContain("600.00");
+  });
+
+  it("adds no note when every bucket total is non-negative", async () => {
+    const result = await delinquencyAging(makeHttp(), { minBalance: 0 });
+    expect(result.notes).toEqual([]);
   });
 
   it("calls the real runReport gate for delinquency and no longer gets UnverifiedReportError", async () => {
