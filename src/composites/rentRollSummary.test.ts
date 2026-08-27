@@ -4,10 +4,12 @@ import { describe, it, expect, vi } from "vitest";
 import { rentRollSummary } from "./rentRollSummary";
 import { runReport } from "../reports/tools";
 
+// Statuses here are the ones AppFolio's rent_roll actually returns, confirmed against a live
+// account: Current, Vacant-Rented, Vacant-Unrented, Notice-Rented, Notice-Unrented.
 const FIXTURE_ROWS = [
-  { property_id: 1, unit_id: 101, sqft: 800, status: "Occupied", market_rent: "1500.00", rent: "1450.00" },
-  { property_id: 1, unit_id: 102, sqft: 950, status: "Vacant", market_rent: "1700.00", rent: "0.00" },
-  { property_id: 2, unit_id: 201, sqft: 600, status: "OCCUPIED", market_rent: "1200.00", rent: "1100.00" },
+  { property_id: 1, unit_id: 101, sqft: 800, status: "Current", market_rent: "1500.00", rent: "1450.00" },
+  { property_id: 1, unit_id: 102, sqft: 950, status: "Vacant-Unrented", market_rent: "1700.00", rent: null },
+  { property_id: 2, unit_id: 201, sqft: 600, status: "Notice-Unrented", market_rent: "1200.00", rent: "1100.00" },
 ];
 
 function makeHttp(rows: Record<string, unknown>[] = FIXTURE_ROWS) {
@@ -30,9 +32,66 @@ describe("rentRollSummary", () => {
     expect(result.portfolio.rentGap).toBeCloseTo(150, 5);
   });
 
-  it("treats status case-insensitively when deciding occupancy", async () => {
-    const result = await rentRollSummary(makeHttp(), { asOf: "2026-08-13" });
-    expect(result.byProperty["2"].unitsOccupied).toBe(1);
+  it("counts a unit under notice to vacate as occupied and a re-leased vacant unit as vacant", async () => {
+    const rows = [
+      { property_id: 1, unit_id: 101, sqft: 100, status: "Current", market_rent: "1000.00", rent: "1000.00" },
+      { property_id: 1, unit_id: 102, sqft: 100, status: "Notice-Rented", market_rent: "1000.00", rent: "900.00" },
+      { property_id: 1, unit_id: 103, sqft: 100, status: "Notice-Unrented", market_rent: "1000.00", rent: "800.00" },
+      { property_id: 1, unit_id: 104, sqft: 100, status: "Vacant-Rented", market_rent: "1000.00", rent: null },
+      { property_id: 1, unit_id: 105, sqft: 100, status: "Vacant-Unrented", market_rent: "1000.00", rent: null },
+    ];
+    const result = await rentRollSummary(makeHttp(rows), { asOf: "2026-08-13" });
+
+    expect(result.portfolio.unitsOccupied).toBe(3);
+    expect(result.portfolio.unitsVacant).toBe(2);
+    // Only the three rent-paying units contribute a gap: 0 + 100 + 200.
+    expect(result.portfolio.rentGap).toBeCloseTo(300, 5);
+  });
+
+  it("treats status case-insensitively and tolerates surrounding whitespace", async () => {
+    const rows = [
+      { property_id: 1, unit_id: 101, sqft: 100, status: "  current  ", market_rent: "1000.00", rent: "1000.00" },
+      { property_id: 1, unit_id: 102, sqft: 100, status: "VACANT-UNRENTED", market_rent: "1000.00", rent: null },
+    ];
+    const result = await rentRollSummary(makeHttp(rows), { asOf: "2026-08-13" });
+
+    expect(result.portfolio.unitsOccupied).toBe(1);
+    expect(result.portfolio.unitsVacant).toBe(1);
+  });
+
+  it("does not report a fully vacant portfolio for a realistic mix of AppFolio statuses", async () => {
+    // The live distribution for a real 230-unit account: comparing status against the literal
+    // string "occupied" classified every one of these units as vacant.
+    const distribution = {
+      Current: 190,
+      "Vacant-Rented": 2,
+      "Vacant-Unrented": 36,
+      "Notice-Rented": 1,
+      "Notice-Unrented": 1,
+    };
+    const rows = Object.entries(distribution).flatMap(([status, count]) =>
+      Array.from({ length: count }, (_, i) => ({
+        property_id: 1,
+        unit_id: `${status}-${i}`,
+        sqft: 100,
+        status,
+        market_rent: "1000.00",
+        rent: status.startsWith("Vacant") ? null : "1000.00",
+      }))
+    );
+
+    const result = await rentRollSummary(makeHttp(rows), { asOf: "2026-08-13" });
+
+    expect(result.portfolio.unitsOccupied).toBe(192);
+    expect(result.portfolio.unitsVacant).toBe(38);
+    expect(result.portfolio.squareFeetOccupied).toBe(19200);
+    expect(result.portfolio.squareFeetVacant).toBe(3800);
+  });
+
+  it("throws on a status outside AppFolio's vocabulary instead of counting the unit vacant", async () => {
+    const rows = [{ property_id: 1, unit_id: 101, sqft: 100, status: "Occupied", market_rent: "1000.00", rent: "1000.00" }];
+
+    await expect(rentRollSummary(makeHttp(rows), { asOf: "2026-08-13" })).rejects.toThrow(/Occupied/);
   });
 
   it("rolls up per property", async () => {

@@ -11,7 +11,27 @@ const COLUMNS = {
   rent: "rent",
 } as const;
 
-const OCCUPIED_STATUS = "occupied";
+// rent_roll's status column carries exactly these five values, confirmed against a live account
+// and corroborated by occupancy_summary, whose columns enumerate the same vocabulary.
+//
+// A unit counts as occupied when someone is paying rent on it today, which is what an owner is
+// asking about when they ask for a current vacancy rate:
+//   Current          - leased and occupied.
+//   Notice-Rented    - occupied, rent still due, a move-out notice is on file and the next lease
+//   Notice-Unrented    is signed (Rented) or not (Unrented). Still paying now, so still occupied.
+//   Vacant-Rented    - nobody in the unit and no rent coming in, even though a future lease is
+//   Vacant-Unrented    already signed (Rented) or not (Unrented). Both are vacant today.
+// AppFolio's own occupancy_summary agrees: its occupied count equals Current plus both Notice
+// statuses, and it reports the two Vacant statuses as the vacancy.
+const OCCUPANCY_BY_STATUS: Record<string, boolean> = {
+  current: true,
+  "notice-rented": true,
+  "notice-unrented": true,
+  "vacant-rented": false,
+  "vacant-unrented": false,
+};
+
+export class UnknownUnitStatusError extends Error {}
 
 interface PropertyTotals {
   unitsOccupied: number;
@@ -30,8 +50,16 @@ function parseCurrency(value: unknown): number {
   return Number.isFinite(num) ? num : 0;
 }
 
+// An unrecognized status fails loudly. Bucketing it by guess is how every unit in the portfolio
+// came back vacant while the totals still looked like a confident answer.
 function isOccupied(status: unknown): boolean {
-  return String(status ?? "").trim().toLowerCase() === OCCUPIED_STATUS;
+  const occupied = OCCUPANCY_BY_STATUS[String(status ?? "").trim().toLowerCase()];
+  if (occupied === undefined) {
+    throw new UnknownUnitStatusError(
+      `rent_roll returned a unit status this tool cannot classify as occupied or vacant: ${JSON.stringify(status)}`
+    );
+  }
+  return occupied;
 }
 
 export async function rentRollSummary(
