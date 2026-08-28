@@ -10,6 +10,7 @@ import { DATABASE_OPERATIONS } from "../../../src/database/operations.generated"
 import { listEndpoints, describeEndpoint, callEndpoint, confirmWrite, type CallEndpointDeps } from "../../../src/database/tools";
 import { listReports, describeReport, runReport } from "../../../src/reports/tools";
 import { vendorCompliance } from "../../../src/composites/vendorCompliance";
+import { findProperty } from "../../../src/composites/findProperty";
 import { rentRollSummary } from "../../../src/composites/rentRollSummary";
 import { delinquencyAging } from "../../../src/composites/delinquencyAging";
 import { workOrderAging } from "../../../src/composites/workOrderAging";
@@ -55,14 +56,12 @@ function roleFor(ctx: { http?: { authInfo?: { extra?: Record<string, unknown> } 
 }
 
 // rent_roll, delinquency, and work_order all key their property_id on the Reports API's own
-// small internal number, unrelated to the Database API's property UUID (getProperties.Id). No
-// tool here resolves an address to that number, so the only path from "123 Main St" to a usable
-// id is run_report against property_directory with no filters, matching property_address
-// client-side.
+// small internal number, unrelated to the Database API's property UUID (getProperties.Id).
+// find_property is the tool that turns an address or name into that number.
 const PROPERTY_ID_NOTE =
   "properties (optional): Reports API numeric property ids as strings, e.g. [\"123\"] " +
-  "(not street addresses, not Database API UUIDs). To find one from an address, run_report " +
-  "property_directory with no filters and match property_address.";
+  "(not street addresses, not Database API UUIDs). Use find_property to resolve an address or " +
+  "name to one.";
 
 const handler = createMcpHandler((server) => {
   if (dbHttp && callEndpointDeps) {
@@ -137,7 +136,8 @@ const handler = createMcpHandler((server) => {
           "Executes a verified report and returns its rows. Unverified reports are refused. Pass filters " +
           "keyed by the exact names describe_report lists; a dotted name like properties.properties_ids " +
           "nests into the request body automatically, do not send it as a literal dotted key. A report's " +
-          "property_id is a small AppFolio-internal number, unrelated to Database API property UUIDs.",
+          "property_id is a small AppFolio-internal number, unrelated to Database API property UUIDs; " +
+          "use find_property to resolve an address or name to one.",
         inputSchema: z.object({
           reportId: z.string().describe("Report id from list_reports, e.g. \"rent_roll\""),
           filters: z.record(z.string(), z.unknown()).optional().describe("Filter names and values, exactly as describe_report lists them"),
@@ -146,6 +146,19 @@ const handler = createMcpHandler((server) => {
         }),
       },
       async ({ reportId, filters, columns, maxRows }) => ({ content: [{ type: "text", text: JSON.stringify(await runReport(reportsHttp, reportId, { filters, columns, maxRows })) }] })
+    );
+    server.registerTool(
+      "find_property",
+      {
+        title: "Find a property",
+        description:
+          "Resolves an address or property name to the numeric Reports API property id that " +
+          "rent_roll_summary, delinquency_aging, and work_order_aging's properties filter needs. " +
+          "Case-insensitive substring match against every property's name, full address, and street; " +
+          "can return more than one match for an ambiguous query.",
+        inputSchema: z.object({ query: z.string().describe("Address, street name, or property name to search for") }),
+      },
+      async ({ query }) => ({ content: [{ type: "text", text: JSON.stringify(await findProperty(reportsHttp, query)) }] })
     );
 
     // vendor_compliance joins the vendor_directory report to getWorkOrders, so it needs both
