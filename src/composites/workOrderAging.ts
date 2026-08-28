@@ -2,6 +2,7 @@
 // ABOUTME: volunteer on its own, grouped by property, vendor, and priority.
 import type { AppFolioHttpClient } from "../http";
 import { runReport } from "../reports/tools";
+import { firstPopulated } from "./support";
 
 const COLUMNS = {
   propertyId: "property_id",
@@ -21,15 +22,6 @@ const COLUMNS = {
 
 function daysBetween(from: string, to: string): number {
   return Math.floor((new Date(to).getTime() - new Date(from).getTime()) / (1000 * 60 * 60 * 24));
-}
-
-// An absent column has to stay absent all the way out to the caller. Stringifying it turns a
-// missing property or vendor into the four-character name "null", which reads like real data.
-function firstPopulated(...values: unknown[]): string | null {
-  for (const value of values) {
-    if (value !== null && value !== undefined && value !== "") return String(value);
-  }
-  return null;
 }
 
 export interface AgedWorkOrder {

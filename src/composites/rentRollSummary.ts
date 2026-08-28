@@ -2,9 +2,13 @@
 // ABOUTME: rolled up per property and portfolio-wide, from the verified rent_roll report.
 import type { AppFolioHttpClient } from "../http";
 import { runReport } from "../reports/tools";
+import { firstPopulated } from "./support";
 
 const COLUMNS = {
   propertyId: "property_id",
+  propertyName: "property_name",
+  propertyAddress: "property_address",
+  property: "property",
   status: "status",
   sqft: "sqft",
   marketRent: "market_rent",
@@ -41,8 +45,18 @@ interface PropertyTotals {
   rentGap: number;
 }
 
+// name is null for a requested property that matched no rows, the same way a property lookup
+// AppFolio has nothing for stays null rather than guessing, elsewhere in this project.
+interface PropertyRollup extends PropertyTotals {
+  propertyName: string | null;
+}
+
 function emptyTotals(): PropertyTotals {
   return { unitsOccupied: 0, unitsVacant: 0, squareFeetOccupied: 0, squareFeetVacant: 0, rentGap: 0 };
+}
+
+function emptyRollup(): PropertyRollup {
+  return { propertyName: null, ...emptyTotals() };
 }
 
 function parseCurrency(value: unknown): number {
@@ -65,22 +79,29 @@ function isOccupied(status: unknown): boolean {
 export async function rentRollSummary(
   reportsHttp: Pick<AppFolioHttpClient, "request">,
   opts: { asOf: string; properties?: string[] }
-): Promise<{ portfolio: PropertyTotals; byProperty: Record<string, PropertyTotals>; truncated: boolean }> {
+): Promise<{ portfolio: PropertyTotals; byProperty: Record<string, PropertyRollup>; truncated: boolean }> {
   const filters: Record<string, unknown> = { as_of_to: opts.asOf };
   if (opts.properties) filters.properties = { properties_ids: opts.properties };
 
   const report = await runReport(reportsHttp, "rent_roll", { filters });
 
   const portfolio = emptyTotals();
-  const byProperty: Record<string, PropertyTotals> = {};
+  const byProperty: Record<string, PropertyRollup> = {};
   if (opts.properties) {
-    for (const id of opts.properties) byProperty[id] = emptyTotals();
+    for (const id of opts.properties) byProperty[id] = emptyRollup();
   }
 
   for (const row of report.rows as Record<string, unknown>[]) {
     const propertyId = String(row[COLUMNS.propertyId]);
     if (opts.properties && !opts.properties.includes(propertyId)) continue;
-    if (!byProperty[propertyId]) byProperty[propertyId] = emptyTotals();
+    if (!byProperty[propertyId]) byProperty[propertyId] = emptyRollup();
+    if (byProperty[propertyId].propertyName === null) {
+      byProperty[propertyId].propertyName = firstPopulated(
+        row[COLUMNS.propertyName],
+        row[COLUMNS.propertyAddress],
+        row[COLUMNS.property]
+      );
+    }
 
     const occupied = isOccupied(row[COLUMNS.status]);
     const sqft = Number(row[COLUMNS.sqft]) || 0;

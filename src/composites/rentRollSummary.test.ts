@@ -97,6 +97,7 @@ describe("rentRollSummary", () => {
   it("rolls up per property", async () => {
     const result = await rentRollSummary(makeHttp(), { asOf: "2026-08-13" });
     expect(result.byProperty["1"]).toEqual({
+      propertyName: null,
       unitsOccupied: 1,
       unitsVacant: 1,
       squareFeetOccupied: 800,
@@ -104,6 +105,7 @@ describe("rentRollSummary", () => {
       rentGap: 50,
     });
     expect(result.byProperty["2"]).toEqual({
+      propertyName: null,
       unitsOccupied: 1,
       unitsVacant: 0,
       squareFeetOccupied: 600,
@@ -117,6 +119,7 @@ describe("rentRollSummary", () => {
 
     expect(Object.keys(result.byProperty).sort()).toEqual(["1", "999"]);
     expect(result.byProperty["999"]).toEqual({
+      propertyName: null,
       unitsOccupied: 0,
       unitsVacant: 0,
       squareFeetOccupied: 0,
@@ -124,6 +127,45 @@ describe("rentRollSummary", () => {
       rentGap: 0,
     });
     expect(result.portfolio.unitsOccupied).toBe(1);
+  });
+
+  // rent_roll's live response carries far more columns than the catalog documents, including
+  // property_name, property_address, and property (the full "street, city, state zip" string),
+  // confirmed against a real 230-row account. property_name is null for plenty of real
+  // properties, exactly as it is on delinquency and work_order, so byProperty needs the same
+  // fallback chain those composites already use rather than leaving a caller with a bare id.
+  it("names each property in the rollup, falling back through address when the name is blank", async () => {
+    const rows = [
+      {
+        property_id: 1,
+        unit_id: 101,
+        sqft: 800,
+        status: "Current",
+        market_rent: "1500.00",
+        rent: "1450.00",
+        property_name: "242 Stallion Drive",
+        property_address: "242 Stallion Drive",
+      },
+      {
+        property_id: 2,
+        unit_id: 201,
+        sqft: 600,
+        status: "Current",
+        market_rent: "1200.00",
+        rent: "1100.00",
+        property_name: null,
+        property_address: "10826 Calderwood Ln Fort Worth, TX 76052",
+      },
+    ];
+    const result = await rentRollSummary(makeHttp(rows), { asOf: "2026-08-13" });
+
+    expect(result.byProperty["1"].propertyName).toBe("242 Stallion Drive");
+    expect(result.byProperty["2"].propertyName).toBe("10826 Calderwood Ln Fort Worth, TX 76052");
+  });
+
+  it("leaves a requested property with zero rows unnamed rather than guessing", async () => {
+    const result = await rentRollSummary(makeHttp(), { asOf: "2026-08-13", properties: ["1", "999"] });
+    expect(result.byProperty["999"].propertyName).toBeNull();
   });
 
   it("sends as_of_to and the properties filter to the rent_roll report", async () => {
