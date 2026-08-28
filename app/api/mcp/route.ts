@@ -54,6 +54,16 @@ function roleFor(ctx: { http?: { authInfo?: { extra?: Record<string, unknown> } 
   return ctx.http?.authInfo?.extra?.role === "admin" ? "admin" : "owner";
 }
 
+// rent_roll, delinquency, and work_order all key their property_id on the Reports API's own
+// small internal number, unrelated to the Database API's property UUID (getProperties.Id). No
+// tool here resolves an address to that number, so the only path from "123 Main St" to a usable
+// id is run_report against property_directory with no filters, matching property_address
+// client-side.
+const PROPERTY_ID_NOTE =
+  "properties (optional): Reports API numeric property ids as strings, e.g. [\"123\"] " +
+  "(not street addresses, not Database API UUIDs). To find one from an address, run_report " +
+  "property_directory with no filters and match property_address.";
+
 const handler = createMcpHandler((server) => {
   if (dbHttp && callEndpointDeps) {
     server.registerTool(
@@ -81,7 +91,15 @@ const handler = createMcpHandler((server) => {
 
     server.registerTool(
       "call_endpoint",
-      { title: "Call a Database API endpoint", description: "Reads execute immediately; writes return a preview and confirm token.", inputSchema: z.object({ operationId: z.string(), pathParams: z.record(z.string(), z.string()).optional(), query: z.record(z.string(), z.string()).optional(), body: z.unknown().optional() }) },
+      {
+        title: "Call a Database API endpoint",
+        description:
+          "Executes one Database API operation by operationId. GET reads run and return data immediately; " +
+          "POST/PATCH/DELETE writes return a preview plus a confirm token for confirm_write and never touch " +
+          "AppFolio here. Get operationId and the exact pathParams/query key names (e.g. bracketed " +
+          "filters[...]) from describe_endpoint first; this tool does not validate that you used the right ones.",
+        inputSchema: z.object({ operationId: z.string(), pathParams: z.record(z.string(), z.string()).optional(), query: z.record(z.string(), z.string()).optional(), body: z.unknown().optional() }),
+      },
       async ({ operationId, pathParams, query, body }, ctx) => {
         const role = roleFor(ctx);
         const result = await callEndpoint(callEndpointDeps, { role }, operationId, { pathParams, query, body });
@@ -113,7 +131,20 @@ const handler = createMcpHandler((server) => {
     );
     server.registerTool(
       "run_report",
-      { title: "Run a report", description: "Executes a verified report. Unverified reports are refused.", inputSchema: z.object({ reportId: z.string(), filters: z.record(z.string(), z.unknown()).optional(), columns: z.array(z.string()).optional(), maxRows: z.number().optional() }) },
+      {
+        title: "Run a report",
+        description:
+          "Executes a verified report and returns its rows. Unverified reports are refused. Pass filters " +
+          "keyed by the exact names describe_report lists; a dotted name like properties.properties_ids " +
+          "nests into the request body automatically, do not send it as a literal dotted key. A report's " +
+          "property_id is a small AppFolio-internal number, unrelated to Database API property UUIDs.",
+        inputSchema: z.object({
+          reportId: z.string().describe("Report id from list_reports, e.g. \"rent_roll\""),
+          filters: z.record(z.string(), z.unknown()).optional().describe("Filter names and values, exactly as describe_report lists them"),
+          columns: z.array(z.string()).optional().describe("Column names to return; omit for every column describe_report lists"),
+          maxRows: z.number().optional().describe("Truncate the result to this many rows"),
+        }),
+      },
       async ({ reportId, filters, columns, maxRows }) => ({ content: [{ type: "text", text: JSON.stringify(await runReport(reportsHttp, reportId, { filters, columns, maxRows })) }] })
     );
 
@@ -122,7 +153,17 @@ const handler = createMcpHandler((server) => {
     if (dbHttp && callEndpointDeps) {
       server.registerTool(
         "vendor_compliance",
-        { title: "Vendor compliance", description: "Vendors with insurance/licenses expiring soon, grouped by property.", inputSchema: z.object({ withinDays: z.number().default(30), asOf: z.string() }) },
+        {
+          title: "Vendor compliance",
+          description:
+            "Vendors whose liability insurance expires within withinDays of asOf, grouped by the properties " +
+            "their work order history shows them assigned to. Only liability insurance drives the match; " +
+            "workers' comp expiration is included on each result for reference but is not filtered on.",
+          inputSchema: z.object({
+            withinDays: z.number().default(30).describe("Days out from asOf counted as \"expiring soon\""),
+            asOf: z.string().describe("Reference date, YYYY-MM-DD"),
+          }),
+        },
         async ({ withinDays, asOf }, ctx) => {
           const role = roleFor(ctx);
           const result = await vendorCompliance({ reportsHttp, callEndpoint, callEndpointDeps }, { role }, { withinDays, asOf });
@@ -132,17 +173,46 @@ const handler = createMcpHandler((server) => {
     }
     server.registerTool(
       "rent_roll_summary",
-      { title: "Rent roll summary", description: "Occupancy and rent gap by property and portfolio.", inputSchema: z.object({ asOf: z.string(), properties: z.array(z.string()).optional() }) },
+      {
+        title: "Rent roll summary",
+        description:
+          `Occupancy (units and square feet) and market-vs-actual rent gap by property and portfolio, as of ` +
+          `a snapshot date. ${PROPERTY_ID_NOTE}`,
+        inputSchema: z.object({
+          asOf: z.string().describe("Snapshot date, YYYY-MM-DD"),
+          properties: z.array(z.string()).optional().describe(PROPERTY_ID_NOTE),
+        }),
+      },
       async ({ asOf, properties }) => ({ content: [{ type: "text", text: JSON.stringify(await rentRollSummary(reportsHttp, { asOf, properties })) }] })
     );
     server.registerTool(
       "delinquency_aging",
-      { title: "Delinquency aging", description: "Aging balances plus collections/repeat-lateness flags.", inputSchema: z.object({ minBalance: z.number().default(0), properties: z.array(z.string()).optional() }) },
+      {
+        title: "Delinquency aging",
+        description: `Aging balances plus collections/repeat-lateness flags, by tenant. ${PROPERTY_ID_NOTE}`,
+        inputSchema: z.object({
+          minBalance: z.number().default(0).describe("Minimum total balance owed to include a tenant, in dollars"),
+          properties: z.array(z.string()).optional().describe(PROPERTY_ID_NOTE),
+        }),
+      },
       async ({ minBalance, properties }) => ({ content: [{ type: "text", text: JSON.stringify(await delinquencyAging(reportsHttp, { minBalance, properties })) }] })
     );
     server.registerTool(
       "work_order_aging",
-      { title: "Work order aging", description: "Age and stall signals for open work orders.", inputSchema: z.object({ asOf: z.string(), properties: z.array(z.string()).optional(), status: z.string().optional() }) },
+      {
+        title: "Work order aging",
+        description:
+          "Age and stall signals for currently open work orders; closed, completed, or canceled tickets are " +
+          "never returned. asOf is only the date ages and stall flags are computed relative to (usually " +
+          `today) and does not change which work orders are fetched. status must exactly match AppFolio's ` +
+          "status text on an already-open ticket (e.g. \"New\", \"Scheduled\", \"Assigned\"); values like " +
+          `"Completed" will never match anything here. ${PROPERTY_ID_NOTE}`,
+        inputSchema: z.object({
+          asOf: z.string().describe("Date to compute work order age and stall flags relative to, YYYY-MM-DD; does not filter which work orders are fetched"),
+          properties: z.array(z.string()).optional().describe(PROPERTY_ID_NOTE),
+          status: z.string().optional().describe("Exact AppFolio status text on an open ticket, e.g. \"New\", \"Scheduled\", \"Assigned\""),
+        }),
+      },
       async ({ asOf, properties, status }) => ({ content: [{ type: "text", text: JSON.stringify(await workOrderAging(reportsHttp, { asOf, properties, status })) }] })
     );
   }
