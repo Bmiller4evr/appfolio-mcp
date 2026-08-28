@@ -68,6 +68,16 @@ describe("describeReport", () => {
     expect(report.filters.map((f) => f.name)).not.toContain("statuses");
   });
 
+  // rentRollSummary, delinquencyAging, and workOrderAging all fall back to property_address when
+  // a row's property_name is blank, a column the OpenAPI schema export these catalog entries were
+  // originally built from never mentioned. Confirmed live against a real account that all three
+  // reports actually carry it, so describe_report should say so too.
+  it("documents property_address for reports whose composites depend on it", () => {
+    expect(describeReport("rent_roll").columns.map((c) => c.name)).toContain("property_address");
+    expect(describeReport("delinquency").columns.map((c) => c.name)).toContain("property_address");
+    expect(describeReport("work_order").columns.map((c) => c.name)).toContain("property_address");
+  });
+
   it("leaves filterCaveats unset on reports whose filters were confirmed working", () => {
     expect(describeReport("rent_roll").filterCaveats).toBeUndefined();
     expect(describeReport("vendor_directory").filterCaveats).toBeUndefined();

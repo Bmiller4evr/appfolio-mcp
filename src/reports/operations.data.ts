@@ -89,17 +89,22 @@ export const REPORTS: ReportDescriptor[] = [
   },
   // rent_roll's V2 columns below are sourced from AppFolio's own Reports API OpenAPI schema
   // export, provided by the project owner (components.schemas.RentRollRequest/Response), not
-  // browsed UI prose or a guess. See .superpowers/sdd/verified-report-columns.md.
+  // browsed UI prose or a guess. See .superpowers/sdd/verified-report-columns.md. property_address
+  // and property are additions on top of that export: the live response carries them (confirmed
+  // against a real 230-row account, 2026-08-28) even though the schema export didn't mention them,
+  // and rentRollSummary depends on both as the fallback for a property with no property_name.
   {
     id: "rent_roll",
     title: "Rent Roll",
     summary: "Occupancy and rent by unit.",
     tags: ["occupancy"],
     verified: true,
-    source: "AppFolio Reports API OpenAPI schema export",
+    source: "AppFolio Reports API OpenAPI schema export; property_address/property live-verified, 2026-08-28",
     columns: [
       { name: "property_id", type: "integer" },
       { name: "property_name", type: "string" },
+      { name: "property_address", type: "string" },
+      { name: "property", type: "string" },
       { name: "unit_id", type: "integer" },
       { name: "unit", type: "string" },
       { name: "sqft", type: "integer" },
@@ -119,17 +124,21 @@ export const REPORTS: ReportDescriptor[] = [
   },
   // delinquency's V2 columns below are sourced from AppFolio's own Reports API OpenAPI schema
   // export, provided by the project owner (components.schemas.DelinquencyRequest/Response), not
-  // browsed UI prose or a guess. See .superpowers/sdd/verified-report-columns.md.
+  // browsed UI prose or a guess. See .superpowers/sdd/verified-report-columns.md. property_address
+  // is an addition on top of that export: the live response carries it (confirmed against a real
+  // account, 2026-08-28) even though the schema export didn't mention it, and delinquencyAging
+  // depends on it as the label for a property with no property_name, which is common in practice.
   {
     id: "delinquency",
     title: "Delinquency",
     summary: "Aging balances by tenant.",
     tags: ["financial"],
     verified: true,
-    source: "AppFolio Reports API OpenAPI schema export",
+    source: "AppFolio Reports API OpenAPI schema export; property_address live-verified, 2026-08-28",
     columns: [
       { name: "property_id", type: "integer" },
       { name: "property_name", type: "string" },
+      { name: "property_address", type: "string" },
       { name: "unit", type: "string" },
       { name: "unit_id", type: "integer" },
       { name: "occupancy_id", type: "integer" },
@@ -156,19 +165,24 @@ export const REPORTS: ReportDescriptor[] = [
   },
   // work_order's V2 columns below are sourced from AppFolio's own Reports API OpenAPI schema
   // export, provided by the project owner (components.schemas.WorkOrderRequest/Response), not
-  // browsed UI prose or a guess. See .superpowers/sdd/verified-report-columns.md.
+  // browsed UI prose or a guess. See .superpowers/sdd/verified-report-columns.md. property_address
+  // and property are additions on top of that export: the live response carries them (confirmed
+  // against a real account, 2026-08-28) even though the schema export didn't mention them, and
+  // workOrderAging depends on both as the fallback for a property with no property_name.
   {
     id: "work_order",
     title: "Work Orders",
     summary: "Open and closed maintenance tickets.",
     tags: ["maintenance"],
     verified: true,
-    source: "AppFolio Reports API OpenAPI schema export",
+    source: "AppFolio Reports API OpenAPI schema export; property_address/property live-verified, 2026-08-28",
     columns: [
       { name: "work_order_id", type: "integer" },
       { name: "work_order_number", type: "string" },
       { name: "property_id", type: "integer" },
       { name: "property_name", type: "string" },
+      { name: "property_address", type: "string" },
+      { name: "property", type: "string" },
       { name: "vendor_id", type: "integer" },
       { name: "vendor", type: "string" },
       { name: "priority", type: "string" },
