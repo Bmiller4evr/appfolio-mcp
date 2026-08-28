@@ -59,75 +59,33 @@ interface Property {
   Address1: string | null;
 }
 
-// Database API records come wrapped in a { data: [...] } envelope, with PascalCase fields (the
-// Reports API's snake_case is a separate convention and does not apply here). next_page_path
-// carries the whole follow-up request, page number included, and is null on the last page.
-// callEndpoint joins the pages of a list read itself and reports a read it had to cut short as
-// truncated, so a response arrives here either already whole or flagged as partial.
-interface Page<T> {
+// callEndpoint follows every page of a list read itself and hands back the whole thing joined, so
+// a READ result here is always either { data, count, truncated } already whole, or the { executed:
+// false } shape a write preview uses (never reachable for the read-only operations this file
+// calls, but the type still has to be narrowed).
+interface ListResult<T> {
   data: T[];
-  next_page_path?: string | null;
-  truncated?: boolean;
+  truncated: boolean;
 }
 
-// A ten-year work order history is large but finite, so this ceiling exists only to keep a
-// response that never stops advertising a next page from spinning forever. Reaching it is
-// reported rather than swallowed, since stopping early is the truncation this pagination fixes.
-const MAX_PAGES = 100;
+function asListResult<T>(result: CallEndpointResult, what: string): ListResult<T> {
+  if (!result.executed) throw new Error(`vendorCompliance: ${what} did not execute as a read`);
+  const page = result.result as ListResult<T>;
+  if (page.truncated) {
+    console.warn(`vendorCompliance: the ${what} read came back truncated; property attribution may be incomplete`);
+  }
+  return page;
+}
 
 // filters[Id] takes a comma-separated list, so the properties behind a whole portfolio's work
 // orders resolve in a couple of requests rather than one per property. Confirmed live that a
 // hundred ids in one request come back in a single unpaginated response.
 const PROPERTY_LOOKUP_BATCH_SIZE = 100;
 
-// next_page_path is absolute against the host ("/api/v0/work_orders?page[number]=2"), while the
-// HTTP client's base URL already ends in the version prefix, so the prefix comes off before the
-// two are concatenated.
-function relativeToVersionedBase(path: string): string {
-  return path.replace(/^\/api\/v\d+/, "");
-}
-
 function addDays(isoDate: string, days: number): string {
   const d = new Date(isoDate);
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
-}
-
-// Only the first page can go through callEndpoint: it resolves the request path from the
-// operation's own fixed path template, so it has nowhere to put the follow-up path AppFolio hands
-// back. Later pages take the same HTTP client directly, having already cleared the role and
-// discoverability checks callEndpoint ran on the first one.
-async function collectPages<T>(
-  deps: VendorComplianceDeps,
-  first: CallEndpointResult,
-  what: string
-): Promise<T[]> {
-  const rows: T[] = [];
-  let page = first.executed ? (first.result as Page<T>) : undefined;
-  let pagesRead = 0;
-  if (page?.truncated) {
-    console.warn(
-      `vendorCompliance: the ${what} read came back truncated; property attribution may be incomplete`
-    );
-  }
-  while (page) {
-    rows.push(...(page.data ?? []));
-    pagesRead++;
-    const nextPagePath = page.next_page_path;
-    if (!nextPagePath) break;
-    if (pagesRead >= MAX_PAGES) {
-      console.warn(
-        `vendorCompliance: stopped following ${what} pages at ${pagesRead}; property attribution may be incomplete`
-      );
-      break;
-    }
-    page = (await deps.callEndpointDeps.http.request(
-      "GET",
-      relativeToVersionedBase(nextPagePath),
-      {}
-    )) as Page<T>;
-  }
-  return rows;
 }
 
 // A property an AppFolio user has hidden (sold, off management) still owns the work order history
@@ -145,7 +103,7 @@ async function propertyNames(
     const result = await deps.callEndpoint(deps.callEndpointDeps, caller, "getProperties", {
       query: { "filters[Id]": batch.join(","), "filters[IncludeHidden]": "true" },
     });
-    for (const property of await collectPages<Property>(deps, result, "property")) {
+    for (const property of asListResult<Property>(result, "property").data) {
       names.set(property.Id, property.Name ?? property.Address1);
     }
   }
@@ -172,7 +130,7 @@ export async function vendorCompliance(
   const workOrdersResult = await deps.callEndpoint(deps.callEndpointDeps, caller, "getWorkOrders", {
     query: { "filters[LastUpdatedAtFrom]": workOrdersUpdatedFrom },
   });
-  const workOrders = await collectPages<WorkOrder>(deps, workOrdersResult, "work order");
+  const workOrders = asListResult<WorkOrder>(workOrdersResult, "work order").data;
 
   const propertiesByVendor = new Map<string, Set<string>>();
   for (const wo of workOrders) {
@@ -181,11 +139,11 @@ export async function vendorCompliance(
     propertiesByVendor.get(wo.VendorId)!.add(wo.PropertyId);
   }
 
-  // The expiration window is enforced here, client-side, because the report does not enforce it
-  // itself: liability_expiration_to comes back with every vendor in the directory no matter what
-  // date it is given (confirmed live, three different cutoffs, identical 301-row response). Most
-  // of a real directory has no expiration on file at all, and no date is not an expiration
-  // inside the window.
+  // Re-checked here, client-side, as a backstop rather than the primary filter: the server-side
+  // liability_expiration_to filter is confirmed working (291 vs. 301 rows across two cutoffs,
+  // live), but this composite still shouldn't trust a report's filtering blindly, matching the
+  // same defensive pattern used elsewhere in this project. Most of a real directory has no
+  // expiration on file at all, and no date is not an expiration inside the window.
   const expiring = (report.rows as unknown as VendorDirectoryRow[]).filter(
     (row) => row.liability_ins_expires !== null && row.liability_ins_expires <= cutoff
   );

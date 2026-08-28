@@ -33,9 +33,10 @@ export const REPORTS: ReportDescriptor[] = [
   // never existed. epa_cert_expires, state_lic_expires, contract_expires, discount_adjustment and
   // markup_adjustment were null in all 301 live rows, so the three dates take their siblings'
   // type and the two adjustments are left unknown rather than guessed at. The filters below are
-  // still the attributed ones, and liability_expiration_to at least does not narrow anything:
-  // three different cutoffs each returned the whole 301-row directory, so a caller wanting an
-  // expiration window has to apply it to the rows itself.
+  // still the attributed ones. liability_expiration_to looked like it narrowed nothing at the time
+  // this was written, but that was runReport's own bug (it wrapped every filter in a { filters }
+  // envelope AppFolio silently ignores), not this report's: re-verified live after that fix,
+  // liability_expiration_to correctly returns 291 rows for a 2022 cutoff and 301 for a 2099 one.
   {
     id: "vendor_directory",
     title: "Vendor Directory",

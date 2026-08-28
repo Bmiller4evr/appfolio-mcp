@@ -51,9 +51,9 @@ function makeDeps() {
     reportsHttp: {
       request: vi.fn().mockResolvedValue({ results: [AMBRIZ, APEX] }),
     },
-    // The Database API v0 shape, as returned live: a { data: [...] } envelope, PascalCase fields,
-    // and a next_page_path that is null once the results fit on a single page. A work order's
-    // VendorId is the vendor's UUID, matching vendor_directory's vendor_integration_id.
+    // callEndpoint already follows every page of a Database API list read itself, so what a caller
+    // gets back is always the fully joined { data, truncated } shape, PascalCase fields. A work
+    // order's VendorId is the vendor's UUID, matching vendor_directory's vendor_integration_id.
     callEndpoint: vi.fn(async (_deps: unknown, _caller: unknown, operationId: string, params: any): Promise<CallEndpointResult> => {
       if (operationId === "getWorkOrders") {
         return {
@@ -63,20 +63,19 @@ function makeDeps() {
               { VendorId: AMBRIZ.vendor_integration_id, PropertyId: STALLION.Id },
               { VendorId: AMBRIZ.vendor_integration_id, PropertyId: SOUTHMOOR.Id },
             ],
-            next_page_path: null,
+            truncated: false,
           },
         };
       }
       const asked = String(params.query["filters[Id]"]).split(",");
       return {
         executed: true,
-        result: { data: asked.map((id) => properties.get(id)).filter(Boolean), next_page_path: null },
+        result: { data: asked.map((id) => properties.get(id)).filter(Boolean), truncated: false },
       };
     }),
-    // Only `http` is real to this unit test: vendorCompliance forwards the whole object to
-    // callEndpoint (itself mocked above) and reaches into `http` for follow-up pages. Route
-    // assembly (Task 16) provides the real CallEndpointDeps.
-    callEndpointDeps: { http: { request: vi.fn() } } as any,
+    // Route assembly (Task 16) provides the real CallEndpointDeps; nothing in this unit test
+    // reaches into it directly, callEndpoint (mocked above) is what vendorCompliance actually calls.
+    callEndpointDeps: {} as any,
   };
 }
 
@@ -96,8 +95,6 @@ describe("vendorCompliance", () => {
         { id: SOUTHMOOR.Id, name: "1044 Southmoor Drive" },
       ],
     });
-    // next_page_path absent on the only page, so there is nothing to follow.
-    expect(deps.callEndpointDeps.http.request).not.toHaveBeenCalled();
   });
 
   // vendor_directory has no "id" column, so reading one yields undefined: JSON.stringify drops
@@ -127,52 +124,6 @@ describe("vendorCompliance", () => {
     const result = await vendorCompliance(deps, { role: "owner" }, { withinDays: 30, asOf: "2026-08-13" });
 
     expect(result.vendors.map((v) => v.name)).toEqual(["Bestcare Home Services, LLC", "Ambriz, Noe"]);
-  });
-
-  // A real portfolio's ten-year work order history runs past one page. AppFolio hands back the
-  // rest through next_page_path, and callEndpoint cannot follow it (it builds the request path
-  // from the operation's own fixed path template), so anything past page 1 reaches the composite
-  // only if it follows that path through the HTTP client itself.
-  it("aggregates work orders across every page of the results, not just the first", async () => {
-    const deps = makeDeps();
-    deps.reportsHttp.request.mockResolvedValue({ results: [AMBRIZ, BESTCARE] });
-    deps.callEndpoint.mockImplementation(async (_deps, _caller, operationId, params): Promise<CallEndpointResult> => {
-      if (operationId === "getWorkOrders") {
-        return {
-          executed: true,
-          result: {
-            data: [{ VendorId: AMBRIZ.vendor_integration_id, PropertyId: STALLION.Id }],
-            next_page_path: "/api/v0/work_orders?page[number]=2",
-          },
-        };
-      }
-      const asked = String(params.query["filters[Id]"]).split(",");
-      const found = [STALLION, SOUTHMOOR, WEST_HILLS].filter((p) => asked.includes(p.Id));
-      return { executed: true, result: { data: found, next_page_path: null } };
-    });
-    deps.callEndpointDeps.http.request.mockResolvedValue({
-      data: [
-        { VendorId: AMBRIZ.vendor_integration_id, PropertyId: SOUTHMOOR.Id },
-        { VendorId: BESTCARE.vendor_integration_id, PropertyId: WEST_HILLS.Id },
-      ],
-      next_page_path: null,
-    });
-
-    const result = await vendorCompliance(deps, { role: "owner" }, { withinDays: 30, asOf: "2026-08-13" });
-
-    // Bestcare's only work order lives on page 2: a single-page fetch attributes it to no property.
-    const bestcare = result.vendors.find((v) => v.vendorId === BESTCARE.vendor_id);
-    expect(bestcare?.properties).toEqual([{ id: WEST_HILLS.Id, name: "1001 West Hills Terrace" }]);
-    // Ambriz's properties span the page boundary, so neither page alone produces this set.
-    const ambriz = result.vendors.find((v) => v.vendorId === AMBRIZ.vendor_id);
-    expect(ambriz?.properties).toEqual([
-      { id: STALLION.Id, name: "242 Stallion Drive" },
-      { id: SOUTHMOOR.Id, name: "1044 Southmoor Drive" },
-    ]);
-
-    // next_page_path repeats the /api/v0 prefix the HTTP client's base URL already carries.
-    expect(deps.callEndpointDeps.http.request).toHaveBeenCalledTimes(1);
-    expect(deps.callEndpointDeps.http.request).toHaveBeenCalledWith("GET", "/work_orders?page[number]=2", {});
   });
 
   it("calls the report with the expiration filter pushed server-side", async () => {
@@ -225,13 +176,10 @@ describe("vendorCompliance", () => {
       if (operationId === "getWorkOrders") {
         return {
           executed: true,
-          result: {
-            data: [{ VendorId: AMBRIZ.vendor_integration_id, PropertyId: STALLION.Id }],
-            next_page_path: null,
-          },
+          result: { data: [{ VendorId: AMBRIZ.vendor_integration_id, PropertyId: STALLION.Id }], truncated: false },
         };
       }
-      return { executed: true, result: { data: [], next_page_path: null } };
+      return { executed: true, result: { data: [], truncated: false } };
     });
 
     const result = await vendorCompliance(deps, { role: "owner" }, { withinDays: 30, asOf: "2026-08-13" });
